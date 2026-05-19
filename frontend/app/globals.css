@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+/* ── LUCARNE Design System ─────────────────────────────────────────────────── */
+
+:root {
+  --void:         #030A06;
+  --surface:      #060F09;
+  --card:         #0A1A0F;
+  --card-hover:   #0F2317;
+  --border:       #122518;
+  --border-glow:  #1a4028;
+
+  --green:        #00FF85;
+  --green-dim:    #00AA57;
+  --green-glow:   rgba(0, 255, 133, 0.12);
+
+  --gold:         #E8FF1A;
+  --gold-dim:     #9BAA0F;
+  --gold-glow:    rgba(232, 255, 26, 0.12);
+
+  --amber:        #FF9500;
+  --amber-glow:   rgba(255, 149, 0, 0.12);
+
+  --red:          #FF3366;
+  --red-glow:     rgba(255, 51, 102, 0.12);
+
+  --calm:         #4B5563;
+  --calm-glow:    rgba(75, 85, 99, 0.12);
+
+  --text-primary: #C8D6C8;
+  --text-dim:     #5A7A5A;
+  --text-faint:   #1A3020;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--void);
+  color: var(--text-primary);
+  font-family: "Space Mono", ui-monospace, monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--green-dim); }
+
+/* ── HUD Grid Background ─────────────────────────────────────────────────── */
+.hud-grid {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.nation-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  cursor: default;
+}
+
+.nation-card:hover {
+  background: var(--card-hover);
+  border-color: var(--border-glow);
+  box-shadow: 0 0 20px var(--green-glow);
+}
+
+.nation-card.regime-trending  { --card-accent: var(--green); }
+.nation-card.regime-volatile  { --card-accent: var(--amber); }
+.nation-card.regime-breakout  { --card-accent: var(--gold); }
+.nation-card.regime-calm      { --card-accent: var(--calm); }
+
+.nation-card:hover { border-color: var(--card-accent, var(--border-glow)); }
+
+/* ── Score Bar ───────────────────────────────────────────────────────────── */
+.score-track {
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+/* ── Regime Badge ────────────────────────────────────────────────────────── */
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+  text-transform: uppercase;
+}
+
+/* ── Live pulse dot ─────────────────────────────────────────────────────── */
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* ── Feed entries ────────────────────────────────────────────────────────── */
+.feed-entry {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  animation: slide-in 0.3s ease;
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Filter tabs ─────────────────────────────────────────────────────────── */
+.filter-tab {
+  padding: 5px 14px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-tab:hover { color: var(--text-primary); border-color: var(--border-glow); }
+.filter-tab.active { color: var(--void); background: var(--green); border-color: var(--green); }

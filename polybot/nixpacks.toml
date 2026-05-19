@@ -2,7 +2,7 @@
 nixPkgs = ["python312"]
 
 [phases.install]
-cmds = ["pip install -r polybot/requirements.txt"]
+cmds = ["pip install -r requirements.txt"]
 
 [start]
-cmd = "python polybot/server.py"
+cmd = "python server.py"
