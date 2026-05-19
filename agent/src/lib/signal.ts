@@ -29,13 +29,20 @@ export async function computeSignal(country: string, polybotUrl: string): Promis
       axios.get(`${polybotUrl}/signal/${country}`, { timeout: 5000 }),
     ]);
 
-    // Polymarket odds → normalize to 0–100 momentum proxy
+    // Polymarket odds → scale to 0–100 using odds level (not just momentum delta)
     const odds: number[] = oddsRes.data?.odds ?? [];
-    if (odds.length >= 2) {
+    if (odds.length >= 1) {
       const latest  = odds[odds.length - 1];
-      const prev    = odds[odds.length - 2];
-      const delta   = latest - prev;
-      oddsScore     = Math.min(100, Math.max(0, 50 + delta * 500));
+      // Level score: top contender (15%+) → ~95, underdog (0.1%) → ~5
+      const levelScore = Math.min(95, Math.max(5, Math.round(Math.sqrt(latest) * 300)));
+      if (odds.length >= 2) {
+        const prev  = odds[odds.length - 2];
+        const delta = latest - prev;
+        // Small momentum boost on top of level score
+        oddsScore = Math.min(100, Math.max(0, levelScore + Math.round(delta * 200)));
+      } else {
+        oddsScore = levelScore;
+      }
     }
 
     // Polybot 10-gate signal (0=no edge, 1=edge detected)

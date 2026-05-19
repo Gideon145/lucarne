@@ -6,6 +6,7 @@ consumed by the LUCARNE TypeScript agent.
 
 import asyncio
 import httpx
+import json
 import os
 import time
 from collections import defaultdict, deque
@@ -47,6 +48,157 @@ COUNTRY_NAMES: dict[str, str] = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Hardcoded Polymarket WC 2026 winner market IDs
+# Derived from gamma-api.polymarket.com/markets bulk listing
+# ─────────────────────────────────────────────────────────────────────────────
+
+POLYMARKET_IDS: dict[str, str] = {
+    "ARG": "558938", "BRA": "558937", "FRA": "558936", "ENG": "558935",
+    "ESP": "558934", "GER": "558939", "POR": "558940", "NED": "558941",
+    "BEL": "558946", "ITA": "558942", "URU": "558944", "CRO": "558976",
+    "COL": "558947", "MEX": "558945", "USA": "558943", "CAN": "558952",
+    "MAR": "558963", "SEN": "558965", "JPN": "558949", "KOR": "558961",
+    "AUS": "558958", "ECU": "558955", "CHE": "558974", "TUN": "558954",
+    "GHA": "558967", "IRN": "558959",
+    # POL, DEN, WAL, SRB, CRC, CMR — no Polymarket WC 2026 winner markets
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# WC 2026 Group Stage Fixtures (ESPN confirmed schedule)
+# home=True means this team is the designated "home" side in ESPN's listing
+# ─────────────────────────────────────────────────────────────────────────────
+
+WC_FIXTURES: dict[str, list[dict]] = {
+    "ARG": [
+        {"opponent": "ALG", "opp_name": "Algeria",      "date": "Jun 17", "home": True},
+        {"opponent": "AUT", "opp_name": "Austria",      "date": "Jun 22", "home": True},
+        {"opponent": "JOR", "opp_name": "Jordan",       "date": "Jun 28", "home": False},
+    ],
+    "BRA": [
+        {"opponent": "MAR", "opp_name": "Morocco",      "date": "Jun 13", "home": True},
+        {"opponent": "HAI", "opp_name": "Haiti",        "date": "Jun 20", "home": True},
+        {"opponent": "SCO", "opp_name": "Scotland",     "date": "Jun 24", "home": False},
+    ],
+    "FRA": [
+        {"opponent": "SEN", "opp_name": "Senegal",      "date": "Jun 16", "home": True},
+        {"opponent": "IRQ", "opp_name": "Iraq",         "date": "Jun 22", "home": True},
+        {"opponent": "NOR", "opp_name": "Norway",       "date": "Jun 26", "home": False},
+    ],
+    "ENG": [
+        {"opponent": "CRO", "opp_name": "Croatia",      "date": "Jun 17", "home": True},
+        {"opponent": "GHA", "opp_name": "Ghana",        "date": "Jun 23", "home": True},
+        {"opponent": "PAN", "opp_name": "Panama",       "date": "Jun 27", "home": False},
+    ],
+    "ESP": [
+        {"opponent": "CPV", "opp_name": "Cape Verde",   "date": "Jun 15", "home": True},
+        {"opponent": "KSA", "opp_name": "Saudi Arabia", "date": "Jun 21", "home": True},
+        {"opponent": "URU", "opp_name": "Uruguay",      "date": "Jun 27", "home": False},
+    ],
+    "GER": [
+        {"opponent": "CUW", "opp_name": "Curaçao",      "date": "Jun 14", "home": True},
+        {"opponent": "CIV", "opp_name": "Ivory Coast",  "date": "Jun 20", "home": True},
+        {"opponent": "ECU", "opp_name": "Ecuador",      "date": "Jun 25", "home": False},
+    ],
+    "POR": [
+        {"opponent": "COD", "opp_name": "Congo DR",     "date": "Jun 17", "home": True},
+        {"opponent": "UZB", "opp_name": "Uzbekistan",   "date": "Jun 23", "home": True},
+        {"opponent": "COL", "opp_name": "Colombia",     "date": "Jun 27", "home": False},
+    ],
+    "NED": [
+        {"opponent": "JPN", "opp_name": "Japan",        "date": "Jun 14", "home": True},
+        {"opponent": "SWE", "opp_name": "Sweden",       "date": "Jun 20", "home": True},
+        {"opponent": "TUN", "opp_name": "Tunisia",      "date": "Jun 25", "home": False},
+    ],
+    "BEL": [
+        {"opponent": "EGY", "opp_name": "Egypt",        "date": "Jun 15", "home": True},
+        {"opponent": "IRN", "opp_name": "Iran",         "date": "Jun 21", "home": True},
+        {"opponent": "NZL", "opp_name": "New Zealand",  "date": "Jun 27", "home": False},
+    ],
+    "URU": [
+        {"opponent": "KSA", "opp_name": "Saudi Arabia", "date": "Jun 15", "home": False},
+        {"opponent": "CPV", "opp_name": "Cape Verde",   "date": "Jun 21", "home": True},
+        {"opponent": "ESP", "opp_name": "Spain",        "date": "Jun 27", "home": True},
+    ],
+    "CRO": [
+        {"opponent": "ENG", "opp_name": "England",      "date": "Jun 17", "home": False},
+        {"opponent": "PAN", "opp_name": "Panama",       "date": "Jun 23", "home": False},
+        {"opponent": "GHA", "opp_name": "Ghana",        "date": "Jun 27", "home": True},
+    ],
+    "COL": [
+        {"opponent": "UZB", "opp_name": "Uzbekistan",   "date": "Jun 18", "home": False},
+        {"opponent": "COD", "opp_name": "Congo DR",     "date": "Jun 24", "home": True},
+        {"opponent": "POR", "opp_name": "Portugal",     "date": "Jun 27", "home": True},
+    ],
+    "MEX": [
+        {"opponent": "RSA", "opp_name": "South Africa", "date": "Jun 11", "home": True},
+        {"opponent": "KOR", "opp_name": "South Korea",  "date": "Jun 19", "home": True},
+        {"opponent": "CZE", "opp_name": "Czechia",      "date": "Jun 25", "home": False},
+    ],
+    "USA": [
+        {"opponent": "PAR", "opp_name": "Paraguay",     "date": "Jun 13", "home": True},
+        {"opponent": "AUS", "opp_name": "Australia",    "date": "Jun 19", "home": True},
+        {"opponent": "TUR", "opp_name": "Türkiye",      "date": "Jun 26", "home": False},
+    ],
+    "CAN": [
+        {"opponent": "BIH", "opp_name": "Bosnia-Herz.", "date": "Jun 12", "home": True},
+        {"opponent": "QAT", "opp_name": "Qatar",        "date": "Jun 18", "home": True},
+        {"opponent": "CHE", "opp_name": "Switzerland",  "date": "Jun 24", "home": False},
+    ],
+    "MAR": [
+        {"opponent": "BRA", "opp_name": "Brazil",       "date": "Jun 13", "home": False},
+        {"opponent": "SCO", "opp_name": "Scotland",     "date": "Jun 19", "home": False},
+        {"opponent": "HAI", "opp_name": "Haiti",        "date": "Jun 24", "home": True},
+    ],
+    "SEN": [
+        {"opponent": "FRA", "opp_name": "France",       "date": "Jun 16", "home": False},
+        {"opponent": "NOR", "opp_name": "Norway",       "date": "Jun 23", "home": False},
+        {"opponent": "IRQ", "opp_name": "Iraq",         "date": "Jun 26", "home": True},
+    ],
+    "JPN": [
+        {"opponent": "NED", "opp_name": "Netherlands",  "date": "Jun 14", "home": False},
+        {"opponent": "TUN", "opp_name": "Tunisia",      "date": "Jun 21", "home": False},
+        {"opponent": "SWE", "opp_name": "Sweden",       "date": "Jun 25", "home": True},
+    ],
+    "KOR": [
+        {"opponent": "CZE", "opp_name": "Czechia",      "date": "Jun 12", "home": True},
+        {"opponent": "MEX", "opp_name": "Mexico",       "date": "Jun 19", "home": False},
+        {"opponent": "RSA", "opp_name": "South Africa", "date": "Jun 25", "home": False},
+    ],
+    "AUS": [
+        {"opponent": "TUR", "opp_name": "Türkiye",      "date": "Jun 14", "home": True},
+        {"opponent": "USA", "opp_name": "United States","date": "Jun 19", "home": False},
+        {"opponent": "PAR", "opp_name": "Paraguay",     "date": "Jun 26", "home": False},
+    ],
+    "ECU": [
+        {"opponent": "CIV", "opp_name": "Ivory Coast",  "date": "Jun 14", "home": False},
+        {"opponent": "CUW", "opp_name": "Curaçao",      "date": "Jun 21", "home": True},
+        {"opponent": "GER", "opp_name": "Germany",      "date": "Jun 25", "home": True},
+    ],
+    "CHE": [
+        {"opponent": "QAT", "opp_name": "Qatar",        "date": "Jun 13", "home": False},
+        {"opponent": "BIH", "opp_name": "Bosnia-Herz.", "date": "Jun 18", "home": True},
+        {"opponent": "CAN", "opp_name": "Canada",       "date": "Jun 24", "home": True},
+    ],
+    "TUN": [
+        {"opponent": "SWE", "opp_name": "Sweden",       "date": "Jun 15", "home": False},
+        {"opponent": "JPN", "opp_name": "Japan",        "date": "Jun 21", "home": True},
+        {"opponent": "NED", "opp_name": "Netherlands",  "date": "Jun 25", "home": True},
+    ],
+    "GHA": [
+        {"opponent": "PAN", "opp_name": "Panama",       "date": "Jun 17", "home": True},
+        {"opponent": "ENG", "opp_name": "England",      "date": "Jun 23", "home": False},
+        {"opponent": "CRO", "opp_name": "Croatia",      "date": "Jun 27", "home": False},
+    ],
+    "IRN": [
+        {"opponent": "NZL", "opp_name": "New Zealand",  "date": "Jun 16", "home": True},
+        {"opponent": "BEL", "opp_name": "Belgium",      "date": "Jun 21", "home": False},
+        {"opponent": "EGY", "opp_name": "Egypt",        "date": "Jun 27", "home": False},
+    ],
+    # Teams not in WC 2026 group stage
+    "ITA": [], "POL": [], "DEN": [], "WAL": [], "SRB": [], "CRC": [], "CMR": [],
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # In-memory odds store (deque per country)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -60,11 +212,10 @@ cache_ttl = 0  # unix timestamp of last fetch
 # ─────────────────────────────────────────────────────────────────────────────
 
 async def fetch_worldcup_markets() -> list[dict]:
-    """Search Polymarket Gamma API for World Cup 2026 markets."""
+    """Fetch WC 2026 market listing (used only for /markets/worldcup debug endpoint)."""
     global market_cache, cache_ttl
-    if time.time() - cache_ttl < 300:  # 5-minute cache
+    if time.time() - cache_ttl < 300:
         return market_cache
-
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(
@@ -77,58 +228,40 @@ async def fetch_worldcup_markets() -> list[dict]:
             market_cache = markets
             cache_ttl = time.time()
             return markets
-    except Exception as e:
-        return market_cache  # return stale cache on error
+    except Exception:
+        return market_cache
 
 
 async def fetch_country_odds(country: str) -> float | None:
     """
-    Fetch the YES price (probability) for a country winning the World Cup.
-    Returns a float 0.0-1.0, or None if no market found.
+    Fetch YES price (win probability) directly from Polymarket individual market API.
+    Uses hardcoded market IDs to avoid relying on bulk listing which lacks price data.
+    Returns float 0.0-1.0, or None if no market / fetch fails.
     """
-    name = COUNTRY_NAMES.get(country)
-    if not name:
+    market_id = POLYMARKET_IDS.get(country)
+    if not market_id:
         return None
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(f"{GAMMA_API}/markets/{market_id}")
+            resp.raise_for_status()
+            m = resp.json()
 
-    markets = await fetch_worldcup_markets()
+        # outcomePrices and outcomes are JSON-encoded strings in the response
+        prices_raw = m.get("outcomePrices", "[]")
+        outcomes_raw = m.get("outcomes", "[]")
+        prices = json.loads(prices_raw) if isinstance(prices_raw, str) else prices_raw
+        outcomes = json.loads(outcomes_raw) if isinstance(outcomes_raw, str) else outcomes_raw
 
-    # Find the most relevant market for this country
-    target = None
-    for m in markets:
-        title = (m.get("question") or m.get("title") or "").lower()
-        if name.lower() in title and ("win" in title or "champion" in title or "world cup" in title):
-            target = m
-            break
+        for i, o in enumerate(outcomes):
+            if str(o).strip('"').lower() == "yes" and i < len(prices):
+                return float(prices[i])
 
-    if not target:
-        # Fallback: any market mentioning the country
-        for m in markets:
-            title = (m.get("question") or m.get("title") or "").lower()
-            if name.lower() in title:
-                target = m
-                break
-
-    if not target:
-        return None
-
-    # Extract best YES price from outcomes
-    outcomes = target.get("outcomes") or []
-    tokens = target.get("tokens") or []
-
-    # Try tokens first (CLOB format)
-    for token in tokens:
-        if str(token.get("outcome", "")).upper() == "YES":
-            price = token.get("price")
-            if price is not None:
-                return float(price)
-
-    # Try outcomes array
-    for o in outcomes:
-        if isinstance(o, dict) and str(o.get("name", "")).upper() == "YES":
-            price = o.get("price") or o.get("probability")
-            if price is not None:
-                return float(price)
-
+        # Fallback: return first price if outcomes parsing is unexpected
+        if prices:
+            return float(prices[0])
+    except Exception:
+        pass
     return None
 
 
@@ -192,26 +325,46 @@ async def get_odds(country: str):
 @app.get("/signal/{country}")
 async def get_signal(country: str):
     """
-    Returns gated signal: 0 = no edge, 1 = edge detected.
-    Edge = odds moved >10% in last 5 readings (momentum spike).
+    Returns signal strength 0.0-1.0 based on Polymarket win probability level.
+    Top contenders (15%+ odds) → near 1.0; no-hopers (<0.2%) → near 0.
+    Also adds a momentum boost if odds moved >3% across 5 readings.
     """
     country = country.upper()
     if country not in COUNTRY_NAMES:
         raise HTTPException(status_code=404, detail=f"Unknown country: {country}")
 
     history = list(odds_store[country])
-    if len(history) < 2:
-        return {"country": country, "signal": 0, "reason": "insufficient data"}
+    if not history:
+        price = await fetch_country_odds(country)
+        if price is not None:
+            odds_store[country].append(price)
+            history = [price]
 
-    recent = history[-5:] if len(history) >= 5 else history
-    delta = recent[-1] - recent[0]
-    signal = 1 if abs(delta) > 0.10 else 0
+    if not history:
+        return {"country": country, "signal": 0.0, "reason": "no odds data"}
+
+    latest = history[-1]
+
+    # Level-based signal: top favorites → high signal, weak teams → low signal
+    if latest >= 0.12:
+        signal = 1.0
+    elif latest >= 0.06:
+        signal = 0.5 + (latest - 0.06) / 0.06 * 0.5
+    elif latest >= 0.02:
+        signal = 0.2 + (latest - 0.02) / 0.04 * 0.3
+    else:
+        signal = (latest / 0.02) * 0.2
+
+    # Momentum boost: odds moved >3% across last 5 readings
+    if len(history) >= 5:
+        delta = history[-1] - history[-5]
+        if abs(delta) > 0.03:
+            signal = min(1.0, signal + 0.15)
 
     return {
         "country": country,
-        "signal": signal,
-        "delta": round(delta, 4),
-        "latest_odds": round(recent[-1], 4),
+        "signal": round(signal, 4),
+        "latest_odds": round(latest, 4),
         "readings": len(history),
     }
 
@@ -329,7 +482,7 @@ async def generate_intel_brief(
     regime: int,
     odds: float | None,
     players: list[dict],
-    form: list[dict],
+    fixtures: list[dict],
 ) -> str:
     """Use Anthropic Claude to generate a concise signal intelligence brief."""
     api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -343,10 +496,10 @@ async def generate_intel_brief(
         for p in players
     ) or "  Squad data unavailable"
 
-    form_text = "\n".join(
-        f"  - {r['home']} {r['score']} {r['away']}"
-        for r in form
-    ) or "  Recent form unavailable"
+    fixtures_text = "\n".join(
+        f"  - {name} {'vs' if f['home'] else '@'} {f['opp_name']} ({f['date']})"
+        for f in fixtures
+    ) or "  Fixture data unavailable (team may not have qualified)"
 
     odds_str = f"{round(odds * 100, 1)}%" if odds is not None else "N/A"
     regime_str = REGIME_DESC.get(regime, "unknown")
@@ -362,13 +515,13 @@ Current LUCARNE Signal Data:
 Key Players:
 {players_text}
 
-Recent Form (last 5 matches):
-{form_text}
+WC 2026 Group Stage Fixtures:
+{fixtures_text}
 
 Write about:
 1. Why the signal is reading {regime_str} right now — what does that mean tactically/statistically
 2. Key players to watch and their potential impact
-3. Their last World Cup run — how far they went, memorable moments
+3. Their group stage draw — toughest opponent, path to the Round of 32
 4. Overall tournament outlook and what would shift the signal
 
 Tone: authoritative, data-driven, like a sports intelligence analyst. Use football terminology.
@@ -383,6 +536,53 @@ Do NOT use bullet points — flowing paragraphs only. Keep it under 250 words to
         return resp.content[0].text.strip()
     except Exception as e:
         return f"Intel generation failed: {str(e)[:120]}"
+
+
+async def generate_match_brief(
+    team1: str, name1: str,
+    team2: str, name2: str,
+    win_a: float, draw: float, win_b: float,
+    odds_a: float | None, odds_b: float | None,
+) -> str:
+    """Generate AI match preview brief for H2H matchup."""
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        return "No Anthropic key configured."
+
+    client = anthropic.AsyncAnthropic(api_key=api_key)
+
+    odds_a_str = f"{round(odds_a * 100, 1)}%" if odds_a else "N/A"
+    odds_b_str = f"{round(odds_b * 100, 1)}%" if odds_b else "N/A"
+
+    prompt = f"""You are LUCARNE, an AI signal intelligence system for the 2026 World Cup.
+Write a sharp match preview (3 paragraphs) for: {name1} vs {name2}
+
+LUCARNE Match Probability Model:
+- {name1} win: {round(win_a * 100, 1)}%
+- Draw: {round(draw * 100, 1)}%
+- {name2} win: {round(win_b * 100, 1)}%
+
+Polymarket Tournament Win Odds:
+- {name1}: {odds_a_str}
+- {name2}: {odds_b_str}
+
+Write about:
+1. What the odds imply about this matchup and which team has the edge
+2. Key tactical factors — playing styles, strengths/weaknesses to exploit
+3. Prediction and what conditions would flip the result
+
+Tone: sharp, analytical, like a premium football intelligence brief.
+Do NOT use bullet points — flowing paragraphs only. Keep it under 200 words total."""
+
+    try:
+        resp = await client.messages.create(
+            model="claude-haiku-4-5",
+            max_tokens=350,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.content[0].text.strip()
+    except Exception as e:
+        return f"Match brief failed: {str(e)[:120]}"
 
 
 @app.get("/intel/{country}")
@@ -402,15 +602,15 @@ async def get_intel(country: str, score: int = 0, regime: int = 0):
 
     name = COUNTRY_NAMES[country]
     team_id = SOFASCORE_TEAM_IDS.get(country)
+    fixtures = WC_FIXTURES.get(country, [])
 
-    # Fetch Sofascore data + current odds in parallel
-    players, form, odds = await asyncio.gather(
+    # Fetch Sofascore squad + current odds in parallel (no longer fetching Sofascore form)
+    players, odds = await asyncio.gather(
         fetch_sofascore_squad(team_id) if team_id else asyncio.sleep(0, result=[]),
-        fetch_sofascore_form(team_id) if team_id else asyncio.sleep(0, result=[]),
         fetch_country_odds(country),
     )
 
-    brief = await generate_intel_brief(country, name, score, regime, odds, players, form)
+    brief = await generate_intel_brief(country, name, score, regime, odds, players, fixtures)
 
     result = {
         "country": country,
@@ -420,7 +620,81 @@ async def get_intel(country: str, score: int = 0, regime: int = 0):
         "odds": round(odds * 100, 2) if odds is not None else None,
         "brief": brief,
         "players": players,
-        "form": form,
+        "fixtures": fixtures,
+    }
+    _intel_cache[cache_key] = result
+    _intel_cache_ts[cache_key] = time.time()
+    return result
+
+
+@app.get("/fixtures/{country}")
+async def get_fixtures(country: str):
+    """Returns WC 2026 group stage fixtures for a country."""
+    country = country.upper()
+    if country not in COUNTRY_NAMES:
+        raise HTTPException(status_code=404, detail=f"Unknown country: {country}")
+    return {
+        "country": country,
+        "name": COUNTRY_NAMES[country],
+        "fixtures": WC_FIXTURES.get(country, []),
+    }
+
+
+@app.get("/match/{team1}/{team2}")
+async def get_match_odds(team1: str, team2: str):
+    """
+    Returns H2H win/draw/loss probabilities and AI brief for a matchup.
+    Derives match probabilities from Polymarket tournament winner odds.
+    """
+    team1 = team1.upper()
+    team2 = team2.upper()
+
+    if team1 not in COUNTRY_NAMES:
+        raise HTTPException(status_code=404, detail=f"Unknown country: {team1}")
+    if team2 not in COUNTRY_NAMES:
+        raise HTTPException(status_code=404, detail=f"Unknown country: {team2}")
+
+    cache_key = f"match_{team1}_{team2}"
+    alt_key   = f"match_{team2}_{team1}"
+    if cache_key in _intel_cache and (time.time() - _intel_cache_ts.get(cache_key, 0)) < 1800:
+        return _intel_cache[cache_key]
+    if alt_key in _intel_cache and (time.time() - _intel_cache_ts.get(alt_key, 0)) < 1800:
+        return _intel_cache[alt_key]
+
+    # Fetch both teams' Polymarket odds in parallel
+    odds_a, odds_b = await asyncio.gather(
+        fetch_country_odds(team1),
+        fetch_country_odds(team2),
+    )
+
+    # Derive H2H win/draw/loss from relative tournament strength
+    if odds_a and odds_b:
+        r = odds_a / (odds_a + odds_b)
+    elif odds_a:
+        r = 0.70  # mild favorite if only one team has odds
+    elif odds_b:
+        r = 0.30
+    else:
+        r = 0.50  # no data — 50/50
+
+    # Draw probability: higher when teams are evenly matched
+    draw_prob = 0.25 + 0.12 * (1.0 - abs(r - 0.5) * 2)
+    win_a = (1.0 - draw_prob) * r
+    win_b = (1.0 - draw_prob) * (1.0 - r)
+
+    name1 = COUNTRY_NAMES[team1]
+    name2 = COUNTRY_NAMES[team2]
+    brief = await generate_match_brief(team1, name1, team2, name2, win_a, draw_prob, win_b, odds_a, odds_b)
+
+    result = {
+        "teamA": team1, "nameA": name1,
+        "teamB": team2, "nameB": name2,
+        "oddsA": round(odds_a * 100, 2) if odds_a else None,
+        "oddsB": round(odds_b * 100, 2) if odds_b else None,
+        "winA":  round(win_a * 100, 1),
+        "draw":  round(draw_prob * 100, 1),
+        "winB":  round(win_b * 100, 1),
+        "brief": brief,
     }
     _intel_cache[cache_key] = result
     _intel_cache_ts[cache_key] = time.time()
