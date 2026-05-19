@@ -95,8 +95,8 @@ export function useAttestations(): AttestationState {
           const r = await fetch(`${POLYBOT_URL}/odds/${iso3}`, { signal: AbortSignal.timeout(4000) });
           if (!r.ok) return;
           const data = await r.json();
-          // data is an array of price points [{price, ts}] or similar
-          const arr = Array.isArray(data) ? data : data?.history ?? [];
+          // polybot /odds/{iso3} returns {"country":"...", "name":"...", "odds": [0.09, ...]}
+          const arr = Array.isArray(data) ? data : (data?.odds ?? data?.history ?? []);
           if (arr.length > 0) {
             const last = arr[arr.length - 1];
             const price = typeof last === "number" ? last : (last?.price ?? last?.odds ?? 0);

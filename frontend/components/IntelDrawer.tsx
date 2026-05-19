@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { NationData } from "@/lib/useAttestations";
 import { COUNTRY_MAP } from "@/lib/countries";
 import { POLYBOT_URL } from "@/lib/constants";
@@ -13,11 +14,11 @@ interface Player {
   age: number | null;
 }
 
-interface FormResult {
-  home: string;
-  away: string;
-  score: string;
-  status: string;
+interface Fixture {
+  opponent: string;
+  opp_name: string;
+  date: string;
+  home: boolean;
 }
 
 interface IntelData {
@@ -28,7 +29,7 @@ interface IntelData {
   odds: number | null;
   brief: string;
   players: Player[];
-  form: FormResult[];
+  fixtures: Fixture[];
 }
 
 interface Props {
@@ -45,6 +46,7 @@ function posLabel(pos: string): string {
 }
 
 export function IntelDrawer({ nation, onClose }: Props) {
+  const router = useRouter();
   const [intel, setIntel] = useState<IntelData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -194,7 +196,7 @@ export function IntelDrawer({ nation, onClose }: Props) {
                 LOADING INTEL…
               </div>
               <div style={{ marginTop: 8, fontSize: 10, color: "var(--text-faint)" }}>
-                Querying Sofascore + generating AI brief
+                Querying Polymarket · generating AI brief
               </div>
             </div>
           )}
@@ -351,8 +353,8 @@ export function IntelDrawer({ nation, onClose }: Props) {
                 </div>
               )}
 
-              {/* Recent Form */}
-              {intel.form.length > 0 && (
+              {/* WC 2026 Fixtures */}
+              {intel.fixtures && intel.fixtures.length > 0 ? (
                 <div>
                   <div style={{
                     fontSize: 12,
@@ -361,33 +363,71 @@ export function IntelDrawer({ nation, onClose }: Props) {
                     fontFamily: "var(--font-mono), monospace",
                     marginBottom: 10,
                   }}>
-                    RECENT FORM
+                    WC 2026 GROUP STAGE
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                    {intel.form.map((r, i) => (
+                    {intel.fixtures.map((f, i) => (
                       <div
                         key={i}
+                        onClick={() => {
+                          const iso3a = intel.country;
+                          const iso3b = COUNTRY_MAP.get(f.opponent)?.iso3 ?? f.opponent;
+                          onClose();
+                          router.push(`/match/${iso3a}-${iso3b}`);
+                        }}
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
                           alignItems: "center",
-                          padding: "6px 12px",
+                          padding: "8px 12px",
                           background: "rgba(255,255,255,0.015)",
+                          border: "1px solid var(--border)",
                           borderRadius: 4,
-                          fontSize: 14,
-                          fontFamily: "var(--font-mono), monospace",
+                          cursor: "pointer",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLDivElement).style.background = "rgba(0,255,133,0.05)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.015)";
                         }}
                       >
-                        <span style={{ color: "var(--text-secondary)" }}>
-                          {r.home} <span style={{ color: "var(--text-dim)" }}>vs</span> {r.away}
-                        </span>
-                        <span style={{ color: "var(--text-primary)", fontWeight: 700, letterSpacing: "0.08em" }}>
-                          {r.score}
-                        </span>
+                        <div style={{ fontSize: 14, fontFamily: "var(--font-mono), monospace", color: "var(--text-secondary)" }}>
+                          <span style={{ color: "var(--text-dim)", fontSize: 11, marginRight: 6 }}>
+                            {f.home ? "H" : "A"}
+                          </span>
+                          {f.home
+                            ? <>{intel.name} <span style={{ color: "var(--text-dim)" }}>vs</span> {f.opp_name}</>
+                            : <>{intel.name} <span style={{ color: "var(--text-dim)" }}>@</span> {f.opp_name}</>
+                          }
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <span style={{ fontSize: 12, color: "var(--text-faint)", letterSpacing: "0.08em" }}>
+                            {f.date}
+                          </span>
+                          <span style={{ fontSize: 10, color: "var(--green)", letterSpacing: "0.1em" }}>
+                            ODDS →
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
+              ) : (
+                intel.fixtures && intel.fixtures.length === 0 && (
+                  <div style={{
+                    padding: "10px 12px",
+                    background: "rgba(255,255,255,0.015)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 4,
+                    fontSize: 12,
+                    color: "var(--text-faint)",
+                    fontFamily: "var(--font-mono), monospace",
+                  }}>
+                    No WC 2026 group stage fixtures available
+                  </div>
+                )
               )}
             </>
           )}
