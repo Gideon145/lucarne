@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>LUCARNE — Brand Kit (Locked)</title>
+<style>
+  :root {
+    --onyx: #0A0F0D;
+    --onyx-2: #11181A;
+    --lime: #00FF85;
+    --lime-dim: #00B85F;
+    --signal: #E8FF1A;
+    --grid: rgba(0, 255, 133, 0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #1c1f1e;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #eee;
+    padding: 40px;
+  }
+  h1 { font-weight: 800; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .sub { color: #999; margin: 0 0 32px; font-size: 14px; max-width: 700px; line-height: 1.6; }
+  .card { background: #0f1211; border: 1px solid #222; border-radius: 12px; padding: 24px; margin-bottom: 32px; }
+  .card h2 { margin: 0 0 4px; font-size: 14px; color: var(--lime); letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; }
+  .card .dim { margin: 0 0 16px; font-size: 12px; color: #777; }
+  .asset-frame { display: inline-block; line-height: 0; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+  code { color: var(--lime); background: #1a1f1d; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+  kbd { background: #222; padding: 2px 6px; border-radius: 3px; font-family: ui-monospace, monospace; font-size: 11px; }
+
+  .logo-1024 { width: 1024px; height: 1024px; background: var(--onyx); position: relative; overflow: hidden; }
+  .logo-1024::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 64px 64px; opacity: 0.55;
+  }
+</style>
+</head>
+<body>
+
+<h1>LUCARNE — Brand Kit</h1>
+<p class="sub">Two assets, locked. Export via Chrome DevTools: <kbd>F12</kbd> → <kbd>Ctrl+Shift+P</kbd> → "Capture node screenshot" → click the <code>.asset-frame</code> div of the asset you want. Saves at native pixel dimensions.</p>
+
+<!-- ====== ASSET 1: HEX LOGO 1024×1024 ====== -->
+<div class="card">
+  <h2>1 · LOGO · Hexagonal · 1024 × 1024</h2>
+  <p class="dim">Profile picture. Hex centers naturally in X's circle crop.</p>
+  <div class="asset-frame">
+    <div class="logo-1024">
+      <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00FF85"/>
+            <stop offset="100%" stop-color="#00B85F"/>
+          </linearGradient>
+          <linearGradient id="streak" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#E8FF1A"/>
+            <stop offset="60%" stop-color="#00FF85"/>
+            <stop offset="100%" stop-color="#00B85F"/>
+          </linearGradient>
+          <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(0,255,133,0.22)"/>
+            <stop offset="70%" stop-color="rgba(0,255,133,0)"/>
+          </radialGradient>
+          <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="16" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <rect x="0" y="0" width="1024" height="1024" fill="url(#halo)"/>
+        <g filter="url(#glow)">
+          <polygon points="512,80 880,296 880,728 512,944 144,728 144,296"
+                   fill="none" stroke="url(#hexGrad)" stroke-width="18" stroke-linejoin="round"/>
+        </g>
+        <polygon points="512,168 800,336 800,688 512,856 224,688 224,336"
+                 fill="none" stroke="rgba(0,255,133,0.22)" stroke-width="3"/>
+        <rect x="312" y="342" width="400" height="40" rx="6" fill="#FFFFFF"/>
+        <rect x="312" y="342" width="40" height="400" rx="6" fill="#FFFFFF"/>
+        <g filter="url(#glow)">
+          <path d="M 728 728 L 332 332" stroke="url(#streak)" stroke-width="32" stroke-linecap="round" fill="none"/>
+          <circle cx="336" cy="336" r="38" fill="#E8FF1A"/>
+          <circle cx="336" cy="336" r="19" fill="#FFFFFF"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ====== ASSET 2: BANNER 1500×500 with 32-nation grid ====== -->
+<div class="card">
+  <h2>2 · BANNER · X Header · 1500 × 500</h2>
+  <p class="dim">32 World Cup nations as hex chips behind the wordmark — each chip carries its country code + flag-color accent bar. Hex logo top-left, chain badge top-right, product strip below wordmark.</p>
+  <div class="asset-frame">
+    <div style="width:1500px;height:500px;background:radial-gradient(ellipse at 50% 50%, rgba(0,255,133,0.10) 0%, transparent 60%),linear-gradient(135deg, #0A0F0D 0%, #11181A 100%);position:relative;overflow:hidden;color:#fff;">
+
+      <!-- Faint grid -->
+      <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,255,133,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,133,0.05) 1px,transparent 1px);background-size:48px 48px;opacity:0.6;"></div>
+
+      <!-- 32-nation hex grid: 8 cols × 4 rows -->
+      <svg width="1500" height="500" viewBox="0 0 1500 500" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;">
+        <defs>
+          <symbol id="hexchip" viewBox="0 0 140 80" overflow="visible">
+            <polygon points="35,2 105,2 138,40 105,78 35,78 2,40"
+                     fill="rgba(0,255,133,0.05)" stroke="rgba(0,255,133,0.22)" stroke-width="1.5"/>
+          </symbol>
+        </defs>
+        <g font-family="ui-monospace, 'JetBrains Mono', monospace" font-size="18" font-weight="700" text-anchor="middle">
+
+          <!-- ROW 1 -->
+          <g transform="translate(65,50)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#75AADB"/><text x="70" y="46" fill="#fff">ARG</text></g>
+          <g transform="translate(243,50)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#009C3B"/><text x="70" y="46" fill="#fff">BRA</text></g>
+          <g transform="translate(421,50)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#0055A4"/><text x="70" y="46" fill="#fff">FRA</text></g>
+          <g transform="translate(599,50)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#CE1124"/><text x="70" y="46" fill="#fff">ENG</text></g>
+          <g transform="translate(777,50)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#C60B1E"/><text x="70" y="46" fill="#fff">ESP</text></g>
+          <g transform="translate(955,50)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#FFCE00"/><text x="70" y="46" fill="#fff">GER</text></g>
+          <g transform="translate(1133,50)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#006600"/><text x="70" y="46" fill="#fff">POR</text></g>
+          <g transform="translate(1311,50)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#FF6900"/><text x="70" y="46" fill="#fff">NED</text></g>
+
+          <!-- ROW 2 -->
+          <g transform="translate(65,160)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#FAE042"/><text x="70" y="46" fill="#fff">BEL</text></g>
+          <g transform="translate(243,160)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#009246"/><text x="70" y="46" fill="#fff">ITA</text></g>
+          <g transform="translate(421,160)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#FCD116"/><text x="70" y="46" fill="#fff">URU</text></g>
+          <g transform="translate(599,160)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#FF0000"/><text x="70" y="46" fill="#fff">CRO</text></g>
+          <g transform="translate(777,160)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#FFCD00"/><text x="70" y="46" fill="#fff">COL</text></g>
+          <g transform="translate(955,160)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#006847"/><text x="70" y="46" fill="#fff">MEX</text></g>
+          <g transform="translate(1133,160)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#3C3B6E"/><text x="70" y="46" fill="#fff">USA</text></g>
+          <g transform="translate(1311,160)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#FF0000"/><text x="70" y="46" fill="#fff">CAN</text></g>
+
+          <!-- ROW 3 -->
+          <g transform="translate(65,270)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#C1272D"/><text x="70" y="46" fill="#fff">MAR</text></g>
+          <g transform="translate(243,270)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#00853F"/><text x="70" y="46" fill="#fff">SEN</text></g>
+          <g transform="translate(421,270)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#BC002D"/><text x="70" y="46" fill="#fff">JPN</text></g>
+          <g transform="translate(599,270)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#003478"/><text x="70" y="46" fill="#fff">KOR</text></g>
+          <g transform="translate(777,270)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#00843D"/><text x="70" y="46" fill="#fff">AUS</text></g>
+          <g transform="translate(955,270)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#FFD100"/><text x="70" y="46" fill="#fff">ECU</text></g>
+          <g transform="translate(1133,270)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#DC143C"/><text x="70" y="46" fill="#fff">POL</text></g>
+          <g transform="translate(1311,270)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#C60C30"/><text x="70" y="46" fill="#fff">DEN</text></g>
+
+          <!-- ROW 4 -->
+          <g transform="translate(65,380)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#DA291C"/><text x="70" y="46" fill="#fff">CHE</text></g>
+          <g transform="translate(243,380)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#00B140"/><text x="70" y="46" fill="#fff">WAL</text></g>
+          <g transform="translate(421,380)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#C6363C"/><text x="70" y="46" fill="#fff">SRB</text></g>
+          <g transform="translate(599,380)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#E70013"/><text x="70" y="46" fill="#fff">TUN</text></g>
+          <g transform="translate(777,380)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#002B7F"/><text x="70" y="46" fill="#fff">CRC</text></g>
+          <g transform="translate(955,380)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#FCD116"/><text x="70" y="46" fill="#fff">GHA</text></g>
+          <g transform="translate(1133,380)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#007A5E"/><text x="70" y="46" fill="#fff">CMR</text></g>
+          <g transform="translate(1311,380)"><use href="#hexchip"/><rect x="35" y="68" width="70" height="4" fill="#239F40"/><text x="70" y="46" fill="#fff">IRN</text></g>
+        </g>
+      </svg>
+
+      <!-- Center scrim so wordmark pops over the grid -->
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse 700px 280px at 50% 50%, rgba(10,15,13,0.95) 0%, rgba(10,15,13,0.78) 38%, rgba(10,15,13,0) 72%);z-index:2;"></div>
+
+      <!-- Wordmark + tagline + product strip (dead center) -->
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;text-align:center;width:1100px;">
+        <p style="font-size:12px;font-weight:700;color:#00FF85;letter-spacing:0.32em;text-transform:uppercase;margin:0 0 14px;">
+          Verifiable Signal Engine · World Cup 2026
+        </p>
+        <h1 style="font-size:140px;font-weight:900;color:#fff;letter-spacing:-0.05em;line-height:0.9;margin:0;text-shadow:0 0 40px rgba(0,255,133,0.25);">
+          LUCAR<span style="color:#00FF85;">N</span>E
+        </h1>
+        <p style="font-size:20px;font-weight:500;color:#a8b3ad;letter-spacing:0.02em;margin:20px 0 16px;">
+          Top corner of the prediction-market signal. <span style="color:#E8FF1A;font-weight:600;">32 nations · 60s attestations · on-chain.</span>
+        </p>
+        <div style="display:inline-flex;gap:0;align-items:center;padding:10px 22px;border:1px solid rgba(0,255,133,0.40);border-radius:999px;background:rgba(0,255,133,0.05);backdrop-filter:blur(6px);font-family:ui-monospace,'JetBrains Mono',monospace;font-size:13px;font-weight:700;letter-spacing:0.22em;color:#fff;text-transform:uppercase;">
+          <span>SIGNAL</span><span style="color:#00FF85;margin:0 14px;">·</span>
+          <span>PERP</span><span style="color:#00FF85;margin:0 14px;">·</span>
+          <span>DARK</span><span style="color:#00FF85;margin:0 14px;">·</span>
+          <span>BOND</span>
+        </div>
+      </div>
+
+      <!-- Top-right: chain badge -->
+      <div style="position:absolute;top:24px;right:32px;z-index:4;display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;padding:10px 16px;border:1px solid #00B85F;border-radius:8px;background:rgba(0,255,133,0.06);backdrop-filter:blur(8px);">
+        <span style="font-size:9px;color:#00FF85;letter-spacing:0.22em;font-weight:700;text-transform:uppercase;">Built on</span>
+        <span style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.01em;">X Layer</span>
+        <span style="font-family:ui-monospace,'JetBrains Mono',monospace;font-size:10px;color:#6b7670;">ChainID 196 · Mainnet</span>
+      </div>
+
+      <!-- Top-left: hex logo mark -->
+      <div style="position:absolute;top:24px;left:32px;z-index:4;">
+        <svg width="78" height="78" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="hexGradB" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00FF85"/>
+              <stop offset="100%" stop-color="#00B85F"/>
+            </linearGradient>
+            <linearGradient id="streakB" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#E8FF1A"/>
+              <stop offset="100%" stop-color="#00FF85"/>
+            </linearGradient>
+          </defs>
+          <polygon points="512,80 880,296 880,728 512,944 144,728 144,296"
+                   fill="none" stroke="url(#hexGradB)" stroke-width="40" stroke-linejoin="round"/>
+          <rect x="312" y="342" width="400" height="40" rx="6" fill="#FFFFFF"/>
+          <rect x="312" y="342" width="40" height="400" rx="6" fill="#FFFFFF"/>
+          <path d="M 728 728 L 332 332" stroke="url(#streakB)" stroke-width="44" stroke-linecap="round" fill="none"/>
+          <circle cx="336" cy="336" r="46" fill="#E8FF1A"/>
+          <circle cx="336" cy="336" r="22" fill="#FFFFFF"/>
+        </svg>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="card" style="border-color:#1f3a2a;background:#0c1410;">
+  <h2 style="color:var(--lime);">Export · 30 seconds</h2>
+  <ol style="font-size:14px;line-height:1.8;color:#bbb;margin:0;padding-left:20px;">
+    <li><kbd>Ctrl + F5</kbd> on this page (hard refresh — bypass cache)</li>
+    <li>Open DevTools: <kbd>F12</kbd> → command palette: <kbd>Ctrl + Shift + P</kbd> → "Capture node screenshot"</li>
+    <li>For the <strong>profile picture</strong>: click Asset 1's <code>.asset-frame</code> div → upload to X profile</li>
+    <li>For the <strong>X banner</strong>: click Asset 2's <code>.asset-frame</code> div → upload to X header</li>
+  </ol>
+</div>
+
+</body>
+</html>

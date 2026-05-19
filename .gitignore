@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+artifacts/
+cache/
+typechain-types/
+*.tsbuildinfo
+.next/
+out/
+__pycache__/
+*.pyc
+.venv/
+polybot/.venv/

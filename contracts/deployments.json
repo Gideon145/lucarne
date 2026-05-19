@@ -1,0 +1,8 @@
+{
+  "network": "xlayer",
+  "chainId": 196,
+  "deployer": "0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3",
+  "attester": "0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3",
+  "SignalAttestor": "0x1206EeBBAEd24039bDDd0C25BFf53a44c57ff59E",
+  "deployedAt": "2026-05-19T20:18:12.621Z"
+}

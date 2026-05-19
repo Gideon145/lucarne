@@ -1,0 +1,14 @@
+{
+  "name": "lucarne",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LUCARNE — Verifiable World Cup Signal Engine on X Layer",
+  "scripts": {
+    "agent:dev": "pnpm --filter agent dev",
+    "agent:start": "pnpm --filter agent start",
+    "compile": "pnpm --filter contracts compile",
+    "deploy": "pnpm --filter contracts deploy",
+    "verify": "pnpm --filter contracts verify"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
