@@ -5,12 +5,15 @@ consumed by the LUCARNE TypeScript agent.
 """
 
 import asyncio
+import base64
+import hashlib
 import httpx
 import json
 import os
 import time
 from collections import defaultdict, deque
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
@@ -23,6 +26,7 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Payment-Required"],
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -31,6 +35,64 @@ app.add_middleware(
 
 GAMMA_API = "https://gamma-api.polymarket.com"
 ODDS_HISTORY_LEN = 60   # keep last 60 data points per country
+
+# ─────────────────────────────────────────────────────────────────────────────
+# x402 Payment Gate — OKX Onchain OS / X Layer
+# ─────────────────────────────────────────────────────────────────────────────
+
+X402_PRICE      = "10000"   # 0.01 USDC (6 decimals)
+X402_ASSET      = "0x74b7f16337b8972027f6196a17a631ac6de26d22"  # USDC on X Layer mainnet
+X402_NETWORK    = "xlayer-mainnet"
+X402_SCHEME     = "exact"
+LUCARNE_WALLET  = os.getenv("LUCARNE_WALLET_ADDRESS", "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81")
+_paid_nonces: set[str] = set()  # replay prevention
+
+
+def make_402_payload(resource_url: str, description: str) -> dict:
+    return {
+        "x402Version": 1,
+        "error": "Payment required",
+        "accepts": [{
+            "scheme": X402_SCHEME,
+            "network": X402_NETWORK,
+            "maxAmountRequired": X402_PRICE,
+            "resource": resource_url,
+            "description": description,
+            "mimeType": "application/json",
+            "payTo": LUCARNE_WALLET,
+            "maxTimeoutSeconds": 300,
+            "asset": X402_ASSET,
+            "extra": {"name": "USD Coin", "version": "2"},
+        }],
+    }
+
+
+def verify_x402_payment(header: str | None) -> tuple[bool, str]:
+    """Decode and lightly validate an X-Payment header.
+    Returns (is_valid, nonce).  For the demo, any well-formed x402
+    payload on xlayer-mainnet is accepted; production would verify
+    the EIP-3009 signature on-chain via okx-onchain-gateway.
+    """
+    if not header:
+        return False, "missing"
+    try:
+        raw = base64.b64decode(header + "==")
+        payload = json.loads(raw)
+    except Exception:
+        return False, "malformed"
+    if payload.get("x402Version") != 1:
+        return False, "wrong version"
+    if payload.get("scheme") != X402_SCHEME:
+        return False, "unsupported scheme"
+    if payload.get("network") != X402_NETWORK:
+        return False, f"wrong network: {payload.get('network')}"
+    # Extract nonce from authorization sub-payload
+    auth = payload.get("payload", {}).get("authorization", {})
+    nonce = auth.get("nonce") or hashlib.sha256(raw).hexdigest()
+    if nonce in _paid_nonces:
+        return False, "payment already used"
+    _paid_nonces.add(nonce)
+    return True, nonce
 
 # ─────────────────────────────────────────────────────────────────────────────
 # World Cup 2026 country → Polymarket search slug
@@ -720,15 +782,33 @@ Do NOT use bullet points — flowing paragraphs only. Keep it under 200 words to
 
 
 @app.get("/intel/{country}")
-async def get_intel(country: str, score: int = 0, regime: int = 0):
+async def get_intel(request: Request, country: str, score: int = 0, regime: int = 0):
     """
     Returns AI-generated signal intelligence brief for a country.
+    Requires x402 micropayment (0.01 USDC on X Layer) via X-Payment header.
     Query params: score (0-100), regime (0-3) — passed from frontend card state.
     Results are cached for 1 hour per country+score combination.
     """
     country = country.upper()
     if country not in COUNTRY_NAMES:
         raise HTTPException(status_code=404, detail=f"Unknown country: {country}")
+
+    # ── x402 payment gate ────────────────────────────────────────────────────
+    payment_header = request.headers.get("X-Payment")
+    valid, _ = verify_x402_payment(payment_header)
+    if not valid:
+        name_for_pmt = COUNTRY_NAMES[country]
+        pmt = make_402_payload(
+            resource_url=str(request.url),
+            description=f"LUCARNE Signal Intel Brief — {name_for_pmt} (WC 2026)",
+        )
+        encoded = base64.b64encode(json.dumps(pmt).encode()).decode()
+        return JSONResponse(
+            status_code=402,
+            content={"error": "Payment required", "x402": pmt},
+            headers={"X-Payment-Required": encoded},
+        )
+    # ─────────────────────────────────────────────────────────────────────────
 
     cache_key = f"{country}_{score}_{regime}"
     if cache_key in _intel_cache and (time.time() - _intel_cache_ts.get(cache_key, 0)) < INTEL_TTL:

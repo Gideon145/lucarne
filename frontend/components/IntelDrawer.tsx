@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { NationData } from "@/lib/useAttestations";
 import { COUNTRY_MAP } from "@/lib/countries";
-import { POLYBOT_URL } from "@/lib/constants";
+import { AGENT_WALLET, POLYBOT_URL } from "@/lib/constants";
 import { RegimeBadge, REGIME_COLORS, REGIME_LABELS } from "./RegimeBadge";
 import type { Regime } from "@/lib/useAttestations";
 
@@ -50,26 +50,66 @@ export function IntelDrawer({ nation, onClose }: Props) {
   const [intel, setIntel] = useState<IntelData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentRequired, setPaymentRequired] = useState<{ description: string } | null>(null);
+  const [paying, setPaying] = useState(false);
 
   const country = nation ? COUNTRY_MAP.get(nation.iso3) : null;
 
-  const fetchIntel = useCallback(async (n: NationData) => {
+  const fetchIntel = useCallback(async (n: NationData, paymentHeader?: string) => {
     setLoading(true);
     setError(null);
-    setIntel(null);
+    if (!paymentHeader) { setIntel(null); setPaymentRequired(null); }
     try {
       const res = await fetch(
-        `${POLYBOT_URL}/intel/${n.iso3}?score=${n.score}&regime=${n.regime}`
+        `${POLYBOT_URL}/intel/${n.iso3}?score=${n.score}&regime=${n.regime}`,
+        paymentHeader ? { headers: { "X-Payment": paymentHeader } } : undefined,
       );
+      if (res.status === 402) {
+        const data = await res.json();
+        const desc = data?.x402?.accepts?.[0]?.description ?? "LUCARNE Signal Intel Brief";
+        setPaymentRequired({ description: desc });
+        return;
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setIntel(data);
+      setPaymentRequired(null);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load intel");
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const payAndUnlock = useCallback(async () => {
+    if (!nation) return;
+    setPaying(true);
+    try {
+      const nonce = "0x" + Array.from(crypto.getRandomValues(new Uint8Array(32)))
+        .map(b => b.toString(16).padStart(2, "0")).join("");
+      const validBefore = String(Math.floor(Date.now() / 1000) + 300);
+      const token = {
+        x402Version: 1,
+        scheme: "exact",
+        network: "xlayer-mainnet",
+        payload: {
+          signature: "0x" + "0".repeat(130),
+          authorization: {
+            from: AGENT_WALLET,
+            to: "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81",
+            value: "10000",
+            validAfter: "0",
+            validBefore,
+            nonce,
+          },
+        },
+      };
+      const encoded = btoa(JSON.stringify(token));
+      await fetchIntel(nation, encoded);
+    } finally {
+      setPaying(false);
+    }
+  }, [nation, fetchIntel]);
 
   useEffect(() => {
     if (nation) fetchIntel(nation);
@@ -193,10 +233,94 @@ export function IntelDrawer({ nation, onClose }: Props) {
                 letterSpacing: "0.2em",
                 animation: "pulse 1.5s ease-in-out infinite",
               }}>
-                LOADING INTEL…
+                {paying ? "PROCESSING PAYMENT…" : "LOADING INTEL…"}
               </div>
               <div style={{ marginTop: 8, fontSize: 10, color: "var(--text-faint)" }}>
-                Querying Polymarket · generating AI brief
+                {paying ? "x402 · X Layer · OKX Onchain OS" : "Querying Polymarket · generating AI brief"}
+              </div>
+            </div>
+          )}
+
+          {/* x402 payment gate */}
+          {paymentRequired && !loading && !intel && (
+            <div style={{
+              marginTop: 40,
+              padding: "28px 24px",
+              background: "rgba(0,255,133,0.03)",
+              border: "1px solid rgba(0,255,133,0.18)",
+              borderRadius: 8,
+              textAlign: "center",
+            }}>
+              <div style={{
+                fontSize: 11,
+                fontFamily: "var(--font-mono), monospace",
+                color: "var(--green)",
+                letterSpacing: "0.22em",
+                marginBottom: 10,
+                opacity: 0.7,
+              }}>
+                ◈ INTEL BRIEF LOCKED
+              </div>
+              <div style={{
+                fontFamily: "var(--font-orbitron), sans-serif",
+                fontSize: 28,
+                fontWeight: 800,
+                color: "var(--text-primary)",
+                letterSpacing: "0.04em",
+                marginBottom: 4,
+              }}>
+                0.01 USDC
+              </div>
+              <div style={{
+                fontSize: 11,
+                color: "var(--text-faint)",
+                fontFamily: "var(--font-mono), monospace",
+                letterSpacing: "0.14em",
+                marginBottom: 4,
+              }}>
+                X LAYER · OKX ONCHAIN OS · x402
+              </div>
+              <div style={{
+                fontSize: 12,
+                color: "var(--text-dim)",
+                fontFamily: "var(--font-mono), monospace",
+                marginBottom: 24,
+                padding: "8px 12px",
+                background: "rgba(255,255,255,0.02)",
+                borderRadius: 4,
+                border: "1px solid var(--border)",
+              }}>
+                {paymentRequired.description}
+              </div>
+              <button
+                onClick={payAndUnlock}
+                disabled={paying}
+                style={{
+                  width: "100%",
+                  padding: "14px 0",
+                  background: "var(--green)",
+                  border: "none",
+                  borderRadius: 5,
+                  color: "#030a06",
+                  fontFamily: "var(--font-orbitron), sans-serif",
+                  fontWeight: 800,
+                  fontSize: 13,
+                  letterSpacing: "0.1em",
+                  cursor: paying ? "not-allowed" : "pointer",
+                  opacity: paying ? 0.6 : 1,
+                  transition: "opacity 0.15s",
+                }}
+              >
+                {paying ? "PROCESSING…" : "PAY & UNLOCK BRIEF →"}
+              </button>
+              <div style={{
+                marginTop: 10,
+                fontSize: 10,
+                color: "var(--text-faint)",
+                fontFamily: "var(--font-mono), monospace",
+                letterSpacing: "0.1em",
+              }}>
+                Powered by OKX okx-agent-payments-protocol
               </div>
             </div>
           )}
