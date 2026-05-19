@@ -1,7 +1,7 @@
 import { NationData } from "@/lib/useAttestations";
 import { COUNTRY_MAP } from "@/lib/countries";
 import { RegimeBadge, REGIME_COLORS, REGIME_GLOWS } from "./RegimeBadge";
-import { OKLINK_BASE } from "@/lib/constants";
+import { OKLINK_BASE, SIGNAL_ATTESTOR } from "@/lib/constants";
 
 function scoreColor(score: number): string {
   if (score >= 75) return "var(--gold)";
@@ -20,9 +20,10 @@ function relativeTime(ts: number): string {
 
 interface Props {
   nation: NationData;
+  onClick?: () => void;
 }
 
-export function NationCard({ nation }: Props) {
+export function NationCard({ nation, onClick }: Props) {
   const country = COUNTRY_MAP.get(nation.iso3);
   if (!country) return null;
 
@@ -39,7 +40,8 @@ export function NationCard({ nation }: Props) {
   return (
     <div
       className={`nation-card ${regimeClass}`}
-      style={{ padding: "16px" }}
+      onClick={onClick}
+      style={{ padding: "16px", cursor: onClick ? "pointer" : "default" }}
     >
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
@@ -118,9 +120,10 @@ export function NationCard({ nation }: Props) {
 
         {shortHash && (
           <a
-            href={`${OKLINK_BASE}/tx/${signalHash.length > 20 ? "—" : signalHash}`}
+            href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`}
             target="_blank"
             rel="noreferrer"
+            title={signalHash}
             style={{ fontSize: 10, color: "var(--text-dim)", textDecoration: "none" }}
           >
             ⛓ {shortHash}

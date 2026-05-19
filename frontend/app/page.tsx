@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useAttestations } from "@/lib/useAttestations";
+import type { NationData } from "@/lib/useAttestations";
 import { NationCard } from "@/components/NationCard";
 import { LiveFeed } from "@/components/LiveFeed";
+import { IntelDrawer } from "@/components/IntelDrawer";
 import { REGIME_COLORS } from "@/components/RegimeBadge";
 import { OKLINK_BASE, SIGNAL_ATTESTOR, AGENT_WALLET } from "@/lib/constants";
 import type { Regime } from "@/lib/useAttestations";
@@ -20,6 +22,7 @@ export default function Home() {
     useAttestations();
   const [filter, setFilter] = useState<FilterType>("ALL");
   const [sort, setSort] = useState<"score" | "regime" | "recent">("score");
+  const [selectedNation, setSelectedNation] = useState<NationData | null>(null);
 
   const filtered = useMemo(() => {
     const regimeIdx = REGIME_INDEX[filter];
@@ -192,7 +195,11 @@ export default function Home() {
               }}
             >
               {filtered.map((nation) => (
-                <NationCard key={nation.iso3} nation={nation} />
+                <NationCard
+                  key={nation.iso3}
+                  nation={nation}
+                  onClick={() => setSelectedNation(nation)}
+                />
               ))}
             </div>
           )}
@@ -215,6 +222,12 @@ export default function Home() {
           <LiveFeed feed={feed} />
         </div>
       </div>
+
+      {/* Intel Drawer */}
+      <IntelDrawer
+        nation={selectedNation}
+        onClose={() => setSelectedNation(null)}
+      />
     </div>
   );
 }

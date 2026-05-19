@@ -1,0 +1,403 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { NationData } from "@/lib/useAttestations";
+import { COUNTRY_MAP } from "@/lib/countries";
+import { POLYBOT_URL } from "@/lib/constants";
+import { RegimeBadge, REGIME_COLORS, REGIME_LABELS } from "./RegimeBadge";
+import type { Regime } from "@/lib/useAttestations";
+
+interface Player {
+  name: string;
+  position: string;
+  age: number | null;
+}
+
+interface FormResult {
+  home: string;
+  away: string;
+  score: string;
+  status: string;
+}
+
+interface IntelData {
+  country: string;
+  name: string;
+  score: number;
+  regime: number;
+  odds: number | null;
+  brief: string;
+  players: Player[];
+  form: FormResult[];
+}
+
+interface Props {
+  nation: NationData | null;
+  onClose: () => void;
+}
+
+const POSITION_LABEL: Record<string, string> = {
+  G: "GK", D: "DEF", M: "MID", F: "FWD",
+};
+
+function posLabel(pos: string): string {
+  return POSITION_LABEL[pos?.[0]?.toUpperCase()] ?? pos ?? "?";
+}
+
+export function IntelDrawer({ nation, onClose }: Props) {
+  const [intel, setIntel] = useState<IntelData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const country = nation ? COUNTRY_MAP.get(nation.iso3) : null;
+
+  const fetchIntel = useCallback(async (n: NationData) => {
+    setLoading(true);
+    setError(null);
+    setIntel(null);
+    try {
+      const res = await fetch(
+        `${POLYBOT_URL}/intel/${n.iso3}?score=${n.score}&regime=${n.regime}`
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setIntel(data);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load intel");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (nation) fetchIntel(nation);
+    else { setIntel(null); setError(null); }
+  }, [nation, fetchIntel]);
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  const open = !!nation;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed", inset: 0,
+          background: "rgba(3,10,6,0.72)",
+          backdropFilter: "blur(4px)",
+          zIndex: 40,
+          opacity: open ? 1 : 0,
+          pointerEvents: open ? "auto" : "none",
+          transition: "opacity 0.22s ease",
+        }}
+      />
+
+      {/* Drawer */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          height: "100vh",
+          width: "clamp(320px, 42vw, 560px)",
+          background: "var(--surface)",
+          borderLeft: "1px solid var(--border-strong)",
+          zIndex: 50,
+          transform: open ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 0.28s cubic-bezier(0.4,0,0.2,1)",
+          display: "flex",
+          flexDirection: "column",
+          overflowY: "auto",
+        }}
+      >
+        {/* HUD scan line top */}
+              <div style={{ height: 2, background: nation
+          ? `linear-gradient(90deg, transparent, ${REGIME_COLORS[nation.regime as Regime]}, transparent)`
+          : "var(--green)", opacity: 0.7 }} />
+
+        {/* Header */}
+        <div style={{
+          padding: "20px 24px 16px",
+          borderBottom: "1px solid var(--border)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}>
+          {nation && country ? (
+            <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+              <span style={{ fontSize: 44, lineHeight: 1 }}>{country.flag}</span>
+              <div>
+                <div style={{
+                  fontFamily: "var(--font-orbitron), sans-serif",
+                  fontWeight: 800,
+                  fontSize: 18,
+                  color: "var(--text-primary)",
+                  letterSpacing: "0.06em",
+                }}>
+                  {country.name.toUpperCase()}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-dim)", letterSpacing: "0.12em", marginTop: 2 }}>
+                  {nation.iso3} · {country.confederation} · SIGNAL {nation.score}/100
+                </div>
+                  {nation && <div style={{ marginTop: 6 }}>
+                  <RegimeBadge regime={nation.regime as Regime} />
+                </div>}
+              </div>
+            </div>
+          ) : (
+            <div />
+          )}
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "1px solid var(--border)",
+              color: "var(--text-dim)",
+              cursor: "pointer",
+              padding: "4px 10px",
+              fontFamily: "var(--font-mono), monospace",
+              fontSize: 12,
+              letterSpacing: "0.1em",
+              borderRadius: 3,
+            }}
+          >
+            ESC
+          </button>
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: "20px 24px", flex: 1 }}>
+
+          {loading && (
+            <div style={{ textAlign: "center", paddingTop: 60 }}>
+              <div style={{
+                fontFamily: "var(--font-mono), monospace",
+                fontSize: 12,
+                color: "var(--green)",
+                letterSpacing: "0.2em",
+                animation: "pulse 1.5s ease-in-out infinite",
+              }}>
+                LOADING INTEL…
+              </div>
+              <div style={{ marginTop: 8, fontSize: 10, color: "var(--text-faint)" }}>
+                Querying Sofascore + generating AI brief
+              </div>
+            </div>
+          )}
+
+          {error && !loading && (
+            <div style={{
+              padding: 16,
+              background: "rgba(255,80,80,0.06)",
+              border: "1px solid rgba(255,80,80,0.2)",
+              borderRadius: 6,
+              color: "rgba(255,100,100,0.8)",
+              fontSize: 12,
+              fontFamily: "var(--font-mono), monospace",
+            }}>
+              {error}
+            </div>
+          )}
+
+          {intel && !loading && (
+            <>
+              {/* Stats bar */}
+              {intel.odds !== null && (
+                <div style={{
+                  display: "flex",
+                  gap: 20,
+                  marginBottom: 20,
+                  padding: "12px 16px",
+                  background: "rgba(0,255,133,0.04)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 6,
+                }}>
+                  <div>
+                    <div style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: "0.12em" }}>POLYMARKET ODDS</div>
+                    <div style={{
+                      fontFamily: "var(--font-orbitron), sans-serif",
+                      fontSize: 22,
+                      fontWeight: 700,
+                      color: REGIME_COLORS[nation!.regime as Regime],
+                    }}>
+                      {intel.odds}%
+                    </div>
+                  </div>
+                  <div style={{ width: 1, background: "var(--border)" }} />
+                  <div>
+                    <div style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: "0.12em" }}>LUCARNE SCORE</div>
+                    <div style={{
+                      fontFamily: "var(--font-orbitron), sans-serif",
+                      fontSize: 22,
+                      fontWeight: 700,
+                      color: REGIME_COLORS[nation!.regime as Regime],
+                    }}>
+                      {intel.score}<span style={{ fontSize: 12, color: "var(--text-dim)" }}>/100</span>
+                    </div>
+                  </div>
+                  <div style={{ width: 1, background: "var(--border)" }} />
+                  <div>
+                    <div style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: "0.12em" }}>REGIME</div>
+                    <div style={{
+                      fontFamily: "var(--font-orbitron), sans-serif",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: REGIME_COLORS[intel.regime as Regime],
+                      marginTop: 4,
+                    }}>
+                      {REGIME_LABELS[intel.regime]}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* AI Brief */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{
+                  fontSize: 10,
+                  color: "var(--green)",
+                  letterSpacing: "0.18em",
+                  fontFamily: "var(--font-mono), monospace",
+                  marginBottom: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}>
+                  <span style={{
+                    display: "inline-block",
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "var(--green)",
+                    boxShadow: "0 0 6px var(--green)",
+                  }} />
+                  LUCARNE INTEL BRIEF
+                </div>
+                <div style={{
+                  fontSize: 13,
+                  lineHeight: 1.7,
+                  color: "var(--text-secondary)",
+                  fontFamily: "var(--font-mono), monospace",
+                  whiteSpace: "pre-wrap",
+                }}>
+                  {intel.brief}
+                </div>
+              </div>
+
+              {/* Players to Watch */}
+              {intel.players.length > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{
+                    fontSize: 10,
+                    color: "var(--text-dim)",
+                    letterSpacing: "0.18em",
+                    fontFamily: "var(--font-mono), monospace",
+                    marginBottom: 10,
+                  }}>
+                    SQUAD INTEL
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {intel.players.map((p, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "7px 12px",
+                          background: "rgba(255,255,255,0.02)",
+                          border: "1px solid var(--border)",
+                          borderRadius: 4,
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <span style={{
+                            fontSize: 9,
+                            fontFamily: "var(--font-mono), monospace",
+                            background: "rgba(0,255,133,0.08)",
+                            color: "var(--green)",
+                            padding: "2px 6px",
+                            borderRadius: 2,
+                            letterSpacing: "0.1em",
+                            minWidth: 30,
+                            textAlign: "center",
+                          }}>
+                            {posLabel(p.position)}
+                          </span>
+                          <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{p.name}</span>
+                        </div>
+                        {p.age && (
+                          <span style={{ fontSize: 11, color: "var(--text-faint)" }}>
+                            {p.age}y
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent Form */}
+              {intel.form.length > 0 && (
+                <div>
+                  <div style={{
+                    fontSize: 10,
+                    color: "var(--text-dim)",
+                    letterSpacing: "0.18em",
+                    fontFamily: "var(--font-mono), monospace",
+                    marginBottom: 10,
+                  }}>
+                    RECENT FORM
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                    {intel.form.map((r, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "6px 12px",
+                          background: "rgba(255,255,255,0.015)",
+                          borderRadius: 4,
+                          fontSize: 12,
+                          fontFamily: "var(--font-mono), monospace",
+                        }}
+                      >
+                        <span style={{ color: "var(--text-secondary)" }}>
+                          {r.home} <span style={{ color: "var(--text-dim)" }}>vs</span> {r.away}
+                        </span>
+                        <span style={{ color: "var(--text-primary)", fontWeight: 700, letterSpacing: "0.08em" }}>
+                          {r.score}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          padding: "10px 24px",
+          borderTop: "1px solid var(--border)",
+          fontSize: 9,
+          color: "var(--text-faint)",
+          fontFamily: "var(--font-mono), monospace",
+          letterSpacing: "0.12em",
+        }}>
+          DATA: SOFASCORE · POLYMARKET GAMMA · LUCARNE SIGNAL ATTESTOR (X LAYER)
+        </div>
+      </div>
+    </>
+  );
+}
