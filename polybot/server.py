@@ -13,7 +13,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
-from openai import AsyncOpenAI
+import anthropic
 
 app = FastAPI(title="lucarne-polybot", version="0.2.0")
 
@@ -331,12 +331,12 @@ async def generate_intel_brief(
     players: list[dict],
     form: list[dict],
 ) -> str:
-    """Use OpenAI to generate a concise signal intelligence brief."""
-    openai_key = os.getenv("OPENAI_API_KEY")
-    if not openai_key:
-        return "No OpenAI key configured. Set OPENAI_API_KEY in Railway env vars."
+    """Use Anthropic Claude to generate a concise signal intelligence brief."""
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        return "No Anthropic key configured. Set ANTHROPIC_API_KEY in Railway env vars."
 
-    client = AsyncOpenAI(api_key=openai_key)
+    client = anthropic.AsyncAnthropic(api_key=api_key)
 
     players_text = "\n".join(
         f"  - {p['name']} ({p['position']}, age {p['age'] or '?'})"
@@ -375,13 +375,12 @@ Tone: authoritative, data-driven, like a sports intelligence analyst. Use footba
 Do NOT use bullet points — flowing paragraphs only. Keep it under 250 words total."""
 
     try:
-        resp = await client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
+        resp = await client.messages.create(
+            model="claude-haiku-4-5",
             max_tokens=400,
-            temperature=0.7,
+            messages=[{"role": "user", "content": prompt}],
         )
-        return resp.choices[0].message.content.strip()
+        return resp.content[0].text.strip()
     except Exception as e:
         return f"Intel generation failed: {str(e)[:120]}"
 
