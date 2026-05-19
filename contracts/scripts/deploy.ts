@@ -28,6 +28,34 @@ async function main() {
   const signalAttestorAddr = await signalAttestor.getAddress();
   console.log(`✅ SignalAttestor deployed: ${signalAttestorAddr}`);
 
+  // ── 2. MomentumPerp ───────────────────────────────────────────────────────
+  const MomentumPerp = await ethers.getContractFactory("MomentumPerp");
+  const momentumPerp = await MomentumPerp.deploy(signalAttestorAddr);
+  await momentumPerp.waitForDeployment();
+  const momentumPerpAddr = await momentumPerp.getAddress();
+  console.log(`✅ MomentumPerp deployed: ${momentumPerpAddr}`);
+
+  // ── 3. SurvivorPool ───────────────────────────────────────────────────────
+  const SurvivorPool = await ethers.getContractFactory("SurvivorPool");
+  const survivorPool = await SurvivorPool.deploy(signalAttestorAddr);
+  await survivorPool.waitForDeployment();
+  const survivorPoolAddr = await survivorPool.getAddress();
+  console.log(`✅ SurvivorPool deployed: ${survivorPoolAddr}`);
+
+  // ── 4. TifosiBond ─────────────────────────────────────────────────────────
+  const TifosiBond = await ethers.getContractFactory("TifosiBond");
+  const tifosiBond = await TifosiBond.deploy(signalAttestorAddr);
+  await tifosiBond.waitForDeployment();
+  const tifosiBondAddr = await tifosiBond.getAddress();
+  console.log(`✅ TifosiBond deployed: ${tifosiBondAddr}`);
+
+  // ── 5. ChampionCrest ──────────────────────────────────────────────────────
+  const ChampionCrest = await ethers.getContractFactory("ChampionCrest");
+  const championCrest = await ChampionCrest.deploy(signalAttestorAddr);
+  await championCrest.waitForDeployment();
+  const championCrestAddr = await championCrest.getAddress();
+  console.log(`✅ ChampionCrest deployed: ${championCrestAddr}`);
+
   // ── Summary ───────────────────────────────────────────────────────────────
   const deployments = {
     network: networkName,
@@ -35,6 +63,10 @@ async function main() {
     deployer: deployer.address,
     attester: attesterAddress,
     SignalAttestor: signalAttestorAddr,
+    MomentumPerp:   momentumPerpAddr,
+    SurvivorPool:   survivorPoolAddr,
+    TifosiBond:     tifosiBondAddr,
+    ChampionCrest:  championCrestAddr,
     deployedAt: new Date().toISOString(),
   };
 
