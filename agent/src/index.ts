@@ -10,7 +10,8 @@ import { logger } from "./lib/logger";
 const CONFIG = {
   rpcUrl:          process.env.RPC_URL          || "https://rpc.xlayer.tech",
   chainId:         parseInt(process.env.CHAIN_ID || "196"),
-  privateKey:      process.env.PRIVATE_KEY       || "",
+  // Normalize: ethers v6 requires 0x-prefixed private key
+  privateKey:      (() => { const k = process.env.PRIVATE_KEY || ""; return k.startsWith("0x") ? k : `0x${k}`; })(),
   contractAddress: process.env.SIGNAL_ATTESTOR   || "",
 
   // Signal-driven write gate thresholds (Provus-pattern)
