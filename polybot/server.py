@@ -37,14 +37,27 @@ ODDS_HISTORY_LEN = 60   # keep last 60 data points per country
 # ─────────────────────────────────────────────────────────────────────────────
 
 COUNTRY_NAMES: dict[str, str] = {
-    "ARG": "Argentina", "BRA": "Brazil",   "FRA": "France",   "ENG": "England",
-    "ESP": "Spain",     "GER": "Germany",  "POR": "Portugal", "NED": "Netherlands",
-    "BEL": "Belgium",   "ITA": "Italy",    "URU": "Uruguay",  "CRO": "Croatia",
-    "COL": "Colombia",  "MEX": "Mexico",   "USA": "United States", "CAN": "Canada",
-    "MAR": "Morocco",   "SEN": "Senegal",  "JPN": "Japan",    "KOR": "South Korea",
-    "AUS": "Australia", "ECU": "Ecuador",  "POL": "Poland",   "DEN": "Denmark",
-    "CHE": "Switzerland","WAL": "Wales",   "SRB": "Serbia",   "TUN": "Tunisia",
-    "CRC": "Costa Rica","GHA": "Ghana",    "CMR": "Cameroon", "IRN": "Iran",
+    # CONMEBOL
+    "ARG": "Argentina",     "BRA": "Brazil",        "URU": "Uruguay",       "COL": "Colombia",
+    "ECU": "Ecuador",       "PAR": "Paraguay",
+    # UEFA
+    "FRA": "France",        "ENG": "England",       "ESP": "Spain",         "GER": "Germany",
+    "POR": "Portugal",      "NED": "Netherlands",   "BEL": "Belgium",       "CRO": "Croatia",
+    "CHE": "Switzerland",   "NOR": "Norway",        "AUT": "Austria",       "SWE": "Sweden",
+    "SCO": "Scotland",      "CZE": "Czechia",       "BIH": "Bosnia-Herzegovina", "TUR": "Türkiye",
+    # CONCACAF
+    "USA": "United States", "MEX": "Mexico",        "CAN": "Canada",        "PAN": "Panama",
+    "HAI": "Haiti",         "CUW": "Curaçao",
+    # CAF
+    "MAR": "Morocco",       "SEN": "Senegal",       "GHA": "Ghana",         "TUN": "Tunisia",
+    "EGY": "Egypt",         "CIV": "Ivory Coast",   "ALG": "Algeria",       "CPV": "Cape Verde",
+    "RSA": "South Africa",  "COD": "Congo DR",
+    # AFC
+    "JPN": "Japan",         "KOR": "South Korea",   "AUS": "Australia",     "IRN": "Iran",
+    "KSA": "Saudi Arabia",  "QAT": "Qatar",         "IRQ": "Iraq",          "JOR": "Jordan",
+    "UZB": "Uzbekistan",
+    # OFC
+    "NZL": "New Zealand",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -53,14 +66,21 @@ COUNTRY_NAMES: dict[str, str] = {
 # ─────────────────────────────────────────────────────────────────────────────
 
 POLYMARKET_IDS: dict[str, str] = {
+    # Top contenders (from prior session)
     "ARG": "558938", "BRA": "558937", "FRA": "558936", "ENG": "558935",
     "ESP": "558934", "GER": "558939", "POR": "558940", "NED": "558941",
-    "BEL": "558946", "ITA": "558942", "URU": "558944", "CRO": "558976",
-    "COL": "558947", "MEX": "558945", "USA": "558943", "CAN": "558952",
-    "MAR": "558963", "SEN": "558965", "JPN": "558949", "KOR": "558961",
-    "AUS": "558958", "ECU": "558955", "CHE": "558974", "TUN": "558954",
-    "GHA": "558967", "IRN": "558959",
-    # POL, DEN, WAL, SRB, CRC, CMR — no Polymarket WC 2026 winner markets
+    "BEL": "558946", "URU": "558944", "CRO": "558976", "COL": "558947",
+    "MEX": "558945", "USA": "558943", "CAN": "558952", "MAR": "558963",
+    "SEN": "558965", "JPN": "558949", "KOR": "558961", "AUS": "558958",
+    "ECU": "558955", "CHE": "558974", "TUN": "558954", "GHA": "558967",
+    "IRN": "558959",
+    # New additions (confirmed from gamma-api.polymarket.com bulk scan)
+    "NOR": "558951", "PAR": "558956", "NZL": "558957", "UZB": "558960",
+    "JOR": "558962", "RSA": "558964", "CIV": "558966", "EGY": "558968",
+    "ALG": "558969", "CPV": "558970", "QAT": "558971", "KSA": "558972",
+    "SCO": "558973", "AUT": "558975", "HAI": "558977", "CUW": "558978",
+    "PAN": "558979", "SWE": "558980", "COD": "558981", "IRQ": "558982",
+    "BIH": "558983", "CZE": "558984", "TUR": "558985",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -194,8 +214,122 @@ WC_FIXTURES: dict[str, list[dict]] = {
         {"opponent": "BEL", "opp_name": "Belgium",      "date": "Jun 21", "home": False},
         {"opponent": "EGY", "opp_name": "Egypt",        "date": "Jun 27", "home": False},
     ],
-    # Teams not in WC 2026 group stage
-    "ITA": [], "POL": [], "DEN": [], "WAL": [], "SRB": [], "CRC": [], "CMR": [],
+    # ── New WC 2026 qualifiers ───────────────────────────────────────────────
+    "RSA": [
+        {"opponent": "MEX", "opp_name": "Mexico",       "date": "Jun 11", "home": False},
+        {"opponent": "CZE", "opp_name": "Czechia",      "date": "Jun 18", "home": False},
+        {"opponent": "KOR", "opp_name": "South Korea",  "date": "Jun 25", "home": True},
+    ],
+    "BIH": [
+        {"opponent": "CAN", "opp_name": "Canada",       "date": "Jun 12", "home": False},
+        {"opponent": "CHE", "opp_name": "Switzerland",  "date": "Jun 18", "home": False},
+        {"opponent": "QAT", "opp_name": "Qatar",        "date": "Jun 24", "home": True},
+    ],
+    "SCO": [
+        {"opponent": "HAI", "opp_name": "Haiti",        "date": "Jun 14", "home": False},
+        {"opponent": "MAR", "opp_name": "Morocco",      "date": "Jun 19", "home": False},
+        {"opponent": "BRA", "opp_name": "Brazil",       "date": "Jun 24", "home": True},
+    ],
+    "HAI": [
+        {"opponent": "SCO", "opp_name": "Scotland",     "date": "Jun 14", "home": True},
+        {"opponent": "BRA", "opp_name": "Brazil",       "date": "Jun 20", "home": False},
+        {"opponent": "MAR", "opp_name": "Morocco",      "date": "Jun 24", "home": False},
+    ],
+    "CUW": [
+        {"opponent": "GER", "opp_name": "Germany",      "date": "Jun 14", "home": False},
+        {"opponent": "ECU", "opp_name": "Ecuador",      "date": "Jun 21", "home": False},
+        {"opponent": "CIV", "opp_name": "Ivory Coast",  "date": "Jun 25", "home": True},
+    ],
+    "PAR": [
+        {"opponent": "USA", "opp_name": "United States","date": "Jun 13", "home": False},
+        {"opponent": "TUR", "opp_name": "Türkiye",      "date": "Jun 20", "home": False},
+        {"opponent": "AUS", "opp_name": "Australia",    "date": "Jun 26", "home": True},
+    ],
+    "TUR": [
+        {"opponent": "AUS", "opp_name": "Australia",    "date": "Jun 14", "home": False},
+        {"opponent": "PAR", "opp_name": "Paraguay",     "date": "Jun 20", "home": True},
+        {"opponent": "USA", "opp_name": "United States","date": "Jun 26", "home": True},
+    ],
+    "CPV": [
+        {"opponent": "ESP", "opp_name": "Spain",        "date": "Jun 15", "home": False},
+        {"opponent": "URU", "opp_name": "Uruguay",      "date": "Jun 21", "home": False},
+        {"opponent": "KSA", "opp_name": "Saudi Arabia", "date": "Jun 27", "home": True},
+    ],
+    "NOR": [
+        {"opponent": "IRQ", "opp_name": "Iraq",         "date": "Jun 16", "home": False},
+        {"opponent": "SEN", "opp_name": "Senegal",      "date": "Jun 23", "home": True},
+        {"opponent": "FRA", "opp_name": "France",       "date": "Jun 26", "home": True},
+    ],
+    "IRQ": [
+        {"opponent": "NOR", "opp_name": "Norway",       "date": "Jun 16", "home": True},
+        {"opponent": "FRA", "opp_name": "France",       "date": "Jun 22", "home": False},
+        {"opponent": "SEN", "opp_name": "Senegal",      "date": "Jun 26", "home": False},
+    ],
+    "NZL": [
+        {"opponent": "IRN", "opp_name": "Iran",         "date": "Jun 16", "home": False},
+        {"opponent": "EGY", "opp_name": "Egypt",        "date": "Jun 22", "home": True},
+        {"opponent": "BEL", "opp_name": "Belgium",      "date": "Jun 27", "home": True},
+    ],
+    "COD": [
+        {"opponent": "POR", "opp_name": "Portugal",     "date": "Jun 17", "home": False},
+        {"opponent": "COL", "opp_name": "Colombia",     "date": "Jun 24", "home": False},
+        {"opponent": "UZB", "opp_name": "Uzbekistan",   "date": "Jun 27", "home": True},
+    ],
+    "UZB": [
+        {"opponent": "COL", "opp_name": "Colombia",     "date": "Jun 18", "home": True},
+        {"opponent": "POR", "opp_name": "Portugal",     "date": "Jun 23", "home": False},
+        {"opponent": "COD", "opp_name": "Congo DR",     "date": "Jun 27", "home": False},
+    ],
+    "KSA": [
+        {"opponent": "URU", "opp_name": "Uruguay",      "date": "Jun 15", "home": True},
+        {"opponent": "ESP", "opp_name": "Spain",        "date": "Jun 21", "home": False},
+        {"opponent": "CPV", "opp_name": "Cape Verde",   "date": "Jun 27", "home": False},
+    ],
+    "QAT": [
+        {"opponent": "CHE", "opp_name": "Switzerland",  "date": "Jun 13", "home": True},
+        {"opponent": "CAN", "opp_name": "Canada",       "date": "Jun 18", "home": False},
+        {"opponent": "BIH", "opp_name": "Bosnia-Herz.", "date": "Jun 24", "home": False},
+    ],
+    "CZE": [
+        {"opponent": "KOR", "opp_name": "South Korea",  "date": "Jun 12", "home": False},
+        {"opponent": "RSA", "opp_name": "South Africa", "date": "Jun 18", "home": True},
+        {"opponent": "MEX", "opp_name": "Mexico",       "date": "Jun 25", "home": True},
+    ],
+    "SWE": [
+        {"opponent": "TUN", "opp_name": "Tunisia",      "date": "Jun 15", "home": True},
+        {"opponent": "NED", "opp_name": "Netherlands",  "date": "Jun 20", "home": False},
+        {"opponent": "JPN", "opp_name": "Japan",        "date": "Jun 25", "home": False},
+    ],
+    "CIV": [
+        {"opponent": "ECU", "opp_name": "Ecuador",      "date": "Jun 14", "home": True},
+        {"opponent": "GER", "opp_name": "Germany",      "date": "Jun 20", "home": False},
+        {"opponent": "CUW", "opp_name": "Curaçao",      "date": "Jun 25", "home": False},
+    ],
+    "EGY": [
+        {"opponent": "BEL", "opp_name": "Belgium",      "date": "Jun 15", "home": False},
+        {"opponent": "NZL", "opp_name": "New Zealand",  "date": "Jun 22", "home": False},
+        {"opponent": "IRN", "opp_name": "Iran",         "date": "Jun 27", "home": True},
+    ],
+    "PAN": [
+        {"opponent": "GHA", "opp_name": "Ghana",        "date": "Jun 17", "home": False},
+        {"opponent": "CRO", "opp_name": "Croatia",      "date": "Jun 23", "home": False},
+        {"opponent": "ENG", "opp_name": "England",      "date": "Jun 27", "home": True},
+    ],
+    "ALG": [
+        {"opponent": "ARG", "opp_name": "Argentina",    "date": "Jun 17", "home": False},
+        {"opponent": "JOR", "opp_name": "Jordan",       "date": "Jun 23", "home": False},
+        {"opponent": "AUT", "opp_name": "Austria",      "date": "Jun 28", "home": True},
+    ],
+    "JOR": [
+        {"opponent": "AUT", "opp_name": "Austria",      "date": "Jun 17", "home": False},
+        {"opponent": "ALG", "opp_name": "Algeria",      "date": "Jun 23", "home": True},
+        {"opponent": "ARG", "opp_name": "Argentina",    "date": "Jun 28", "home": True},
+    ],
+    "AUT": [
+        {"opponent": "JOR", "opp_name": "Jordan",       "date": "Jun 17", "home": True},
+        {"opponent": "ARG", "opp_name": "Argentina",    "date": "Jun 22", "home": False},
+        {"opponent": "ALG", "opp_name": "Algeria",      "date": "Jun 28", "home": False},
+    ],
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
