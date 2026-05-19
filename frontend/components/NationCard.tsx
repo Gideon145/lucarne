@@ -45,21 +45,28 @@ export function NationCard({ nation, onClick }: Props) {
     >
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 28, lineHeight: 1 }}>{country.flag}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img
+            src={`https://flagcdn.com/w80/${country.iso2}.png`}
+            alt={country.name}
+            width={44}
+            height={30}
+            className="flag-img"
+            style={{ objectFit: "cover" }}
+          />
           <div>
             <div
               style={{
                 fontFamily: "var(--font-orbitron), sans-serif",
                 fontWeight: 700,
-                fontSize: 14,
+                fontSize: 16,
                 color: "var(--text-primary)",
                 letterSpacing: "0.05em",
               }}
             >
               {country.name}
             </div>
-            <div style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: "0.1em" }}>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", letterSpacing: "0.1em" }}>
               {iso3} · {country.confederation}
             </div>
           </div>
@@ -108,12 +115,12 @@ export function NationCard({ nation, onClick }: Props) {
       >
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           {polybotOdds !== null && (
-            <span style={{ fontSize: 11, color: "var(--text-dim)" }}>
+            <span style={{ fontSize: 13, color: "var(--text-dim)" }}>
               <span style={{ color: accentColor, fontWeight: 700 }}>{polybotOdds}%</span>
               {" "}odds
             </span>
           )}
-          <span style={{ fontSize: 11, color: "var(--text-faint)" }}>
+          <span style={{ fontSize: 13, color: "var(--text-faint)" }}>
             {relativeTime(ts)}
           </span>
         </div>
@@ -124,7 +131,7 @@ export function NationCard({ nation, onClick }: Props) {
             target="_blank"
             rel="noreferrer"
             title={signalHash}
-            style={{ fontSize: 10, color: "var(--text-dim)", textDecoration: "none" }}
+            style={{ fontSize: 11, color: "var(--text-dim)", textDecoration: "none" }}
           >
             ⛓ {shortHash}
           </a>

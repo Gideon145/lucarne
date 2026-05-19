@@ -132,18 +132,25 @@ export function IntelDrawer({ nation, onClose }: Props) {
         }}>
           {nation && country ? (
             <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-              <span style={{ fontSize: 44, lineHeight: 1 }}>{country.flag}</span>
+              <img
+                src={`https://flagcdn.com/w160/${country.iso2}.png`}
+                alt={country.name}
+                width={72}
+                height={48}
+                className="flag-img"
+                style={{ objectFit: "cover", borderRadius: 4 }}
+              />
               <div>
                 <div style={{
                   fontFamily: "var(--font-orbitron), sans-serif",
                   fontWeight: 800,
-                  fontSize: 18,
+                  fontSize: 22,
                   color: "var(--text-primary)",
                   letterSpacing: "0.06em",
                 }}>
                   {country.name.toUpperCase()}
                 </div>
-                <div style={{ fontSize: 11, color: "var(--text-dim)", letterSpacing: "0.12em", marginTop: 2 }}>
+                <div style={{ fontSize: 13, color: "var(--text-dim)", letterSpacing: "0.12em", marginTop: 2 }}>
                   {nation.iso3} · {country.confederation} · SIGNAL {nation.score}/100
                 </div>
                   {nation && <div style={{ marginTop: 6 }}>
@@ -220,7 +227,7 @@ export function IntelDrawer({ nation, onClose }: Props) {
                   borderRadius: 6,
                 }}>
                   <div>
-                    <div style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: "0.12em" }}>POLYMARKET ODDS</div>
+                    <div style={{ fontSize: 12, color: "var(--text-dim)", letterSpacing: "0.12em" }}>POLYMARKET ODDS</div>
                     <div style={{
                       fontFamily: "var(--font-orbitron), sans-serif",
                       fontSize: 22,
@@ -232,7 +239,7 @@ export function IntelDrawer({ nation, onClose }: Props) {
                   </div>
                   <div style={{ width: 1, background: "var(--border)" }} />
                   <div>
-                    <div style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: "0.12em" }}>LUCARNE SCORE</div>
+                    <div style={{ fontSize: 12, color: "var(--text-dim)", letterSpacing: "0.12em" }}>LUCARNE SCORE</div>
                     <div style={{
                       fontFamily: "var(--font-orbitron), sans-serif",
                       fontSize: 22,
@@ -244,7 +251,7 @@ export function IntelDrawer({ nation, onClose }: Props) {
                   </div>
                   <div style={{ width: 1, background: "var(--border)" }} />
                   <div>
-                    <div style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: "0.12em" }}>REGIME</div>
+                    <div style={{ fontSize: 12, color: "var(--text-dim)", letterSpacing: "0.12em" }}>REGIME</div>
                     <div style={{
                       fontFamily: "var(--font-orbitron), sans-serif",
                       fontSize: 13,
@@ -261,7 +268,7 @@ export function IntelDrawer({ nation, onClose }: Props) {
               {/* AI Brief */}
               <div style={{ marginBottom: 24 }}>
                 <div style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   color: "var(--green)",
                   letterSpacing: "0.18em",
                   fontFamily: "var(--font-mono), monospace",
@@ -281,8 +288,8 @@ export function IntelDrawer({ nation, onClose }: Props) {
                   LUCARNE INTEL BRIEF
                 </div>
                 <div style={{
-                  fontSize: 13,
-                  lineHeight: 1.7,
+                  fontSize: 15,
+                  lineHeight: 1.75,
                   color: "var(--text-secondary)",
                   fontFamily: "var(--font-mono), monospace",
                   whiteSpace: "pre-wrap",
@@ -295,7 +302,7 @@ export function IntelDrawer({ nation, onClose }: Props) {
               {intel.players.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
                   <div style={{
-                    fontSize: 10,
+                    fontSize: 12,
                     color: "var(--text-dim)",
                     letterSpacing: "0.18em",
                     fontFamily: "var(--font-mono), monospace",
@@ -319,11 +326,11 @@ export function IntelDrawer({ nation, onClose }: Props) {
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                           <span style={{
-                            fontSize: 9,
+                            fontSize: 11,
                             fontFamily: "var(--font-mono), monospace",
                             background: "rgba(0,255,133,0.08)",
                             color: "var(--green)",
-                            padding: "2px 6px",
+                            padding: "3px 7px",
                             borderRadius: 2,
                             letterSpacing: "0.1em",
                             minWidth: 30,
@@ -331,10 +338,10 @@ export function IntelDrawer({ nation, onClose }: Props) {
                           }}>
                             {posLabel(p.position)}
                           </span>
-                          <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{p.name}</span>
+                          <span style={{ fontSize: 15, color: "var(--text-primary)" }}>{p.name}</span>
                         </div>
                         {p.age && (
-                          <span style={{ fontSize: 11, color: "var(--text-faint)" }}>
+                          <span style={{ fontSize: 13, color: "var(--text-faint)" }}>
                             {p.age}y
                           </span>
                         )}
@@ -348,7 +355,7 @@ export function IntelDrawer({ nation, onClose }: Props) {
               {intel.form.length > 0 && (
                 <div>
                   <div style={{
-                    fontSize: 10,
+                    fontSize: 12,
                     color: "var(--text-dim)",
                     letterSpacing: "0.18em",
                     fontFamily: "var(--font-mono), monospace",
@@ -367,7 +374,7 @@ export function IntelDrawer({ nation, onClose }: Props) {
                           padding: "6px 12px",
                           background: "rgba(255,255,255,0.015)",
                           borderRadius: 4,
-                          fontSize: 12,
+                          fontSize: 14,
                           fontFamily: "var(--font-mono), monospace",
                         }}
                       >

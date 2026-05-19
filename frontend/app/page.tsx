@@ -68,7 +68,7 @@ export default function Home() {
           <span
             style={{
               fontFamily: "var(--font-orbitron), sans-serif",
-              fontSize: 22,
+              fontSize: 28,
               fontWeight: 900,
               letterSpacing: "0.15em",
               color: "var(--green)",
@@ -77,7 +77,7 @@ export default function Home() {
           >
             LUCARNE
           </span>
-          <span style={{ fontSize: 11, color: "var(--text-dim)", letterSpacing: "0.08em" }}>
+          <span style={{ fontSize: 13, color: "var(--text-dim)", letterSpacing: "0.08em" }}>
             World Cup Signal Intelligence
           </span>
         </div>
@@ -86,7 +86,7 @@ export default function Home() {
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           <StatusPill label="AGENT" live={agentLive} />
           <StatusPill label="POLYBOT" live={polybotLive} />
-          <div style={{ fontSize: 11, color: "var(--text-dim)" }}>
+          <div style={{ fontSize: 13, color: "var(--text-dim)" }}>
             Updated {lastRefreshStr}
           </div>
         </div>
@@ -244,7 +244,7 @@ function StatusPill({ label, live }: { label: string; live: boolean }) {
         padding: "3px 8px",
         border: `1px solid ${live ? "var(--green)" : "var(--border)"}`,
         borderRadius: 4,
-        fontSize: 10,
+        fontSize: 12,
         fontWeight: 700,
         letterSpacing: "0.1em",
         color: live ? "var(--green)" : "var(--text-dim)",
@@ -267,7 +267,7 @@ function StatusPill({ label, live }: { label: string; live: boolean }) {
 function StatItem({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div style={{ flexShrink: 0 }}>
-      <div style={{ fontSize: 9, color: "var(--text-dim)", letterSpacing: "0.12em", marginBottom: 2 }}>
+      <div style={{ fontSize: 11, color: "var(--text-dim)", letterSpacing: "0.12em", marginBottom: 2 }}>
         {label}
       </div>
       <div

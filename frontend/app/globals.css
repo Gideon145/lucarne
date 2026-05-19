@@ -40,6 +40,7 @@ html, body {
   background: var(--void);
   color: var(--text-primary);
   font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 15px;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -94,12 +95,30 @@ html, body {
   transition: width 0.6s ease;
 }
 
+/* ── Flag image ─────────────────────────────────────────────────────────── */
+.flag-img {
+  display: block;
+  border-radius: 3px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.55);
+  transform-origin: left center;
+  animation: flag-wave 4s ease-in-out infinite;
+}
+
+@keyframes flag-wave {
+  0%   { transform: skewY(0deg)    scaleX(1);    }
+  18%  { transform: skewY(-1deg)   scaleX(1.02); }
+  38%  { transform: skewY(0.7deg)  scaleX(0.99); }
+  58%  { transform: skewY(-0.5deg) scaleX(1.01); }
+  78%  { transform: skewY(0.3deg)  scaleX(0.995); }
+  100% { transform: skewY(0deg)    scaleX(1);    }
+}
+
 /* ── Regime Badge ────────────────────────────────────────────────────────── */
 .badge {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.12em;
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: 3px;
   border: 1px solid currentColor;
   text-transform: uppercase;
@@ -134,9 +153,9 @@ html, body {
 
 /* ── Filter tabs ─────────────────────────────────────────────────────────── */
 .filter-tab {
-  padding: 5px 14px;
+  padding: 6px 16px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.1em;
   border: 1px solid var(--border);
