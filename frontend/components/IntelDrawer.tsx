@@ -340,7 +340,7 @@ export function IntelDrawer({ nation, onClose }: Props) {
             </div>
           )}
 
-          {intel && !loading && (
+          {intel && nation && !loading && (
             <>
               {/* Stats bar */}
               {intel.odds !== null && (
