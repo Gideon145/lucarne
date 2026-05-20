@@ -492,6 +492,23 @@ def health():
     return {"status": "ok", "version": "0.2.0", "tracked": len(odds_store)}
 
 
+# ─── RPC proxy (solves CORS: browser → polybot → rpc.xlayer.tech) ────────────
+XLAYER_RPC = "https://rpc.xlayer.tech"
+
+@app.post("/rpc")
+async def rpc_proxy(request: Request):
+    """Transparent JSON-RPC proxy to X Layer — allows browser clients to read
+    the chain without hitting rpc.xlayer.tech directly (CORS blocked)."""
+    body = await request.json()
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.post(
+            XLAYER_RPC,
+            json=body,
+            headers={"Content-Type": "application/json"},
+        )
+    return JSONResponse(content=resp.json(), status_code=resp.status_code)
+
+
 @app.get("/debug/players/{country}")
 async def debug_players(country: str):
     """Debug: call generate_key_players directly and return raw Claude output."""

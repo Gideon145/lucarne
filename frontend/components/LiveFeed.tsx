@@ -62,7 +62,17 @@ export function LiveFeed({ feed }: Props) {
             const accentColor = REGIME_COLORS[entry.regime];
             return (
               <div key={entry.id} className="feed-entry" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 18 }}>{country?.flag ?? "🏳"}</span>
+                {country ? (
+                  <img
+                    src={`https://flagcdn.com/w40/${country.iso2}.png`}
+                    alt={country.name}
+                    width={28}
+                    height={19}
+                    style={{ objectFit: "cover", borderRadius: 2, flexShrink: 0 }}
+                  />
+                ) : (
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>🏳</span>
+                )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span
