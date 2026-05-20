@@ -675,38 +675,52 @@ async def generate_key_players(country: str, name: str) -> list[dict]:
     """Use Claude to identify 5 key star players for a WC 2026 nation."""
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
+        print(f"[key_players] {country}: no ANTHROPIC_API_KEY")
         return []
 
     client = anthropic.AsyncAnthropic(api_key=api_key)
     prompt = f"""List the 5 most important players to watch for {name} at the 2026 World Cup.
-Output ONLY a valid JSON array with exactly 5 objects, no markdown, no explanation:
-[
-  {{"name": "Player Name", "position": "FWD", "club": "Club Name", "why": "One concise sentence on their WC 2026 impact."}},
-  ...
-]
-Use short position codes: FWD, MID, DEF, GK. Include variety (not all attackers). Keep "why" to 1 sharp sentence. Return ONLY the JSON array."""
+Output ONLY a JSON array with exactly 5 objects in this exact shape:
+[{{"name":"Player Name","position":"FWD","club":"Club Name","why":"One concise sentence on their WC 2026 impact."}}]
+
+Use short position codes: FWD, MID, DEF, GK. Include variety (not all attackers). Keep "why" to 1 sharp sentence.
+Start your response with [ and end with ]. No markdown, no preamble, no explanation."""
 
     try:
         resp = await client.messages.create(
             model="claude-haiku-4-5",
-            max_tokens=600,
-            messages=[{"role": "user", "content": prompt}],
+            max_tokens=800,
+            messages=[
+                {"role": "user", "content": prompt},
+                {"role": "assistant", "content": "["},
+            ],
         )
-        text = resp.content[0].text.strip()
-        # Strip markdown code fences if present
+        raw = resp.content[0].text.strip()
+        # Prefill means response continues from '['
+        text = "[" + raw if not raw.startswith("[") else raw
+        # Strip markdown fences if present
         if "```" in text:
             parts = text.split("```")
-            text = parts[1] if len(parts) > 1 else text
+            for part in parts:
+                if "[" in part:
+                    text = part
+                    break
             if text.startswith("json"):
                 text = text[4:]
-        # Find the JSON array
+        # Extract array
         start = text.find("[")
         end = text.rfind("]") + 1
         if start != -1 and end > start:
             text = text[start:end]
         players = json.loads(text)
+        print(f"[key_players] {country}: parsed {len(players)} players")
         return players[:5]
-    except Exception:
+    except Exception as e:
+        print(f"[key_players] {country}: FAILED — {type(e).__name__}: {e}")
+        try:
+            print(f"[key_players] raw response: {raw[:500]}")
+        except Exception:
+            pass
         return []
 
 
