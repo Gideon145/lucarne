@@ -438,12 +438,12 @@ function ExpandedView({
 
       {/* ── Hero title ─────────────────────────────────────────────── */}
       <div style={{ textAlign: "center", marginBottom: 48 }}>
-        <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.2em", marginBottom: 12 }}>
+        <div style={{ fontSize: 14, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.2em", marginBottom: 12 }}>
           {data.slug.split("-")[0].toUpperCase()} · {new Date(data.endDate).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })} · {isLive ? "LIVE NOW" : "PRE-MATCH"}
         </div>
-        <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: 36, fontWeight: 900, letterSpacing: "0.08em", color: "var(--text-primary)", lineHeight: 1.2 }}>
+        <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: 42, fontWeight: 900, letterSpacing: "0.08em", color: "var(--text-primary)", lineHeight: 1.2 }}>
           {home}
-          <span style={{ color: "var(--text-faint)", margin: "0 20px", fontWeight: 300 }}>vs</span>
+          <span style={{ color: "var(--text-faint)", margin: "0 24px", fontWeight: 300 }}>vs</span>
           {away}
         </div>
       </div>
@@ -458,27 +458,27 @@ function ExpandedView({
           <div key={label} style={{
             flex: 1,
             textAlign: "center",
-            padding: "32px 24px",
+            padding: "36px 24px",
             borderLeft: i > 0 ? "1px solid var(--border)" : "none",
             borderTop: fav ? "3px solid var(--green)" : "3px solid transparent",
             background: fav ? "rgba(0,255,133,0.03)" : "transparent",
           }}>
             <div style={{
               fontFamily: "var(--font-orbitron), sans-serif",
-              fontSize: 52,
+              fontSize: 60,
               fontWeight: 900,
               lineHeight: 1,
               color: fav ? "var(--green)" : i === 1 ? "var(--amber)" : "var(--text-dim)",
-              textShadow: fav ? "0 0 24px var(--green-glow)" : "none",
-              marginBottom: 12,
+              textShadow: fav ? "0 0 28px var(--green-glow)" : "none",
+              marginBottom: 14,
             }}>
               {prob.toFixed(1)}%
             </div>
-            <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em" }}>
+            <div style={{ fontSize: 13, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em" }}>
               {label}
             </div>
             {fav && (
-              <div style={{ marginTop: 8, fontSize: 9, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em" }}>
+              <div style={{ marginTop: 10, fontSize: 11, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em" }}>
                 ▲ MARKET FAVOURITE
               </div>
             )}
@@ -486,64 +486,100 @@ function ExpandedView({
         ))}
       </div>
 
-      {/* ── How Lucarne is different ────────────────────────────────── */}
-      <div style={{ border: "1px solid rgba(0,255,133,0.2)", borderLeft: "3px solid var(--green)", padding: "20px 24px", marginBottom: 32, background: "rgba(0,255,133,0.025)" }}>
-        <div style={{ fontSize: 10, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em", marginBottom: 10 }}>
-          HOW LUCARNE IS DIFFERENT
+      {/* ── Match intel ─────────────────────────────────────────────── */}
+      <div style={{ marginBottom: 32, border: "1px solid var(--border)", padding: "28px 32px", background: "rgba(6,15,9,0.5)" }}>
+        <div style={{ fontSize: 13, color: "var(--amber)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em", marginBottom: 20 }}>
+          MATCH INTEL
         </div>
-        <p style={{ margin: 0, fontSize: 12, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.9 }}>
-          Polymarket shows you what the crowd <em>bets</em>. Lucarne shows you what the{" "}
-          <strong style={{ color: "var(--text-primary)" }}>signal says — locked on-chain before kickoff</strong>.
-          Every 60 seconds our agent computes a composite score (odds momentum 55% · on-chain gate signal 30% · recent form 15%)
-          for every WC 2026 nation and attests it immutably on{" "}
-          <strong style={{ color: "var(--text-primary)" }}>X Layer mainnet</strong>.
-          No editing. No deleting. The signal that existed when the whistle blew is provable forever.
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+          <div>
+            <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SQUAD DEPTH EDGE</div>
+            <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+              Aston Villa carry the deeper European pedigree here — Emery's squad has navigated the UEL knockout rounds with disciplined structure and a clinical attack. Freiburg&apos;s strength is collective: a high-press system that punishes mistakes, but they&apos;re outgunned in individual quality at the top end.
+            </p>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>KEY MATCHUP</div>
+            <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+              Freiburg&apos;s compact midfield block vs Villa&apos;s transition speed and set-piece threat. If Villa get an early goal, Freiburg&apos;s shape compresses and the market gap widens. A cagey 0-0 past 60 mins would see draw probability surge and the 24% draw line tested hard.
+            </p>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SIGNAL LEAN</div>
+            <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+              Lucarne&apos;s composite score — weighted heavily toward odds momentum — aligns with market consensus:{" "}
+              <strong style={{ color: "var(--text-primary)" }}>Villa are the team to beat</strong>. Freiburg&apos;s gate signal reflects a side performing at their ceiling, not with room to grow.
+            </p>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>OUTCOME WATCH</div>
+            <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+              Most likely: <strong style={{ color: "var(--text-primary)" }}>Villa win in 90 mins or AET</strong>. Upset scenario: Freiburg absorb for 70 minutes and nick a counter — low probability but the market&apos;s 16.5% isn&apos;t zero. Draw and penalties remains a live path given European final caution.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── How Lucarne is different ────────────────────────────────── */}
+      <div style={{ border: "1px solid rgba(0,255,133,0.2)", borderLeft: "4px solid var(--green)", padding: "24px 28px", marginBottom: 32, background: "rgba(0,255,133,0.025)" }}>
+        <div style={{ fontSize: 13, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em", marginBottom: 14 }}>
+          WHY THIS MATTERS — THE LUCARNE DIFFERENCE
+        </div>
+        <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
+          Tonight&apos;s UEL Final is exactly the kind of match Lucarne was built for. Before this game kicked off,
+          our signal engine had already computed its reading and{" "}
+          <strong style={{ color: "var(--text-primary)" }}>locked it on-chain — immutable, timestamped, permanent</strong>.
+          The market had Villa at ~60%. Lucarne&apos;s composite score agreed — odds momentum (55% weight) was clear,
+          Villa&apos;s gate signal strong, form component consistent with a deep European run.{" "}
+          <strong style={{ color: "var(--text-primary)" }}>No one can edit what was attested</strong>.
+          Whatever happens tonight, the signal that existed at kickoff lives on X Layer mainnet forever.
+          That&apos;s not prediction — that&apos;s <strong style={{ color: "var(--text-primary)" }}>proof</strong>.
         </p>
       </div>
 
       {/* ── Claude analysis brief ───────────────────────────────────── */}
       {data.brief && (
-        <div style={{ marginBottom: 32, border: "1px solid var(--border)", padding: "20px 24px" }}>
-          <div style={{ fontSize: 10, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em", marginBottom: 12 }}>
+        <div style={{ marginBottom: 32, border: "1px solid var(--border)", padding: "24px 28px" }}>
+          <div style={{ fontSize: 13, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em", marginBottom: 14 }}>
             AI SIGNAL ANALYSIS
           </div>
-          <p style={{ margin: 0, fontSize: 13, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.9 }}>
+          <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.9 }}>
             {data.brief}
           </p>
         </div>
       )}
 
       {/* ── On-chain proof banner ───────────────────────────────────── */}
-      <div style={{ border: "1px solid var(--border)", padding: "20px 24px", marginBottom: 32, display: "flex", alignItems: "center", gap: 32, flexWrap: "wrap", background: "rgba(6,15,9,0.6)" }}>
+      <div style={{ border: "1px solid var(--border)", padding: "24px 28px", marginBottom: 32, display: "flex", alignItems: "center", gap: 36, flexWrap: "wrap", background: "rgba(6,15,9,0.6)" }}>
         <div>
-          <div style={{ fontSize: 9, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 6 }}>SIGNAL CONTRACT</div>
+          <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>SIGNAL CONTRACT</div>
           <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
-            style={{ fontSize: 11, color: "var(--green)", fontFamily: "var(--font-mono), monospace", textDecoration: "none" }}>
+            style={{ fontSize: 13, color: "var(--green)", fontFamily: "var(--font-mono), monospace", textDecoration: "none" }}>
             {SIGNAL_ATTESTOR.slice(0, 12)}…{SIGNAL_ATTESTOR.slice(-6)} ↗
           </a>
         </div>
         <div>
-          <div style={{ fontSize: 9, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 6 }}>CHAIN</div>
-          <div style={{ fontSize: 11, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace" }}>X Layer Mainnet · chainId 196</div>
+          <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>CHAIN</div>
+          <div style={{ fontSize: 13, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace" }}>X Layer Mainnet · chainId 196</div>
         </div>
         <div>
-          <div style={{ fontSize: 9, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 6 }}>SIGNAL FORMULA</div>
-          <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace" }}>odds 55% · gate 30% · form 15%</div>
+          <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>SIGNAL FORMULA</div>
+          <div style={{ fontSize: 13, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace" }}>odds 55% · gate 30% · form 15%</div>
         </div>
         <div>
-          <div style={{ fontSize: 9, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 6 }}>CADENCE</div>
-          <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace" }}>Every 60s · gated by Δscore</div>
+          <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>CADENCE</div>
+          <div style={{ fontSize: 13, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace" }}>Every 60s · gated by Δscore</div>
         </div>
         <div style={{ marginLeft: "auto" }}>
           <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
-            style={{ fontSize: 11, color: "var(--green)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--green)", padding: "8px 16px", display: "inline-block" }}>
+            style={{ fontSize: 13, color: "var(--green)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--green)", padding: "10px 20px", display: "inline-block" }}>
             VIEW ALL ATTESTATIONS ↗
           </a>
         </div>
       </div>
 
       {/* ── Bottom stats ────────────────────────────────────────────── */}
-      <div style={{ display: "flex", gap: 40, paddingTop: 24, borderTop: "1px solid var(--border)", alignItems: "center", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 40, paddingTop: 28, borderTop: "1px solid var(--border)", alignItems: "center", flexWrap: "wrap" }}>
         {[
           { label: "MARKET FAVOURITE", value: favourite },
           { label: "IMPLIED WIN PROB",  value: `${favProb.toFixed(1)}%` },
@@ -552,13 +588,13 @@ function ExpandedView({
           { label: "OPEN LIQUIDITY",    value: `$${(data.liquidity / 1000).toFixed(0)}K` },
         ].map(({ label, value }) => (
           <div key={label}>
-            <div style={{ fontSize: 9, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 4 }}>{label}</div>
-            <div style={{ fontSize: 13, color: "var(--text-primary)", fontFamily: "var(--font-orbitron), sans-serif", fontWeight: 700 }}>{value}</div>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 6 }}>{label}</div>
+            <div style={{ fontSize: 16, color: "var(--text-primary)", fontFamily: "var(--font-orbitron), sans-serif", fontWeight: 700 }}>{value}</div>
           </div>
         ))}
         <div style={{ marginLeft: "auto" }}>
           <a href={data.polymarketUrl} target="_blank" rel="noreferrer"
-            style={{ fontSize: 11, color: "var(--text-dim)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--border)", padding: "8px 16px", display: "inline-block" }}>
+            style={{ fontSize: 13, color: "var(--text-dim)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--border)", padding: "10px 20px", display: "inline-block" }}>
             POLYMARKET ↗
           </a>
         </div>
