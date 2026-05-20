@@ -493,20 +493,36 @@ def health():
 
 
 # ─── RPC proxy (solves CORS: browser → polybot → rpc.xlayer.tech) ────────────
-XLAYER_RPC = "https://rpc.xlayer.tech"
+XLAYER_RPC_ENDPOINTS = [
+    "https://xlayerrpc.okx.com",
+    "https://rpc.xlayer.tech",
+    "https://xlayer-rpc.publicnode.com",
+]
 
 @app.post("/rpc")
 async def rpc_proxy(request: Request):
     """Transparent JSON-RPC proxy to X Layer — allows browser clients to read
-    the chain without hitting rpc.xlayer.tech directly (CORS blocked)."""
+    the chain without hitting rpc.xlayer.tech directly (CORS blocked).
+    Tries multiple RPC endpoints in order until one succeeds."""
     body = await request.json()
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.post(
-            XLAYER_RPC,
-            json=body,
-            headers={"Content-Type": "application/json"},
-        )
-    return JSONResponse(content=resp.json(), status_code=resp.status_code)
+    last_error = None
+    async with httpx.AsyncClient(timeout=8.0) as client:
+        for rpc_url in XLAYER_RPC_ENDPOINTS:
+            try:
+                resp = await client.post(
+                    rpc_url,
+                    json=body,
+                    headers={"Content-Type": "application/json"},
+                )
+                if resp.status_code == 200:
+                    return JSONResponse(content=resp.json())
+            except Exception as e:
+                last_error = str(e)
+                continue
+    return JSONResponse(
+        content={"jsonrpc": "2.0", "error": {"code": -32603, "message": f"All RPC endpoints failed: {last_error}"}, "id": body.get("id")},
+        status_code=502,
+    )
 
 
 @app.get("/debug/players/{country}")
