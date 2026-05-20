@@ -52,21 +52,28 @@ function getHomeAwayDraw(
   homeTeam: string,
   awayTeam: string
 ) {
-  // Pull by question content
-  const homeProb = getOutcomeProb(markets, homeTeam.slice(0, 6));
-  const drawProb = getOutcomeProb(markets, "draw");
-  const awayProb = getOutcomeProb(markets, awayTeam.slice(0, 6));
+  // Draw: question explicitly says "draw"
+  const drawM = markets.find((m) => m.question.toLowerCase().includes("draw"));
 
-  // Fallback: sort markets by prob desc, assign home/draw/away by question order
-  if (homeProb === 0 && drawProb === 0 && awayProb === 0) {
-    const sorted = [...markets];
-    return {
-      homeProb: sorted[0]?.prob ?? 33,
-      drawProb: sorted[1]?.prob ?? 33,
-      awayProb: sorted[2]?.prob ?? 33,
-    };
-  }
-  return { homeProb, drawProb, awayProb };
+  // Win markets only — excludes the draw question which mentions both team names
+  const winMarkets = markets.filter((m) => m.question.toLowerCase().includes(" win"));
+
+  // Pick the most meaningful word from team name (skip short words and "FC"/"CF"/"SC")
+  const sig = (name: string) =>
+    name.split(" ").find((w) => w.length > 2 && !["FC","CF","SC","AFC","RFC"].includes(w.toUpperCase()))
+    ?? name.slice(0, 6);
+
+  const homeKey = sig(homeTeam).toLowerCase();
+  const awayKey = sig(awayTeam).toLowerCase();
+
+  const homeM = winMarkets.find((m) => m.question.toLowerCase().includes(homeKey));
+  const awayM = winMarkets.find((m) => m.question.toLowerCase().includes(awayKey));
+
+  return {
+    homeProb: homeM?.prob ?? winMarkets[0]?.prob ?? 33,
+    drawProb: drawM?.prob ?? 33,
+    awayProb: awayM?.prob ?? winMarkets[1]?.prob ?? 33,
+  };
 }
 
 function OddsBar({
