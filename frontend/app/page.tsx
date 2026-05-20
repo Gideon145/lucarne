@@ -211,7 +211,7 @@ export default function Home() {
 
       {/* ── Main Content: Grid + Feed ─────────────────────────────────────── */}
       {filter === "LIVE" ? (
-        <LiveMatchPanel expanded nations={nations} />
+        <LiveMatchPanel expanded />
       ) : (
       <div
         style={{
