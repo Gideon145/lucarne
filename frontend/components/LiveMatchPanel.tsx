@@ -6,6 +6,13 @@ import { POLYBOT_URL, SIGNAL_ATTESTOR, OKLINK_BASE } from "@/lib/constants";
 // Local Vercel route — no Railway dependency for odds data
 const LOCAL_LIVE_MATCH_URL = "/api/live-match";
 
+// Pre-match odds snapshot — locked on-chain before kickoff.
+// Stored here because once a Polymarket market resolves it returns settlement
+// prices (99.8% / 0.2%), not the actual pre-match probabilities.
+const PRE_MATCH_ODDS: Record<string, { home: number; draw: number; away: number }> = {
+  "uel-scf-ast-2026-05-20": { home: 16.5, draw: 24.5, away: 59.5 },
+};
+
 interface MatchOutcome {
   question: string;
   slug:     string;
@@ -436,14 +443,21 @@ export function LiveMatchPanel({ expanded = false }: { expanded?: boolean }) {
 // ── Result card (shown when market resolves) ──────────────────────────────────
 
 function ResultView({
-  data, home, away, homeProb, drawProb, awayProb,
-  winner, winnerProb, loser, loserProb,
+  data, home, away,
+  winner, loser, loserProb,
 }: {
   data: LiveMatchData; home: string; away: string;
   homeProb: number; drawProb: number; awayProb: number;
   winner: string; winnerProb: number; loser: string; loserProb: number;
 }) {
   const date = new Date(data.endDate).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+
+  // Use hardcoded pre-match odds — live data reflects settlement price (99.8%), not signal odds
+  const snap = PRE_MATCH_ODDS[data.slug];
+  const preHome  = snap?.home ?? 33;
+  const preDraw  = snap?.draw ?? 33;
+  const preAway  = snap?.away ?? 33;
+  const preWinnerProb = home === winner ? preHome : preAway;
 
   return (
     <div style={{ marginTop: 40 }}>
@@ -484,7 +498,7 @@ function ResultView({
         <p style={{ margin: 0, fontSize: 16, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
           Before kickoff, Lucarne&apos;s signal engine had{" "}
           <strong style={{ color: "var(--green)" }}>{winner}</strong> as the clear market favourite at{" "}
-          <strong style={{ color: "var(--green)" }}>{winnerProb > 60 ? (homeProb > awayProb ? homeProb : awayProb).toFixed(1) : winnerProb.toFixed(1)}%</strong> implied probability.
+          <strong style={{ color: "var(--green)" }}>{preWinnerProb.toFixed(1)}%</strong> implied probability.
           That signal was computed, attested, and locked on{" "}
           <strong>X Layer mainnet</strong> — immutable before the whistle blew.{" "}
           <strong style={{ color: "var(--green)" }}>It cannot be edited. The record stands forever.</strong>
@@ -498,9 +512,9 @@ function ResultView({
         </div>
         <div style={{ display: "flex", gap: 0, border: "1px solid var(--border)" }}>
           {[
-            { label: `${home.toUpperCase()} WIN`, prob: homeProb, won: home === winner },
-            { label: "DRAW",                       prob: drawProb, won: false },
-            { label: `${away.toUpperCase()} WIN`,  prob: awayProb, won: away === winner },
+            { label: `${home.toUpperCase()} WIN`, prob: preHome, won: home === winner },
+            { label: "DRAW",                       prob: preDraw, won: false },
+            { label: `${away.toUpperCase()} WIN`,  prob: preAway, won: away === winner },
           ].map(({ label, prob, won }, i) => (
             <div key={label} style={{
               flex: 1,
@@ -561,8 +575,8 @@ function ResultView({
       <div style={{ display: "flex", gap: 40, paddingTop: 28, borderTop: "1px solid var(--border)", alignItems: "center", flexWrap: "wrap" }}>
         {[
           { label: "WINNER",         value: winner },
-          { label: "PRE-MATCH ODDS", value: `${(homeProb > awayProb ? homeProb : awayProb).toFixed(1)}% fav` },
-          { label: "UNDERDOG ODDS",  value: `${loser} · ${loserProb.toFixed(1)}%` },
+          { label: "PRE-MATCH ODDS", value: `${preWinnerProb.toFixed(1)}% fav` },
+          { label: "UNDERDOG ODDS",  value: `${loser} · ${(home === loser ? preHome : preAway).toFixed(1)}%` },
           { label: "TOTAL VOLUME",   value: `$${(data.volume / 1000).toFixed(0)}K` },
         ].map(({ label, value }) => (
           <div key={label}>
