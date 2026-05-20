@@ -64,7 +64,7 @@ export async function computeSignal(country: string, polybotUrl: string): Promis
 
     // Form signal from Sofascore (0-100, anchored at 50 neutral)
     // Only use if there are played matches (pre-tournament = no data = stays 50)
-    if (formRes?.data?.played > 0) {
+    if (formRes != null && (formRes.data?.played ?? 0) > 0) {
       formScore = formRes.data.formScore ?? 50;
     }
   } catch {
