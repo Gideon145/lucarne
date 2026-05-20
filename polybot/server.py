@@ -691,7 +691,7 @@ async def fetch_sofascore_squad(team_id: int) -> list[dict]:
 
 
 async def fetch_sofascore_form(team_id: int) -> list[dict]:
-    """Fetch last 5 match results for a team."""
+    """Fetch last 5 match results for a team (raw event list)."""
     url = f"https://api.sofascore.com/api/v1/team/{team_id}/events/last/0"
     try:
         async with httpx.AsyncClient(timeout=8, headers=SOFASCORE_HEADERS, follow_redirects=True) as client:
@@ -715,6 +715,96 @@ async def fetch_sofascore_form(team_id: int) -> list[dict]:
             return results
     except Exception:
         return []
+
+
+async def fetch_form_signal(team_id: int, team_name: str) -> dict:
+    """
+    Parse last 5 results into a W/D/L sequence and a numeric form score 0–100.
+    - WIN=W, DRAW=D, LOSS=L
+    - formScore: W=+20pts, D=+5pts, L=-20pts, anchored at 50, clamped 0-100
+    """
+    url = f"https://api.sofascore.com/api/v1/team/{team_id}/events/last/0"
+    try:
+        async with httpx.AsyncClient(timeout=8, headers=SOFASCORE_HEADERS, follow_redirects=True) as client:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                return {"sequence": [], "formScore": 50, "played": 0}
+            data = resp.json()
+            events = data.get("events", [])[-5:]
+
+        sequence = []
+        for e in events:
+            status_type = (e.get("status") or {}).get("type", "")
+            if status_type not in ("finished",):
+                continue  # skip live/upcoming
+
+            home_team = (e.get("homeTeam") or {}).get("name", "")
+            hs = (e.get("homeScore") or {}).get("current")
+            as_ = (e.get("awayScore") or {}).get("current")
+            if hs is None or as_ is None:
+                continue
+
+            is_home = team_name.lower() in home_team.lower()
+            gf = hs if is_home else as_
+            ga = as_ if is_home else hs
+            if gf > ga:
+                sequence.append("W")
+            elif gf < ga:
+                sequence.append("L")
+            else:
+                sequence.append("D")
+
+        wins   = sequence.count("W")
+        draws  = sequence.count("D")
+        losses = sequence.count("L")
+        raw    = 50 + wins * 20 + draws * 5 - losses * 20
+        form_score = max(0, min(100, raw))
+
+        return {"sequence": sequence, "formScore": form_score, "played": len(sequence)}
+    except Exception:
+        return {"sequence": [], "formScore": 50, "played": 0}
+
+
+# ── Form cache (15 min TTL — Sofascore rate-limit conscious) ─────────────────
+_form_cache: dict[str, dict] = {}
+_form_cache_ts: dict[str, float] = {}
+FORM_TTL = 900  # 15 minutes
+
+
+@app.get("/form/{country}")
+async def get_form(country: str):
+    """
+    Returns the recent form (W/D/L sequence) and a numeric form score for a country.
+    formScore: 0-100 anchored at 50 (neutral). Higher = recent wins, lower = recent losses.
+    Used by the agent to add a form component to the momentum score.
+    """
+    country = country.upper()
+    if country not in COUNTRY_NAMES:
+        raise HTTPException(status_code=404, detail=f"Unknown country: {country}")
+
+    now = time.time()
+    if country in _form_cache and (now - _form_cache_ts.get(country, 0)) < FORM_TTL:
+        return _form_cache[country]
+
+    team_id = SOFASCORE_TEAM_IDS.get(country)
+    if not team_id:
+        result = {"country": country, "sequence": [], "formScore": 50, "played": 0, "source": "no_id"}
+        _form_cache[country] = result
+        _form_cache_ts[country] = now
+        return result
+
+    form = await fetch_form_signal(team_id, COUNTRY_NAMES[country])
+    result = {
+        "country": country,
+        "name": COUNTRY_NAMES[country],
+        "sequence": form["sequence"],
+        "formScore": form["formScore"],
+        "played": form["played"],
+        "source": "sofascore",
+    }
+    _form_cache[country] = result
+    _form_cache_ts[country] = now
+    return result
 
 
 async def generate_key_players(country: str, name: str, debug: bool = False):
@@ -1011,6 +1101,125 @@ async def get_match_odds(team1: str, team2: str):
     _intel_cache[cache_key] = result
     _intel_cache_ts[cache_key] = time.time()
     return result
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Calibration — reads OutcomeAttestor on-chain data via /rpc proxy
+# POST /calibration  body: { "outcomes": [{country, opponent, gf, ga, preScore, ts}] }
+# Also exposes GET /calibration/summary (queries chain via internal rpc call)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# In-memory outcome store — populated by the agent's outcome writer via POST
+# Shape: { country: [{opponent, gf, ga, result("W"|"D"|"L"), preScore, ts}] }
+_outcome_store: dict[str, list[dict]] = defaultdict(list)
+
+
+class OutcomeRecord(BaseModel):
+    country:  str
+    opponent: str
+    gf:       int
+    ga:       int
+    preScore: int
+    ts:       int  # unix timestamp of match
+
+
+@app.post("/outcomes/record")
+def record_outcome(rec: OutcomeRecord):
+    """
+    Called by the agent after it writes an outcome on-chain.
+    Stores a local copy for fast calibration queries without hitting the chain.
+    """
+    country = rec.country.upper()
+    result  = "W" if rec.gf > rec.ga else ("L" if rec.gf < rec.ga else "D")
+    _outcome_store[country].append({
+        "opponent": rec.opponent.upper(),
+        "gf":       rec.gf,
+        "ga":       rec.ga,
+        "result":   result,
+        "preScore": rec.preScore,
+        "ts":       rec.ts,
+    })
+    return {"ok": True, "country": country, "result": result}
+
+
+@app.get("/calibration")
+def get_calibration():
+    """
+    Returns calibration stats across all countries with recorded outcomes.
+    Shows whether the LUCARNE signal has alpha vs pure market odds.
+
+    Key metric: avgWinScore >> avgLossScore → signal has directional edge.
+    """
+    if not _outcome_store:
+        return {
+            "status": "no_data",
+            "message": "No match outcomes recorded yet. First WC 2026 match: Jun 12.",
+            "countries": {},
+        }
+
+    global_wins = global_draws = global_losses = 0
+    global_win_scores: list[int] = []
+    global_loss_scores: list[int] = []
+    country_stats = {}
+
+    for country, outcomes in _outcome_store.items():
+        wins = draws = losses = 0
+        win_scores:  list[int] = []
+        draw_scores: list[int] = []
+        loss_scores: list[int] = []
+
+        for o in outcomes:
+            s = o["preScore"]
+            if o["result"] == "W":
+                wins  += 1; win_scores.append(s)
+            elif o["result"] == "D":
+                draws += 1; draw_scores.append(s)
+            else:
+                losses += 1; loss_scores.append(s)
+
+        global_wins   += wins
+        global_draws  += draws
+        global_losses += losses
+        global_win_scores.extend(win_scores)
+        global_loss_scores.extend(loss_scores)
+
+        def avg(lst): return round(sum(lst) / len(lst), 1) if lst else None
+
+        country_stats[country] = {
+            "played":       wins + draws + losses,
+            "wins":         wins,
+            "draws":        draws,
+            "losses":       losses,
+            "avgWinScore":  avg(win_scores),
+            "avgDrawScore": avg(draw_scores),
+            "avgLossScore": avg(loss_scores),
+            "alpha":        round(avg(win_scores) - avg(loss_scores), 1)
+                            if win_scores and loss_scores else None,
+        }
+
+    def avg(lst): return round(sum(lst) / len(lst), 1) if lst else None
+    global_alpha = round(avg(global_win_scores) - avg(global_loss_scores), 1) \
+                   if global_win_scores and global_loss_scores else None
+
+    return {
+        "status": "ok",
+        "global": {
+            "played":       global_wins + global_draws + global_losses,
+            "wins":         global_wins,
+            "draws":        global_draws,
+            "losses":       global_losses,
+            "avgWinScore":  avg(global_win_scores),
+            "avgLossScore": avg(global_loss_scores),
+            "alpha":        global_alpha,
+            "interpretation": (
+                f"Signal scores before wins averaged {avg(global_win_scores)} vs "
+                f"{avg(global_loss_scores)} before losses — "
+                + ("positive alpha detected" if global_alpha and global_alpha > 5
+                   else "no significant alpha yet")
+            ) if global_alpha is not None else "insufficient data",
+        },
+        "countries": country_stats,
+    }
 
 
 if __name__ == "__main__":

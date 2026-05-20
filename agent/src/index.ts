@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { ethers } from "ethers";
 import { computeSignal } from "./lib/signal";
+import { checkAndRecordOutcomes } from "./lib/outcome";
 import { logger } from "./lib/logger";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -13,6 +14,7 @@ const CONFIG = {
   // Normalize: ethers v6 requires 0x-prefixed private key
   privateKey:      (() => { const k = process.env.PRIVATE_KEY || ""; return k.startsWith("0x") ? k : `0x${k}`; })(),
   contractAddress: process.env.SIGNAL_ATTESTOR   || "",
+  outcomeAddress:  process.env.OUTCOME_ATTESTOR  || "",  // OutcomeAttestor — optional until deployed
 
   // Signal-driven write gate thresholds (Provus-pattern)
   minScoreDelta:   parseInt(process.env.MIN_SCORE_DELTA   || "3"),   // |Δscore| must exceed this to write
@@ -174,6 +176,20 @@ async function run(): Promise<void> {
     // Log cycle summary
     const cycleDuration = ((Date.now() - cycleStart) / 1000).toFixed(1);
     logger.info(`── cycle done in ${cycleDuration}s | txToday=${txToday}/${CONFIG.maxTxPerDay} | total=${totalTxCount}`);
+
+    // ── Outcome writer: check for completed WC matches and record on-chain ──
+    // Runs after every signal cycle. Deduplication prevents double-writes.
+    // No-op until OutcomeAttestor is deployed (OUTCOME_ATTESTOR env var).
+    try {
+      await checkAndRecordOutcomes({
+        outcomeAttestorAddress: CONFIG.outcomeAddress,
+        signalAttestorAddress:  CONFIG.contractAddress,
+        wallet,
+        polybotUrl:             CONFIG.polybotUrl,
+      });
+    } catch (err) {
+      logger.error(`Outcome writer error: ${String(err).slice(0, 80)}`);
+    }
 
     await sleep(CONFIG.loopIntervalMs);
   }
