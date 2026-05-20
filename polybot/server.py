@@ -1222,6 +1222,148 @@ def get_calibration():
     }
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Live Match Panel — fetches featured match odds from Polymarket by slug
+# GET /live-match         returns current featured match data + brief
+# GET /live-match/{slug}  override slug (admin use)
+# ─────────────────────────────────────────────────────────────────────────────
+
+_live_match_cache: dict = {}
+_live_match_cache_ts: float = 0
+LIVE_MATCH_TTL = 30  # seconds — refresh every 30s for live data
+
+LIVE_MATCH_SLUG = os.getenv("LIVE_MATCH_SLUG", "uel-scf-ast-2026-05-20")
+
+
+async def fetch_live_match_data(slug: str) -> dict | None:
+    """Fetch match event + odds from Polymarket Gamma API by slug."""
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                f"{GAMMA_API}/events",
+                params={"slug": slug},
+                headers={"User-Agent": "lucarne-polybot/1.0"},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+        if not data:
+            return None
+
+        ev = data[0]
+        markets = ev.get("markets", [])
+
+        # Parse outcomes from negRisk markets (home win / draw / away win)
+        outcomes_parsed: list[dict] = []
+        for m in markets:
+            prices_raw   = m.get("outcomePrices", "[]")
+            outcomes_raw = m.get("outcomes", "[]")
+            prices   = json.loads(prices_raw)   if isinstance(prices_raw, str)   else prices_raw
+            outcomes = json.loads(outcomes_raw) if isinstance(outcomes_raw, str) else outcomes_raw
+
+            yes_idx = next(
+                (i for i, o in enumerate(outcomes) if str(o).lower() == "yes"),
+                0
+            )
+            prob = float(prices[yes_idx]) if yes_idx < len(prices) else None
+            if prob is not None:
+                outcomes_parsed.append({
+                    "question": m.get("question", ""),
+                    "slug":     m.get("slug", ""),
+                    "prob":     round(prob * 100, 1),
+                    "marketId": m.get("id"),
+                })
+
+        return {
+            "slug":        slug,
+            "eventId":     ev.get("id"),
+            "title":       ev.get("title", ""),
+            "description": ev.get("description", ""),
+            "endDate":     ev.get("endDate", ""),
+            "active":      ev.get("active", False),
+            "closed":      ev.get("closed", False),
+            "volume":      round(ev.get("volume", 0)),
+            "liquidity":   round(ev.get("liquidity", 0)),
+            "volume24hr":  round(ev.get("volume24hr", 0)),
+            "competitive": round(ev.get("competitive", 0), 3),
+            "markets":     outcomes_parsed,
+            "polymarketUrl": f"https://polymarket.com/sports/{slug.split('-')[0]}/{slug}",
+        }
+    except Exception as e:
+        print(f"[live-match] fetch error: {e}")
+        return None
+
+
+async def generate_live_match_brief(title: str, markets: list[dict]) -> str:
+    """Generate a punchy tactical analysis for a live club match."""
+    if not markets:
+        return ""
+
+    outcomes_str = "\n".join(
+        f"- {m['question'].replace('Will ', '').replace('?', '')}: {m['prob']}%"
+        for m in markets
+    )
+
+    prompt = f"""You are a sharp sports intelligence analyst. Write a 3-sentence pre-match analysis for:
+
+{title}
+
+Market-implied probabilities:
+{outcomes_str}
+
+Focus on: what the odds say about the balance of power, one key tactical edge, and what to watch for.
+No bullet points. Under 80 words. Authoritative tone."""
+
+    try:
+        client_ai = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY", ""))
+        msg = client_ai.messages.create(
+            model="claude-haiku-4-5",
+            max_tokens=150,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return msg.content[0].text.strip()
+    except Exception as e:
+        print(f"[live-match] claude error: {e}")
+        return ""
+
+
+@app.get("/live-match")
+@app.get("/live-match/{slug}")
+async def get_live_match(slug: str | None = None):
+    """
+    Returns live match data for the featured match of the day.
+    Refreshes every 30s from Polymarket. Override slug via LIVE_MATCH_SLUG env var
+    or pass it directly as a path param.
+    """
+    global _live_match_cache, _live_match_cache_ts
+
+    target_slug = slug or LIVE_MATCH_SLUG
+    cache_key = f"lm_{target_slug}"
+
+    cached = _live_match_cache.get(cache_key)
+    if cached and (time.time() - _live_match_cache_ts) < LIVE_MATCH_TTL:
+        return cached
+
+    match_data = await fetch_live_match_data(target_slug)
+    if not match_data:
+        raise HTTPException(status_code=404, detail=f"Match not found: {target_slug}")
+
+    # Generate brief (cached independently — only regenerate every 15 min)
+    brief_key = f"brief_{target_slug}"
+    brief_ts  = _intel_cache_ts.get(brief_key, 0)
+    if brief_key not in _intel_cache or (time.time() - brief_ts) > 900:
+        brief = await generate_live_match_brief(match_data["title"], match_data["markets"])
+        _intel_cache[brief_key]    = brief
+        _intel_cache_ts[brief_key] = time.time()
+    else:
+        brief = _intel_cache[brief_key]
+
+    match_data["brief"] = brief
+    _live_match_cache[cache_key] = match_data
+    _live_match_cache_ts = time.time()
+    return match_data
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8001"))
     uvicorn.run("server:app", host="0.0.0.0", port=port, reload=False)

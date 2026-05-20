@@ -6,6 +6,7 @@ import type { NationData } from "@/lib/useAttestations";
 import { NationCard } from "@/components/NationCard";
 import { LiveFeed } from "@/components/LiveFeed";
 import { IntelDrawer } from "@/components/IntelDrawer";
+import { LiveMatchPanel } from "@/components/LiveMatchPanel";
 import { REGIME_COLORS } from "@/components/RegimeBadge";
 import { OKLINK_BASE, SIGNAL_ATTESTOR, AGENT_WALLET } from "@/lib/constants";
 import type { Regime } from "@/lib/useAttestations";
@@ -155,6 +156,9 @@ export default function Home() {
           </a>
         </div>
       </div>
+
+      {/* ── Live Match Panel ─────────────────────────────────────────────── */}
+      <LiveMatchPanel />
 
       {/* ── Filter + Sort ─────────────────────────────────────────────────── */}
       <div
