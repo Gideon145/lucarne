@@ -671,6 +671,45 @@ async def fetch_sofascore_form(team_id: int) -> list[dict]:
         return []
 
 
+async def generate_key_players(country: str, name: str) -> list[dict]:
+    """Use Claude to identify 5 key star players for a WC 2026 nation."""
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        return []
+
+    client = anthropic.AsyncAnthropic(api_key=api_key)
+    prompt = f"""List the 5 most important players to watch for {name} at the 2026 World Cup.
+Output ONLY a valid JSON array with exactly 5 objects, no markdown, no explanation:
+[
+  {{"name": "Player Name", "position": "FWD", "club": "Club Name", "why": "One concise sentence on their WC 2026 impact."}},
+  ...
+]
+Use short position codes: FWD, MID, DEF, GK. Include variety (not all attackers). Keep "why" to 1 sharp sentence. Return ONLY the JSON array."""
+
+    try:
+        resp = await client.messages.create(
+            model="claude-haiku-4-5",
+            max_tokens=600,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = resp.content[0].text.strip()
+        # Strip markdown code fences if present
+        if "```" in text:
+            parts = text.split("```")
+            text = parts[1] if len(parts) > 1 else text
+            if text.startswith("json"):
+                text = text[4:]
+        # Find the JSON array
+        start = text.find("[")
+        end = text.rfind("]") + 1
+        if start != -1 and end > start:
+            text = text[start:end]
+        players = json.loads(text)
+        return players[:5]
+    except Exception:
+        return []
+
+
 async def generate_intel_brief(
     country: str,
     name: str,
@@ -688,7 +727,7 @@ async def generate_intel_brief(
     client = anthropic.AsyncAnthropic(api_key=api_key)
 
     players_text = "\n".join(
-        f"  - {p['name']} ({p['position']}, age {p['age'] or '?'})"
+        f"  - {p['name']} ({p.get('position', '?')}, {p.get('club', '?')}) — {p.get('why', '')}"
         for p in players
     ) or "  Squad data unavailable"
 
@@ -701,7 +740,7 @@ async def generate_intel_brief(
     regime_str = REGIME_DESC.get(regime, "unknown")
 
     prompt = f"""You are LUCARNE, an AI signal intelligence system for the 2026 World Cup.
-Write a sharp, concise tactical intel brief (3-4 paragraphs) for {name} ({country}).
+Write a sharp, concise tactical intel brief (3 paragraphs) for {name} ({country}).
 
 Current LUCARNE Signal Data:
 - Score: {score}/100
@@ -716,12 +755,11 @@ WC 2026 Group Stage Fixtures:
 
 Write about:
 1. Why the signal is reading {regime_str} right now — what does that mean tactically/statistically
-2. Key players to watch and their potential impact
-3. Their group stage draw — toughest opponent, path to the Round of 32
-4. Overall tournament outlook and what would shift the signal
+2. Their group stage draw — toughest opponent, path to the Round of 32
+3. Overall tournament outlook and what would shift the signal
 
 Tone: authoritative, data-driven, like a sports intelligence analyst. Use football terminology.
-Do NOT use bullet points — flowing paragraphs only. Keep it under 250 words total."""
+Do NOT use bullet points — flowing paragraphs only. Keep it under 200 words total."""
 
     try:
         resp = await client.messages.create(
@@ -818,13 +856,13 @@ async def get_intel(request: Request, country: str, score: int = 0, regime: int 
     team_id = SOFASCORE_TEAM_IDS.get(country)
     fixtures = WC_FIXTURES.get(country, [])
 
-    # Fetch Sofascore squad + current odds in parallel (no longer fetching Sofascore form)
-    players, odds = await asyncio.gather(
-        fetch_sofascore_squad(team_id) if team_id else asyncio.sleep(0, result=[]),
+    # Fetch key players (Claude-generated) + current odds in parallel
+    key_players, odds = await asyncio.gather(
+        generate_key_players(country, name),
         fetch_country_odds(country),
     )
 
-    brief = await generate_intel_brief(country, name, score, regime, odds, players, fixtures)
+    brief = await generate_intel_brief(country, name, score, regime, odds, key_players, fixtures)
 
     result = {
         "country": country,
@@ -833,7 +871,7 @@ async def get_intel(request: Request, country: str, score: int = 0, regime: int 
         "regime": regime,
         "odds": round(odds * 100, 2) if odds is not None else None,
         "brief": brief,
-        "players": players,
+        "players": key_players,
         "fixtures": fixtures,
     }
     _intel_cache[cache_key] = result

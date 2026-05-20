@@ -11,7 +11,8 @@ import type { Regime } from "@/lib/useAttestations";
 interface Player {
   name: string;
   position: string;
-  age: number | null;
+  club: string;
+  why: string;
 }
 
 interface Fixture {
@@ -424,52 +425,59 @@ export function IntelDrawer({ nation, onClose }: Props) {
                 </div>
               </div>
 
-              {/* Players to Watch */}
+              {/* Key Players to Watch */}
               {intel.players.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
                   <div style={{
                     fontSize: 12,
-                    color: "var(--text-dim)",
+                    color: "var(--green)",
                     letterSpacing: "0.18em",
                     fontFamily: "var(--font-mono), monospace",
                     marginBottom: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
                   }}>
-                    SQUAD INTEL
+                    <span>⚡</span> KEY PLAYERS TO WATCH
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {intel.players.map((p, i) => (
                       <div
                         key={i}
                         style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          padding: "7px 12px",
-                          background: "rgba(255,255,255,0.02)",
+                          padding: "10px 14px",
+                          background: "rgba(0,255,133,0.03)",
                           border: "1px solid var(--border)",
+                          borderLeft: "2px solid var(--green)",
                           borderRadius: 4,
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                           <span style={{
-                            fontSize: 11,
+                            fontSize: 10,
                             fontFamily: "var(--font-mono), monospace",
-                            background: "rgba(0,255,133,0.08)",
+                            background: "rgba(0,255,133,0.1)",
                             color: "var(--green)",
-                            padding: "3px 7px",
+                            padding: "2px 6px",
                             borderRadius: 2,
                             letterSpacing: "0.1em",
-                            minWidth: 30,
-                            textAlign: "center",
                           }}>
-                            {posLabel(p.position)}
+                            {p.position || "?"}
                           </span>
-                          <span style={{ fontSize: 15, color: "var(--text-primary)" }}>{p.name}</span>
+                          <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{p.name}</span>
+                          {p.club && (
+                            <span style={{ fontSize: 11, color: "var(--text-dim)", marginLeft: "auto" }}>{p.club}</span>
+                          )}
                         </div>
-                        {p.age && (
-                          <span style={{ fontSize: 13, color: "var(--text-faint)" }}>
-                            {p.age}y
-                          </span>
+                        {p.why && (
+                          <div style={{
+                            fontSize: 12,
+                            color: "var(--text-dim)",
+                            fontFamily: "var(--font-mono), monospace",
+                            lineHeight: 1.5,
+                          }}>
+                            {p.why}
+                          </div>
                         )}
                       </div>
                     ))}
@@ -496,7 +504,6 @@ export function IntelDrawer({ nation, onClose }: Props) {
                         onClick={() => {
                           const iso3a = intel.country;
                           const iso3b = COUNTRY_MAP.get(f.opponent)?.iso3 ?? f.opponent;
-                          onClose();
                           router.push(`/match/${iso3a}-${iso3b}`);
                         }}
                         style={{
