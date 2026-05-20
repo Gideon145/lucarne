@@ -13,7 +13,7 @@ import os
 import time
 from collections import defaultdict, deque
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
@@ -504,23 +504,25 @@ async def rpc_proxy(request: Request):
     """Transparent JSON-RPC proxy to X Layer — allows browser clients to read
     the chain without hitting rpc.xlayer.tech directly (CORS blocked).
     Tries multiple RPC endpoints in order until one succeeds."""
-    body = await request.json()
-    last_error = None
+    raw_body = await request.body()
+    last_error = "no endpoints tried"
     async with httpx.AsyncClient(timeout=8.0) as client:
         for rpc_url in XLAYER_RPC_ENDPOINTS:
             try:
                 resp = await client.post(
                     rpc_url,
-                    json=body,
+                    content=raw_body,
                     headers={"Content-Type": "application/json"},
                 )
-                if resp.status_code == 200:
-                    return JSONResponse(content=resp.json())
+                # Only accept if response looks like JSON-RPC
+                if resp.status_code == 200 and resp.content.startswith(b"{"):
+                    return Response(content=resp.content, media_type="application/json")
+                last_error = f"{rpc_url} returned status={resp.status_code} non-JSON"
             except Exception as e:
-                last_error = str(e)
+                last_error = f"{rpc_url}: {e}"
                 continue
     return JSONResponse(
-        content={"jsonrpc": "2.0", "error": {"code": -32603, "message": f"All RPC endpoints failed: {last_error}"}, "id": body.get("id")},
+        content={"jsonrpc": "2.0", "error": {"code": -32603, "message": f"All RPC endpoints failed: {last_error}"}, "id": None},
         status_code=502,
     )
 
