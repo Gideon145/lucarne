@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { POLYBOT_URL, SIGNAL_ATTESTOR, OKLINK_BASE } from "@/lib/constants";
+import PredictionPanel from "./PredictionPanel";
 
 // Local Vercel route — no Railway dependency for odds data
 const LOCAL_LIVE_MATCH_URL = "/api/live-match";
@@ -546,6 +547,9 @@ function ResultView({
         </div>
       </div>
 
+      {/* ── Community predictions (resolved — show results, no submit) */}
+      <PredictionPanel slug={data.slug} home={home} away={away} isResolved={true} />
+
       {/* ── On-chain proof ─────────────────────────────────────────── */}
       <div style={{ border: "1px solid var(--border)", padding: "24px 28px", marginBottom: 40, display: "flex", alignItems: "center", gap: 36, flexWrap: "wrap", background: "rgba(6,15,9,0.6)" }}>
         <div>
@@ -695,6 +699,9 @@ function ExpandedView({
           </div>
         </div>
       </div>
+
+      {/* ── Community predictions ──────────────────────────────────── */}
+      <PredictionPanel slug={data.slug} home={home} away={away} isResolved={false} />
 
       {/* ── How Lucarne is different ────────────────────────────────── */}
       <div style={{ border: "1px solid rgba(0,255,133,0.2)", borderLeft: "4px solid var(--green)", padding: "24px 28px", marginBottom: 32, background: "rgba(0,255,133,0.025)" }}>
