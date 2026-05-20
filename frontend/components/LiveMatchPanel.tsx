@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { POLYBOT_URL } from "@/lib/constants";
+import { POLYBOT_URL, SIGNAL_ATTESTOR, OKLINK_BASE } from "@/lib/constants";
+import type { NationData } from "@/lib/useAttestations";
 
 // Local Vercel route — no Railway dependency for odds data
 const LOCAL_LIVE_MATCH_URL = "/api/live-match";
+
+const REGIME_LABELS = ["CALM", "TRENDING", "VOLATILE", "BREAKOUT"] as const;
+const REGIME_COLORS = ["#4a6b5c", "#f59e0b", "#ef4444", "#00ff85"] as const;
 
 interface MatchOutcome {
   question: string;
@@ -28,6 +32,8 @@ interface LiveMatchData {
   markets:      MatchOutcome[];
   polymarketUrl:string;
   brief:        string;
+  homeNation:   string | null;
+  awayNation:   string | null;
 }
 
 function parseTeams(title: string): { home: string; away: string } {
@@ -129,7 +135,7 @@ function OddsBar({
   );
 }
 
-export function LiveMatchPanel({ expanded = false }: { expanded?: boolean }) {
+export function LiveMatchPanel({ expanded = false, nations = [] }: { expanded?: boolean; nations?: NationData[] }) {
   const [data, setData] = useState<LiveMatchData | null>(null);
   const [error, setError] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -409,160 +415,242 @@ export function LiveMatchPanel({ expanded = false }: { expanded?: boolean }) {
         </div>
       </div>
 
-      {/* ── Expanded: big match view ──────────────────────────────────── */}
-      {expanded && (
-        <div style={{ marginTop: 40 }}>
+      {/* ── Expanded: full Lucarne analysis view ─────────────────────── */}
+      {expanded && <ExpandedView data={data} home={home} away={away}
+        homeProb={homeProb} drawProb={drawProb} awayProb={awayProb}
+        isLive={isLive} nations={nations} />}
+    </div>
+  );
+}
 
-          {/* Big match title */}
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.2em", marginBottom: 12 }}>
-              {data.slug.split("-")[0].toUpperCase()} · {new Date(data.endDate).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}
-            </div>
-            <div
-              style={{
-                fontFamily: "var(--font-orbitron), sans-serif",
-                fontSize: 32,
-                fontWeight: 900,
-                letterSpacing: "0.08em",
-                color: "var(--text-primary)",
-                lineHeight: 1.2,
-              }}
-            >
-              {home}
-              <span style={{ color: "var(--text-faint)", margin: "0 16px", fontWeight: 400 }}>vs</span>
-              {away}
-            </div>
+// ── Expanded view — separated for readability ─────────────────────────────────
+
+function SignalCard({
+  label, nation, nationData, marketProb,
+}: {
+  label: string;
+  nation: string | null;
+  nationData: NationData | undefined;
+  marketProb: number;
+}) {
+  if (!nation || !nationData) {
+    return (
+      <div style={{ flex: 1, border: "1px solid var(--border)", padding: "20px 24px", minWidth: 220 }}>
+        <div style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 12 }}>{label}</div>
+        <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace" }}>No on-chain signal for this club's nation</div>
+      </div>
+    );
+  }
+
+  const regime      = nationData.regime as 0 | 1 | 2 | 3;
+  const regimeLabel = REGIME_LABELS[regime];
+  const regimeColor = REGIME_COLORS[regime];
+  const signalDelta = nationData.score - marketProb;
+  const aligned     = Math.abs(signalDelta) <= 10;
+  const alignLabel  = aligned ? "ALIGNED" : signalDelta > 0 ? "SIGNAL BULLISH" : "SIGNAL BEARISH";
+  const alignColor  = aligned ? "var(--text-dim)" : signalDelta > 0 ? "var(--green)" : "#ef4444";
+  const secAgo      = Math.floor(Date.now() / 1000) - nationData.ts;
+  const timeAgo     = secAgo < 120 ? `${secAgo}s ago` : secAgo < 3600 ? `${Math.floor(secAgo / 60)}m ago` : `${Math.floor(secAgo / 3600)}h ago`;
+  const hashShort   = nationData.signalHash ? nationData.signalHash.slice(0, 10) + "…" : "—";
+  const oklink      = `${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`;
+
+  return (
+    <div style={{ flex: 1, border: "1px solid var(--border)", borderTop: `3px solid ${regimeColor}`, padding: "20px 24px", minWidth: 220, position: "relative" }}>
+      <div style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 16 }}>
+        {label} · LUCARNE SIGNAL
+      </div>
+
+      {/* Nation + score */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 12 }}>
+        <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: 44, fontWeight: 900, color: regimeColor, lineHeight: 1, textShadow: `0 0 16px ${regimeColor}` }}>
+          {nationData.score}
+        </div>
+        <div>
+          <div style={{ fontSize: 13, color: "var(--text-primary)", fontFamily: "var(--font-orbitron), sans-serif", fontWeight: 700, letterSpacing: "0.1em" }}>{nation}</div>
+          <div style={{ fontSize: 10, color: regimeColor, fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginTop: 2 }}>{regimeLabel}</div>
+        </div>
+      </div>
+
+      {/* Signal vs market */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+        <div style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace" }}>vs market {marketProb.toFixed(1)}%</div>
+        <div style={{ fontSize: 10, color: alignColor, fontFamily: "var(--font-mono), monospace", fontWeight: 700, letterSpacing: "0.1em" }}>
+          {signalDelta > 0 ? "+" : ""}{signalDelta.toFixed(0)}pt · {alignLabel}
+        </div>
+      </div>
+
+      {/* On-chain proof */}
+      <div style={{ paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+        <div style={{ fontSize: 9, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 6 }}>ON-CHAIN PROOF</div>
+        <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", marginBottom: 4 }}>
+          hash <span style={{ color: "var(--green)" }}>{hashShort}</span>
+        </div>
+        <div style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", marginBottom: 8 }}>
+          attested {timeAgo}
+        </div>
+        <a
+          href={oklink}
+          target="_blank"
+          rel="noreferrer"
+          style={{ fontSize: 9, color: "var(--green)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid rgba(0,255,133,0.3)", padding: "3px 8px" }}
+        >
+          VERIFY ON X LAYER ↗
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function ExpandedView({
+  data, home, away, homeProb, drawProb, awayProb, isLive, nations,
+}: {
+  data: LiveMatchData; home: string; away: string;
+  homeProb: number; drawProb: number; awayProb: number;
+  isLive: boolean; nations: NationData[];
+}) {
+  const homeNationData = nations.find((n) => n.iso3 === data.homeNation);
+  const awayNationData = nations.find((n) => n.iso3 === data.awayNation);
+  const favourite      = homeProb > awayProb ? home : away;
+  const favProb        = Math.max(homeProb, awayProb);
+  const underdog       = homeProb > awayProb ? away : home;
+  const underdogProb   = Math.min(homeProb, awayProb);
+
+  return (
+    <div style={{ marginTop: 40 }}>
+
+      {/* ── Hero title ─────────────────────────────────────────────── */}
+      <div style={{ textAlign: "center", marginBottom: 48 }}>
+        <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.2em", marginBottom: 12 }}>
+          {data.slug.split("-")[0].toUpperCase()} · {new Date(data.endDate).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })} · {isLive ? "LIVE NOW" : "PRE-MATCH"}
+        </div>
+        <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: 36, fontWeight: 900, letterSpacing: "0.08em", color: "var(--text-primary)", lineHeight: 1.2 }}>
+          {home}
+          <span style={{ color: "var(--text-faint)", margin: "0 20px", fontWeight: 300 }}>vs</span>
+          {away}
+        </div>
+      </div>
+
+      {/* ── What makes Lucarne different ───────────────────────────── */}
+      <div style={{ border: "1px solid rgba(0,255,133,0.2)", borderLeft: "3px solid var(--green)", padding: "20px 24px", marginBottom: 40, background: "rgba(0,255,133,0.025)" }}>
+        <div style={{ fontSize: 10, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em", marginBottom: 10 }}>
+          HOW LUCARNE IS DIFFERENT
+        </div>
+        <p style={{ margin: 0, fontSize: 12, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.9 }}>
+          Polymarket shows you what the crowd <em>bets</em>. Lucarne shows you what the <strong style={{ color: "var(--text-primary)" }}>signal says — locked on-chain before kickoff</strong>.
+          Every 60 seconds, our agent computes a composite score (odds momentum 55% · on-chain gate signal 30% · recent form 15%)
+          for every WC 2026 nation and attests it immutably on <strong style={{ color: "var(--text-primary)" }}>X Layer mainnet</strong>.
+          No editing, no deleting. The score that existed when the whistle blew is provable forever.
+        </p>
+      </div>
+
+      {/* ── Three-column: Signal | Odds | Signal ───────────────────── */}
+      <div style={{ display: "flex", gap: 20, marginBottom: 40, alignItems: "stretch", flexWrap: "wrap" }}>
+
+        {/* Home nation signal */}
+        <SignalCard
+          label={home.toUpperCase()}
+          nation={data.homeNation}
+          nationData={homeNationData}
+          marketProb={homeProb}
+        />
+
+        {/* Center: market odds */}
+        <div style={{ flex: "0 0 220px", border: "1px solid var(--border)", padding: "20px 24px", display: "flex", flexDirection: "column", gap: 0 }}>
+          <div style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 16 }}>
+            POLYMARKET CONSENSUS
           </div>
-
-          {/* Large odds display */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 60, marginBottom: 40 }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{
-                fontFamily: "var(--font-orbitron), sans-serif",
-                fontSize: 56,
-                fontWeight: 900,
-                color: homeProb > awayProb ? "var(--green)" : "var(--text-dim)",
-                textShadow: homeProb > awayProb ? "0 0 20px var(--green-glow)" : "none",
-                lineHeight: 1,
-              }}>
-                {homeProb.toFixed(0)}%
+          {[
+            { label: home, prob: homeProb, color: homeProb > awayProb ? "var(--green)" : "var(--text-dim)" },
+            { label: "DRAW", prob: drawProb, color: "var(--amber)" },
+            { label: away, prob: awayProb, color: awayProb > homeProb ? "var(--green)" : "var(--text-dim)" },
+          ].map(({ label, prob, color }) => (
+            <div key={label} style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace" }}>{label}</span>
+                <span style={{ fontSize: 14, color, fontFamily: "var(--font-orbitron), sans-serif", fontWeight: 700 }}>{prob.toFixed(1)}%</span>
               </div>
-              <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", marginTop: 8, letterSpacing: "0.1em" }}>
-                {home.toUpperCase()} WIN
-              </div>
-              <div style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", marginTop: 4 }}>
-                implied probability
+              <div style={{ height: 3, background: "var(--border)", borderRadius: 2 }}>
+                <div style={{ height: "100%", width: `${prob}%`, background: color, borderRadius: 2, transition: "width 0.4s ease" }} />
               </div>
             </div>
-
-            <div style={{ textAlign: "center" }}>
-              <div style={{
-                fontFamily: "var(--font-orbitron), sans-serif",
-                fontSize: 56,
-                fontWeight: 900,
-                color: "var(--amber)",
-                lineHeight: 1,
-              }}>
-                {drawProb.toFixed(0)}%
-              </div>
-              <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", marginTop: 8, letterSpacing: "0.1em" }}>
-                DRAW
-              </div>
-              <div style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", marginTop: 4 }}>
-                implied probability
-              </div>
-            </div>
-
-            <div style={{ textAlign: "center" }}>
-              <div style={{
-                fontFamily: "var(--font-orbitron), sans-serif",
-                fontSize: 56,
-                fontWeight: 900,
-                color: awayProb > homeProb ? "var(--green)" : "var(--text-dim)",
-                textShadow: awayProb > homeProb ? "0 0 20px var(--green-glow)" : "none",
-                lineHeight: 1,
-              }}>
-                {awayProb.toFixed(0)}%
-              </div>
-              <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", marginTop: 8, letterSpacing: "0.1em" }}>
-                {away.toUpperCase()} WIN
-              </div>
-              <div style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", marginTop: 4 }}>
-                implied probability
-              </div>
-            </div>
-          </div>
-
-          {/* What this means callout */}
-          <div
-            style={{
-              border: "1px solid var(--border)",
-              borderLeft: "3px solid var(--green)",
-              padding: "20px 24px",
-              marginBottom: 32,
-              background: "rgba(0,255,133,0.03)",
-            }}
-          >
-            <div style={{ fontSize: 10, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em", marginBottom: 12 }}>
-              WHAT THIS MEANS
-            </div>
-            <p style={{ margin: 0, fontSize: 13, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
-              These are <strong style={{ color: "var(--text-primary)" }}>real-money prediction market odds</strong> from Polymarket — not a model forecast.
-              Crowd traders have put <strong style={{ color: "var(--text-primary)" }}>${(data.volume / 1000).toFixed(0)}K</strong> on the line.
-              The market currently prices <strong style={{ color: "var(--green)" }}>{favourite}</strong> as favourite to win at{" "}
-              <strong style={{ color: "var(--green)" }}>{favProb.toFixed(1)}%</strong> implied probability.{" "}
-              {underdog} at {underdogProb.toFixed(1)}% is priced as the underdog.
-              {drawProb > 20 && ` A draw at ${drawProb.toFixed(1)}% is a significant outcome priced in by the market.`}
-            </p>
-          </div>
-
-          {/* Signal analysis brief */}
-          {data.brief && (
-            <div style={{ marginBottom: 32 }}>
-              <div style={{ fontSize: 10, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em", marginBottom: 12 }}>
-                SIGNAL ANALYSIS
-              </div>
-              <p style={{ margin: 0, fontSize: 14, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.9 }}>
-                {data.brief}
-              </p>
-            </div>
-          )}
-
-          {/* Market stats footer */}
-          <div style={{ display: "flex", gap: 40, paddingTop: 24, borderTop: "1px solid var(--border)" }}>
-            {[
-              { label: "TOTAL VOLUME", value: `$${(data.volume / 1000).toFixed(0)}K` },
-              { label: "OPEN LIQUIDITY", value: `$${(data.liquidity / 1000).toFixed(0)}K` },
-              { label: "24H VOLUME", value: `$${(data.volume24hr / 1000).toFixed(0)}K` },
-              { label: "STATUS", value: isLive ? "LIVE" : "PRE-MATCH" },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <div style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 4 }}>{label}</div>
-                <div style={{ fontSize: 16, color: "var(--text-primary)", fontFamily: "var(--font-orbitron), sans-serif", fontWeight: 700 }}>{value}</div>
-              </div>
-            ))}
-            <div style={{ marginLeft: "auto" }}>
-              <a
-                href={data.polymarketUrl}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  fontSize: 12,
-                  color: "var(--green)",
-                  textDecoration: "none",
-                  fontFamily: "var(--font-mono), monospace",
-                  letterSpacing: "0.1em",
-                  border: "1px solid var(--green)",
-                  padding: "8px 16px",
-                  display: "inline-block",
-                }}
-              >
-                TRADE ON POLYMARKET ↗
-              </a>
-            </div>
+          ))}
+          <div style={{ marginTop: "auto", paddingTop: 16, borderTop: "1px solid var(--border)", fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace" }}>
+            ${(data.volume / 1000).toFixed(0)}K traded · ${(data.liquidity / 1000).toFixed(0)}K open
           </div>
         </div>
+
+        {/* Away nation signal */}
+        <SignalCard
+          label={away.toUpperCase()}
+          nation={data.awayNation}
+          nationData={awayNationData}
+          marketProb={awayProb}
+        />
+      </div>
+
+      {/* ── On-chain proof banner ───────────────────────────────────── */}
+      <div style={{ border: "1px solid var(--border)", padding: "20px 24px", marginBottom: 40, display: "flex", alignItems: "center", gap: 32, flexWrap: "wrap", background: "rgba(6,15,9,0.6)" }}>
+        <div>
+          <div style={{ fontSize: 9, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 6 }}>SIGNAL CONTRACT</div>
+          <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
+            style={{ fontSize: 11, color: "var(--green)", fontFamily: "var(--font-mono), monospace", textDecoration: "none" }}>
+            {SIGNAL_ATTESTOR.slice(0, 12)}…{SIGNAL_ATTESTOR.slice(-6)} ↗
+          </a>
+        </div>
+        <div>
+          <div style={{ fontSize: 9, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 6 }}>CHAIN</div>
+          <div style={{ fontSize: 11, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace" }}>X Layer Mainnet (chainId 196)</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 9, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 6 }}>SIGNAL FORMULA</div>
+          <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace" }}>
+            odds 55% · gate 30% · form 15%
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 9, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 6 }}>CADENCE</div>
+          <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace" }}>Every 60s · gated by Δscore</div>
+        </div>
+        <div style={{ marginLeft: "auto" }}>
+          <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
+            style={{ fontSize: 11, color: "var(--green)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--green)", padding: "8px 16px", display: "inline-block" }}>
+            VIEW ALL ATTESTATIONS ↗
+          </a>
+        </div>
+      </div>
+
+      {/* ── Claude analysis brief ───────────────────────────────────── */}
+      {data.brief && (
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ fontSize: 10, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em", marginBottom: 12 }}>
+            AI SIGNAL ANALYSIS
+          </div>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.9, maxWidth: 800 }}>
+            {data.brief}
+          </p>
+        </div>
       )}
+
+      {/* ── Bottom stats + market link ──────────────────────────────── */}
+      <div style={{ display: "flex", gap: 40, paddingTop: 24, borderTop: "1px solid var(--border)", alignItems: "center", flexWrap: "wrap" }}>
+        {[
+          { label: "MARKET FAVOURITE", value: favourite },
+          { label: "IMPLIED WIN PROB", value: `${favProb.toFixed(1)}%` },
+          { label: "UNDERDOG", value: `${underdog} ${underdogProb.toFixed(1)}%` },
+          { label: "24H VOLUME", value: `$${(data.volume24hr / 1000).toFixed(0)}K` },
+        ].map(({ label, value }) => (
+          <div key={label}>
+            <div style={{ fontSize: 9, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 4 }}>{label}</div>
+            <div style={{ fontSize: 14, color: "var(--text-primary)", fontFamily: "var(--font-orbitron), sans-serif", fontWeight: 700 }}>{value}</div>
+          </div>
+        ))}
+        <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}>
+          <a href={data.polymarketUrl} target="_blank" rel="noreferrer"
+            style={{ fontSize: 11, color: "var(--text-dim)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--border)", padding: "8px 16px", display: "inline-block" }}>
+            POLYMARKET ↗
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

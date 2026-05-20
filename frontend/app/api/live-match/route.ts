@@ -4,6 +4,36 @@ const GAMMA_API = "https://gamma-api.polymarket.com";
 // Default to today's UEL match; override via LIVE_MATCH_SLUG env var
 const DEFAULT_SLUG = process.env.LIVE_MATCH_SLUG ?? "uel-scf-ast-2026-05-20";
 
+// Maps Polymarket team abbreviations (from slug) → Lucarne nation ISO3 codes
+// Add entries here when rotating to a new daily match
+const TEAM_NATION_MAP: Record<string, string> = {
+  // Club → home nation (for signal lookup in Lucarne)
+  scf: "GER",  // SC Freiburg
+  ast: "ENG",  // Aston Villa
+  atm: "ESP",  // Atletico Madrid
+  bvb: "GER",  // Borussia Dortmund
+  fcb: "GER",  // Bayern Munich
+  bar: "ESP",  // Barcelona
+  rma: "ESP",  // Real Madrid
+  liv: "ENG",  // Liverpool
+  mci: "ENG",  // Man City
+  mun: "ENG",  // Man Utd
+  ars: "ENG",  // Arsenal
+  chel: "ENG", // Chelsea
+  tot: "ENG",  // Tottenham
+  juv: "ITA",  // Juventus
+  int: "ITA",  // Inter Milan
+  mil: "ITA",  // AC Milan
+  psg: "FRA",  // PSG
+  ole: "FRA",  // Marseille / Olympique Lyonnais
+  ben: "POR",  // Benfica
+  por: "POR",  // Porto
+  spo: "POR",  // Sporting
+  ajax: "NED", // Ajax
+  fen: "TUR",  // Fenerbahce
+  gal: "TUR",  // Galatasaray
+};
+
 export const runtime = "edge";
 export const revalidate = 30; // cache for 30s
 
@@ -57,6 +87,12 @@ export async function GET(req: NextRequest) {
     const slugParts = slug.split("-");
     const competition = slugParts[0]?.toUpperCase() ?? "MATCH";
 
+    // Resolve nation codes from slug abbreviations (slugParts[1] = home, slugParts[2] = away)
+    const homeAbbr = slugParts[1]?.toLowerCase() ?? "";
+    const awayAbbr = slugParts[2]?.toLowerCase() ?? "";
+    const homeNation = TEAM_NATION_MAP[homeAbbr] ?? null;
+    const awayNation = TEAM_NATION_MAP[awayAbbr] ?? null;
+
     const result = {
       slug,
       eventId:      String(ev.id ?? ""),
@@ -71,6 +107,8 @@ export async function GET(req: NextRequest) {
       competitive:  Number(ev.competitive ?? 0),
       markets:      parsed,
       competition,
+      homeNation,   // ISO3 for home team's nation (e.g. "GER")
+      awayNation,   // ISO3 for away team's nation (e.g. "ENG")
       polymarketUrl: `https://polymarket.com/sports/${competition.toLowerCase()}/${slug}`,
       brief:        "", // polybot adds this when available
     };
