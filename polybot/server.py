@@ -492,6 +492,17 @@ def health():
     return {"status": "ok", "version": "0.2.0", "tracked": len(odds_store)}
 
 
+@app.get("/debug/players/{country}")
+async def debug_players(country: str):
+    """Debug: call generate_key_players directly and return raw Claude output."""
+    country = country.upper()
+    if country not in COUNTRY_NAMES:
+        raise HTTPException(status_code=404, detail=f"Unknown country: {country}")
+    name = COUNTRY_NAMES[country]
+    result = await generate_key_players(country, name, debug=True)
+    return result
+
+
 @app.get("/markets/worldcup")
 async def get_worldcup_markets():
     markets = await fetch_worldcup_markets()
@@ -671,57 +682,57 @@ async def fetch_sofascore_form(team_id: int) -> list[dict]:
         return []
 
 
-async def generate_key_players(country: str, name: str) -> list[dict]:
-    """Use Claude to identify 5 key star players for a WC 2026 nation."""
+async def generate_key_players(country: str, name: str, debug: bool = False):
+    """Use Claude to identify 5 key star players for a WC 2026 nation.
+
+    Returns list of players (or, when debug=True, a dict with raw response details).
+    """
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         print(f"[key_players] {country}: no ANTHROPIC_API_KEY")
-        return []
+        return {"error": "no_api_key"} if debug else []
 
     client = anthropic.AsyncAnthropic(api_key=api_key)
-    prompt = f"""List the 5 most important players to watch for {name} at the 2026 World Cup.
-Output ONLY a JSON array with exactly 5 objects in this exact shape:
-[{{"name":"Player Name","position":"FWD","club":"Club Name","why":"One concise sentence on their WC 2026 impact."}}]
+    prompt = (
+        f"Return a JSON array of 5 key players for {name} at the 2026 World Cup. "
+        f"Each object MUST have these exact keys: name, position, club, why. "
+        f"position is one of: FWD, MID, DEF, GK. "
+        f"why is one short sentence about their WC 2026 impact. "
+        f"Include variety (mix of attackers, midfielders, defenders). "
+        f"Respond with ONLY the JSON array — no prose, no markdown, no code fences."
+    )
 
-Use short position codes: FWD, MID, DEF, GK. Include variety (not all attackers). Keep "why" to 1 sharp sentence.
-Start your response with [ and end with ]. No markdown, no preamble, no explanation."""
-
+    raw = ""
     try:
         resp = await client.messages.create(
             model="claude-haiku-4-5",
-            max_tokens=800,
-            messages=[
-                {"role": "user", "content": prompt},
-                {"role": "assistant", "content": "["},
-            ],
+            max_tokens=1000,
+            messages=[{"role": "user", "content": prompt}],
         )
         raw = resp.content[0].text.strip()
-        # Prefill means response continues from '['
-        text = "[" + raw if not raw.startswith("[") else raw
         # Strip markdown fences if present
+        text = raw
         if "```" in text:
-            parts = text.split("```")
-            for part in parts:
-                if "[" in part:
-                    text = part
-                    break
-            if text.startswith("json"):
-                text = text[4:]
-        # Extract array
+            import re
+            m = re.search(r"```(?:json)?\s*(\[[\s\S]*?\])\s*```", text)
+            if m:
+                text = m.group(1)
+        # Extract first array
         start = text.find("[")
         end = text.rfind("]") + 1
         if start != -1 and end > start:
             text = text[start:end]
         players = json.loads(text)
+        if not isinstance(players, list):
+            print(f"[key_players] {country}: not a list, got {type(players)}")
+            return {"error": "not_a_list", "raw": raw} if debug else []
         print(f"[key_players] {country}: parsed {len(players)} players")
-        return players[:5]
+        result = players[:5]
+        return {"players": result, "raw": raw} if debug else result
     except Exception as e:
         print(f"[key_players] {country}: FAILED — {type(e).__name__}: {e}")
-        try:
-            print(f"[key_players] raw response: {raw[:500]}")
-        except Exception:
-            pass
-        return []
+        print(f"[key_players] raw response: {raw[:500]}")
+        return {"error": f"{type(e).__name__}: {e}", "raw": raw} if debug else []
 
 
 async def generate_intel_brief(
