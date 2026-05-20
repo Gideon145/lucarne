@@ -3,6 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { POLYBOT_URL } from "@/lib/constants";
 
+// Local Vercel route — no Railway dependency for odds data
+const LOCAL_LIVE_MATCH_URL = "/api/live-match";
+
 interface MatchOutcome {
   question: string;
   slug:     string;
@@ -133,10 +136,26 @@ export function LiveMatchPanel() {
 
   const fetchMatch = useCallback(async () => {
     try {
-      const res = await fetch(`${POLYBOT_URL}/live-match`, { cache: "no-store" });
+      // Primary: Vercel /api/live-match (always available)
+      const res = await fetch(LOCAL_LIVE_MATCH_URL, { cache: "no-store" });
       if (!res.ok) { setError(true); return; }
       const json: LiveMatchData = await res.json();
-      setData(json);
+
+      // Secondary: try polybot for the Claude brief (non-blocking)
+      let brief = json.brief ?? "";
+      if (!brief) {
+        try {
+          const botRes = await fetch(`${POLYBOT_URL}/live-match`, { cache: "no-store", signal: AbortSignal.timeout(4000) });
+          if (botRes.ok) {
+            const botJson: LiveMatchData = await botRes.json();
+            brief = botJson.brief ?? "";
+          }
+        } catch {
+          // polybot unavailable — panel still renders without brief
+        }
+      }
+
+      setData({ ...json, brief });
       setLastUpdate(new Date());
       setError(false);
     } catch {
