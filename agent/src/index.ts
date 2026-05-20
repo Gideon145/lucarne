@@ -31,10 +31,19 @@ const CONFIG = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const COUNTRIES: string[] = [
-  "ARG", "BRA", "FRA", "ENG", "ESP", "GER", "POR", "NED",
-  "BEL", "ITA", "URU", "CRO", "COL", "MEX", "USA", "CAN",
-  "MAR", "SEN", "JPN", "KOR", "AUS", "ECU", "POL", "DEN",
-  "CHE", "WAL", "SRB", "TUN", "CRC", "GHA", "CMR", "IRN",
+  // CONMEBOL (6)
+  "ARG", "BRA", "URU", "COL", "ECU", "PAR",
+  // UEFA (16)
+  "FRA", "ENG", "ESP", "GER", "POR", "NED", "BEL", "CRO",
+  "CHE", "NOR", "AUT", "SWE", "SCO", "CZE", "BIH", "TUR",
+  // CONCACAF (6)
+  "USA", "MEX", "CAN", "PAN", "HAI", "CUW",
+  // CAF (10)
+  "MAR", "SEN", "GHA", "TUN", "EGY", "CIV", "ALG", "CPV", "RSA", "COD",
+  // AFC (9)
+  "JPN", "KOR", "AUS", "IRN", "KSA", "QAT", "IRQ", "JOR", "UZB",
+  // OFC (1)
+  "NZL",
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -135,7 +144,7 @@ async function run(): Promise<void> {
       continue;
     }
 
-    // Process all 32 countries in this cycle
+    // Process all 48 WC 2026 countries in this cycle
     for (const country of COUNTRIES) {
       try {
         // Compute signal (calls polybot sidecar + local processors)
