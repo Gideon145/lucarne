@@ -11,11 +11,11 @@ import { REGIME_COLORS } from "@/components/RegimeBadge";
 import { OKLINK_BASE, SIGNAL_ATTESTOR, AGENT_WALLET } from "@/lib/constants";
 import type { Regime } from "@/lib/useAttestations";
 
-const REGIME_FILTERS = ["ALL", "BREAKOUT", "VOLATILE", "TRENDING", "CALM"] as const;
+const REGIME_FILTERS = ["ALL", "BREAKOUT", "VOLATILE", "TRENDING", "CALM", "LIVE"] as const;
 type FilterType = typeof REGIME_FILTERS[number];
 
 const REGIME_INDEX: Record<FilterType, Regime | null> = {
-  ALL: null, BREAKOUT: 3, VOLATILE: 2, TRENDING: 1, CALM: 0,
+  ALL: null, BREAKOUT: 3, VOLATILE: 2, TRENDING: 1, CALM: 0, LIVE: null,
 };
 
 export default function Home() {
@@ -157,9 +157,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Live Match Panel ─────────────────────────────────────────────── */}
-      <LiveMatchPanel />
-
       {/* ── Filter + Sort ─────────────────────────────────────────────────── */}
       <div
         style={{
@@ -178,7 +175,23 @@ export default function Home() {
               key={f}
               className={`filter-tab${filter === f ? " active" : ""}`}
               onClick={() => setFilter(f)}
+              style={f === "LIVE" ? { position: "relative" } : undefined}
             >
+              {f === "LIVE" && (
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "var(--green)",
+                    boxShadow: "0 0 6px var(--green)",
+                    marginRight: 6,
+                    animation: "pulse 1.4s ease-in-out infinite",
+                    verticalAlign: "middle",
+                  }}
+                />
+              )}
               {f}
             </button>
           ))}
@@ -197,6 +210,9 @@ export default function Home() {
       </div>
 
       {/* ── Main Content: Grid + Feed ─────────────────────────────────────── */}
+      {filter === "LIVE" ? (
+        <LiveMatchPanel expanded />
+      ) : (
       <div
         style={{
           display: "grid",
@@ -252,6 +268,7 @@ export default function Home() {
           <LiveFeed feed={feed} />
         </div>
       </div>
+      )}
 
       {/* Intel Drawer */}
       <IntelDrawer
