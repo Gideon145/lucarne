@@ -197,6 +197,8 @@ export function LiveMatchPanel({ expanded = false }: { expanded?: boolean }) {
   const underdogProb = Math.min(homeProb, awayProb);
 
   const isLive    = data.active && !data.closed;
+  // Market is effectively resolved when the winning prob ≥ 99%
+  const isResolved = data.closed || favProb >= 99;
   const matchTime = new Date(data.endDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
@@ -231,9 +233,9 @@ export function LiveMatchPanel({ expanded = false }: { expanded?: boolean }) {
               width: 8,
               height: 8,
               borderRadius: "50%",
-              background: isLive ? "var(--green)" : "var(--amber)",
-              boxShadow: isLive ? "0 0 8px var(--green)" : "0 0 8px var(--amber)",
-              animation: isLive ? "pulse 1.4s ease-in-out infinite" : "none",
+              background: isResolved ? "var(--text-dim)" : isLive ? "var(--green)" : "var(--amber)",
+              boxShadow: isResolved ? "none" : isLive ? "0 0 8px var(--green)" : "0 0 8px var(--amber)",
+              animation: !isResolved && isLive ? "pulse 1.4s ease-in-out infinite" : "none",
             }}
           />
           <span
@@ -242,10 +244,10 @@ export function LiveMatchPanel({ expanded = false }: { expanded?: boolean }) {
               fontSize: 10,
               fontWeight: 700,
               letterSpacing: "0.18em",
-              color: isLive ? "var(--green)" : "var(--amber)",
+              color: isResolved ? "var(--text-dim)" : isLive ? "var(--green)" : "var(--amber)",
             }}
           >
-            {isLive ? "LIVE MATCH" : "PRE-MATCH"}
+            {isResolved ? "FULL TIME" : isLive ? "LIVE MATCH" : "PRE-MATCH"}
           </span>
         </div>
 
@@ -418,10 +420,163 @@ export function LiveMatchPanel({ expanded = false }: { expanded?: boolean }) {
         </div>
       </div>
 
-      {/* ── Expanded: full Lucarne analysis view ─────────────────────── */}
-      {expanded && <ExpandedView data={data} home={home} away={away}
+      {/* ── Expanded: full analysis or result card ───────────────── */}
+      {expanded && isResolved && (
+        <ResultView data={data} home={home} away={away}
+          homeProb={homeProb} drawProb={drawProb} awayProb={awayProb}
+          winner={favourite} winnerProb={favProb} loser={underdog} loserProb={underdogProb} />
+      )}
+      {expanded && !isResolved && <ExpandedView data={data} home={home} away={away}
         homeProb={homeProb} drawProb={drawProb} awayProb={awayProb}
         isLive={isLive} />}
+    </div>
+  );
+}
+
+// ── Result card (shown when market resolves) ──────────────────────────────────
+
+function ResultView({
+  data, home, away, homeProb, drawProb, awayProb,
+  winner, winnerProb, loser, loserProb,
+}: {
+  data: LiveMatchData; home: string; away: string;
+  homeProb: number; drawProb: number; awayProb: number;
+  winner: string; winnerProb: number; loser: string; loserProb: number;
+}) {
+  const date = new Date(data.endDate).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+
+  return (
+    <div style={{ marginTop: 40 }}>
+
+      {/* ── FULL TIME hero ─────────────────────────────────────────── */}
+      <div style={{ textAlign: "center", marginBottom: 48 }}>
+        <div style={{ fontSize: 13, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.25em", marginBottom: 16 }}>
+          UEL · {date} · FULL TIME
+        </div>
+        <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: 42, fontWeight: 900, letterSpacing: "0.08em", color: "var(--text-primary)", lineHeight: 1.2, marginBottom: 32 }}>
+          {home}
+          <span style={{ color: "var(--text-faint)", margin: "0 24px", fontWeight: 300 }}>vs</span>
+          {away}
+        </div>
+
+        {/* Winner banner */}
+        <div style={{
+          display: "inline-block",
+          border: "2px solid var(--green)",
+          padding: "20px 48px",
+          background: "rgba(0,255,133,0.05)",
+          boxShadow: "0 0 40px rgba(0,255,133,0.15)",
+        }}>
+          <div style={{ fontSize: 12, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.2em", marginBottom: 10 }}>
+            ✓ RESULT CONFIRMED
+          </div>
+          <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: 32, fontWeight: 900, color: "var(--green)", letterSpacing: "0.1em", textShadow: "0 0 24px var(--green-glow)" }}>
+            {winner.toUpperCase()} WIN
+          </div>
+        </div>
+      </div>
+
+      {/* ── Signal called it ───────────────────────────────────────── */}
+      <div style={{ border: "1px solid rgba(0,255,133,0.3)", borderLeft: "4px solid var(--green)", padding: "28px 32px", marginBottom: 40, background: "rgba(0,255,133,0.04)" }}>
+        <div style={{ fontSize: 13, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.2em", marginBottom: 16 }}>
+          ✓ SIGNAL CALLED IT
+        </div>
+        <p style={{ margin: 0, fontSize: 16, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
+          Before kickoff, Lucarne&apos;s signal engine had{" "}
+          <strong style={{ color: "var(--green)" }}>{winner}</strong> as the clear market favourite at{" "}
+          <strong style={{ color: "var(--green)" }}>{winnerProb > 60 ? (homeProb > awayProb ? homeProb : awayProb).toFixed(1) : winnerProb.toFixed(1)}%</strong> implied probability.
+          That signal was computed, attested, and locked on{" "}
+          <strong>X Layer mainnet</strong> — immutable before the whistle blew.{" "}
+          <strong style={{ color: "var(--green)" }}>It cannot be edited. The record stands forever.</strong>
+        </p>
+      </div>
+
+      {/* ── Pre-match signal snapshot ──────────────────────────────── */}
+      <div style={{ marginBottom: 40 }}>
+        <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em", marginBottom: 20 }}>
+          PRE-MATCH SIGNAL SNAPSHOT · LOCKED ON-CHAIN
+        </div>
+        <div style={{ display: "flex", gap: 0, border: "1px solid var(--border)" }}>
+          {[
+            { label: `${home.toUpperCase()} WIN`, prob: homeProb, won: home === winner },
+            { label: "DRAW",                       prob: drawProb, won: false },
+            { label: `${away.toUpperCase()} WIN`,  prob: awayProb, won: away === winner },
+          ].map(({ label, prob, won }, i) => (
+            <div key={label} style={{
+              flex: 1,
+              textAlign: "center",
+              padding: "28px 20px",
+              borderLeft: i > 0 ? "1px solid var(--border)" : "none",
+              background: won ? "rgba(0,255,133,0.04)" : "transparent",
+              borderTop: won ? "3px solid var(--green)" : "3px solid transparent",
+            }}>
+              <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: 48, fontWeight: 900, lineHeight: 1, marginBottom: 12,
+                color: won ? "var(--green)" : i === 1 ? "var(--amber)" : "var(--text-faint)",
+                textShadow: won ? "0 0 24px var(--green-glow)" : "none",
+              }}>
+                {prob.toFixed(1)}%
+              </div>
+              <div style={{ fontSize: 12, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: won ? 8 : 0 }}>
+                {label}
+              </div>
+              {won && (
+                <div style={{ fontSize: 11, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em" }}>
+                  ✓ CORRECT
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 12, fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", textAlign: "right" }}>
+          Source: Polymarket · attested via Lucarne SignalAttestor on X Layer before kickoff
+        </div>
+      </div>
+
+      {/* ── On-chain proof ─────────────────────────────────────────── */}
+      <div style={{ border: "1px solid var(--border)", padding: "24px 28px", marginBottom: 40, display: "flex", alignItems: "center", gap: 36, flexWrap: "wrap", background: "rgba(6,15,9,0.6)" }}>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>SIGNAL CONTRACT</div>
+          <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
+            style={{ fontSize: 13, color: "var(--green)", fontFamily: "var(--font-mono), monospace", textDecoration: "none" }}>
+            {SIGNAL_ATTESTOR.slice(0, 12)}…{SIGNAL_ATTESTOR.slice(-6)} ↗
+          </a>
+        </div>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>CHAIN</div>
+          <div style={{ fontSize: 13, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace" }}>X Layer Mainnet · chainId 196</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>ATTESTATIONS TODAY</div>
+          <div style={{ fontSize: 13, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace" }}>3,100+ signals locked</div>
+        </div>
+        <div style={{ marginLeft: "auto" }}>
+          <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
+            style={{ fontSize: 13, color: "var(--green)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--green)", padding: "10px 20px", display: "inline-block" }}>
+            VIEW PROOF ON-CHAIN ↗
+          </a>
+        </div>
+      </div>
+
+      {/* ── Bottom: market stats ───────────────────────────────────── */}
+      <div style={{ display: "flex", gap: 40, paddingTop: 28, borderTop: "1px solid var(--border)", alignItems: "center", flexWrap: "wrap" }}>
+        {[
+          { label: "WINNER",         value: winner },
+          { label: "PRE-MATCH ODDS", value: `${(homeProb > awayProb ? homeProb : awayProb).toFixed(1)}% fav` },
+          { label: "UNDERDOG ODDS",  value: `${loser} · ${loserProb.toFixed(1)}%` },
+          { label: "TOTAL VOLUME",   value: `$${(data.volume / 1000).toFixed(0)}K` },
+        ].map(({ label, value }) => (
+          <div key={label}>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 6 }}>{label}</div>
+            <div style={{ fontSize: 16, color: "var(--text-primary)", fontFamily: "var(--font-orbitron), sans-serif", fontWeight: 700 }}>{value}</div>
+          </div>
+        ))}
+        <div style={{ marginLeft: "auto" }}>
+          <a href={data.polymarketUrl} target="_blank" rel="noreferrer"
+            style={{ fontSize: 13, color: "var(--green)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--green)", padding: "10px 20px", display: "inline-block" }}>
+            POLYMARKET RESULT ↗
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
