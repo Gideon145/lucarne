@@ -177,7 +177,7 @@ export default function PredictionPanel({
           COMMUNITY PREDICTIONS · ON-CHAIN
         </div>
         {counts && (
-          <div style={{ fontFamily: "var(--font-mono), monospace", fontSize: 13, color: "var(--text-faint)" }}>
+          <div style={{ fontFamily: "var(--font-mono), monospace", fontSize: 16, color: "#ffffff" }}>
             {counts.home + counts.draw + counts.away} predictions submitted
           </div>
         )}
@@ -197,7 +197,7 @@ export default function PredictionPanel({
                     <span style={{ fontSize: 13, color: isMyPick ? OUTCOME_COLORS[i] : "var(--text-dim)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em" }}>
                       {labels[i]} {isMyPick ? "← your pick" : ""}
                     </span>
-                    <span style={{ fontSize: 13, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace" }}>{pct}% · {count}</span>
+                    <span style={{ fontSize: 16, color: "#ffffff", fontFamily: "var(--font-mono), monospace" }}>{pct}% · {count}</span>
                   </div>
                   <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
                     <div style={{ height: 4, width: `${pct}%`, background: OUTCOME_COLORS[i], borderRadius: 2, transition: "width 0.6s ease" }} />
