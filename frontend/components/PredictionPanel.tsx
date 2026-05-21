@@ -62,6 +62,22 @@ export default function PredictionPanel({
 
   useEffect(() => { fetchCounts(); }, [fetchCounts]);
 
+  // ── Track account switches in the wallet extension ─────────────────────────
+  useEffect(() => {
+    const eth = (window as any).ethereum;
+    if (!eth) return;
+    const onAccountsChanged = (accounts: string[]) => {
+      const newAddr = accounts[0] ?? null;
+      setWallet(newAddr);
+      setStatus("idle");
+      setErrMsg(null);
+      setTxHash(null);
+      fetchCounts(newAddr ?? undefined);
+    };
+    eth.on("accountsChanged", onAccountsChanged);
+    return () => eth.removeListener("accountsChanged", onAccountsChanged);
+  }, [fetchCounts]);
+
   // ── Connect wallet ──────────────────────────────────────────────────────────
 
   const connect = useCallback(async () => {
@@ -69,7 +85,13 @@ export default function PredictionPanel({
     if (!eth) { setErrMsg("No wallet found. Install MetaMask or OKX Wallet."); return null; }
 
     try {
-      const [addr] = await eth.request({ method: "eth_requestAccounts" }) as string[];
+      // Force the account picker so the user explicitly selects which wallet
+      // to predict from. This avoids returning a stale cached connection when
+      // multiple accounts exist in the extension.
+      await eth.request({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] });
+      const accounts = await eth.request({ method: "eth_accounts" }) as string[];
+      const addr = accounts[0];
+      if (!addr) return null;
       setWallet(addr);
       fetchCounts(addr);
 
@@ -100,9 +122,23 @@ export default function PredictionPanel({
 
   const submit = async (outcome: 0 | 1 | 2) => {
     setErrMsg(null);
-    let addr = wallet;
-    if (!addr) { addr = await connect(); }
+    // Always connect to get the currently active account — never use cached wallet.
+    // This ensures switching accounts in the extension is picked up correctly.
+    const addr = await connect();
     if (!addr) return;
+
+    // Check on-chain whether this wallet has already predicted before sending the tx.
+    try {
+      const res = await fetch(`/api/predictions?slug=${slug}&wallet=${addr}`);
+      if (res.ok) {
+        const fresh = await res.json();
+        setCounts(fresh);
+        if (fresh.mine?.predicted) {
+          setErrMsg(`${addr.slice(0, 6)}…${addr.slice(-4)} has already predicted for this game.`);
+          return;
+        }
+      }
+    } catch { /* non-blocking — proceed if the check fails */ }
 
     setStatus("pending");
     try {
@@ -137,11 +173,11 @@ export default function PredictionPanel({
 
       {/* Header */}
       <div style={{ padding: "18px 24px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ fontFamily: "var(--font-mono), monospace", fontSize: 11, letterSpacing: "0.2em", color: "var(--amber)" }}>
+        <div style={{ fontFamily: "var(--font-mono), monospace", fontSize: 14, letterSpacing: "0.2em", color: "var(--amber)" }}>
           COMMUNITY PREDICTIONS · ON-CHAIN
         </div>
         {counts && (
-          <div style={{ fontFamily: "var(--font-mono), monospace", fontSize: 11, color: "var(--text-faint)" }}>
+          <div style={{ fontFamily: "var(--font-mono), monospace", fontSize: 13, color: "var(--text-faint)" }}>
             {counts.home + counts.draw + counts.away} predictions submitted
           </div>
         )}
@@ -158,10 +194,10 @@ export default function PredictionPanel({
               return (
                 <div key={i}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <span style={{ fontSize: 11, color: isMyPick ? OUTCOME_COLORS[i] : "var(--text-dim)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em" }}>
+                    <span style={{ fontSize: 13, color: isMyPick ? OUTCOME_COLORS[i] : "var(--text-dim)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em" }}>
                       {labels[i]} {isMyPick ? "← your pick" : ""}
                     </span>
-                    <span style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace" }}>{pct}% · {count}</span>
+                    <span style={{ fontSize: 13, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace" }}>{pct}% · {count}</span>
                   </div>
                   <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
                     <div style={{ height: 4, width: `${pct}%`, background: OUTCOME_COLORS[i], borderRadius: 2, transition: "width 0.6s ease" }} />
@@ -174,24 +210,24 @@ export default function PredictionPanel({
 
         {/* Action area */}
         {isResolved ? (
-          <div style={{ fontSize: 13, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", textAlign: "center", padding: "12px 0" }}>
+          <div style={{ fontSize: 15, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", textAlign: "center", padding: "12px 0" }}>
             Market resolved — predictions closed
           </div>
         ) : alreadyPredicted ? (
           <div style={{ textAlign: "center", padding: "12px 0" }}>
-            <div style={{ fontSize: 13, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>
+            <div style={{ fontSize: 15, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>
               ✓ PREDICTION SUBMITTED ON-CHAIN
             </div>
             {txHash && (
               <a href={`${OKLINK_BASE}/tx/${txHash}`} target="_blank" rel="noreferrer"
-                style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", textDecoration: "none" }}>
+                style={{ fontSize: 13, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", textDecoration: "none" }}>
                 view tx ↗
               </a>
             )}
           </div>
         ) : (
           <>
-            <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 16, textAlign: "center" }}>
+            <div style={{ fontSize: 13, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 16, textAlign: "center" }}>
               {status === "pending" ? "CONFIRM IN WALLET…" : "SUBMIT YOUR PREDICTION · FREE · ONE TX"}
             </div>
             <div style={{ display: "flex", gap: 12 }}>
@@ -205,7 +241,7 @@ export default function PredictionPanel({
                     border: `1px solid ${OUTCOME_COLORS[i]}`,
                     color: OUTCOME_COLORS[i],
                     fontFamily: "var(--font-mono), monospace",
-                    fontSize: 12, letterSpacing: "0.12em",
+                    fontSize: 15, letterSpacing: "0.12em",
                     cursor: status === "pending" ? "not-allowed" : "pointer",
                     opacity: status === "pending" ? 0.5 : 1,
                     transition: "background 0.15s",
@@ -221,13 +257,13 @@ export default function PredictionPanel({
         )}
 
         {errMsg && (
-          <div style={{ marginTop: 12, fontSize: 12, color: "#ff4444", fontFamily: "var(--font-mono), monospace", textAlign: "center" }}>
+          <div style={{ marginTop: 12, fontSize: 13, color: "#ff4444", fontFamily: "var(--font-mono), monospace", textAlign: "center" }}>
             {errMsg}
           </div>
         )}
 
         {!wallet && !alreadyPredicted && !isResolved && (
-          <div style={{ marginTop: 10, fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", textAlign: "center" }}>
+          <div style={{ marginTop: 10, fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", textAlign: "center" }}>
             Requires MetaMask or OKX Wallet · X Layer Mainnet
           </div>
         )}
