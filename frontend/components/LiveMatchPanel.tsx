@@ -53,6 +53,8 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     ],
     polymarketUrl: "",
     brief: "", homeNation: "NED", awayNation: "NED",
+    gameId: "0xe055f62b2b266bf46db7c04a4cb083e1cd169e103c8c8dff960d34e05420c4a4",
+    proofTxHash: "0x43dc866227d4b93a4a4bae3c6706c5a1d032309aa46e03390ecf9d677115c8fb",
   },
 };
 
@@ -80,6 +82,8 @@ interface LiveMatchData {
   brief:        string;
   homeNation:   string | null;
   awayNation:   string | null;
+  gameId?:      string;
+  proofTxHash?: string;
 }
 
 function parseTeams(title: string): { home: string; away: string } {
@@ -664,7 +668,7 @@ function ResultView({
       <PredictionPanel slug={data.slug} home={home} away={away} isResolved={true} />
 
       {/* ── On-chain proof ─────────────────────────────────────────── */}
-      <div style={{ border: "1px solid var(--border)", padding: "24px 28px", marginBottom: 40, display: "flex", alignItems: "center", gap: 36, flexWrap: "wrap", background: "rgba(6,15,9,0.6)" }}>
+      <div style={{ border: "1px solid var(--border)", padding: "24px 28px", marginBottom: 40, display: "flex", alignItems: "flex-start", gap: 36, flexWrap: "wrap", background: "rgba(6,15,9,0.6)" }}>
         <div>
           <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>SIGNAL CONTRACT</div>
           <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
@@ -676,14 +680,22 @@ function ResultView({
           <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>CHAIN</div>
           <div style={{ fontSize: 13, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace" }}>X Layer Mainnet · chainId 196</div>
         </div>
-        <div>
-          <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>ATTESTATIONS TODAY</div>
-          <div style={{ fontSize: 13, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace" }}>3,100+ signals locked</div>
-        </div>
-        <div style={{ marginLeft: "auto" }}>
+        {data.gameId && (
+          <div style={{ maxWidth: 320 }}>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>GAME ID · keccak256("{data.slug}")</div>
+            <div style={{ fontSize: 12, color: "var(--amber)", fontFamily: "var(--font-mono), monospace", wordBreak: "break-all" }}>{data.gameId}</div>
+          </div>
+        )}
+        <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end" }}>
+          {data.proofTxHash && (
+            <a href={`${OKLINK_BASE}/tx/${data.proofTxHash}`} target="_blank" rel="noreferrer"
+              style={{ fontSize: 13, color: "var(--amber)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--amber)", padding: "10px 20px", display: "inline-block" }}>
+              SAMPLE TX (GAME ID IN INPUT) ↗
+            </a>
+          )}
           <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
             style={{ fontSize: 13, color: "var(--green)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--green)", padding: "10px 20px", display: "inline-block" }}>
-            VIEW PROOF ON-CHAIN ↗
+            VIEW ALL ATTESTATIONS ↗
           </a>
         </div>
       </div>
@@ -886,7 +898,7 @@ function ExpandedView({
       )}
 
       {/* ── On-chain proof banner ───────────────────────────────────── */}
-      <div style={{ border: "1px solid var(--border)", padding: "24px 28px", marginBottom: 32, display: "flex", alignItems: "center", gap: 36, flexWrap: "wrap", background: "rgba(6,15,9,0.6)" }}>
+      <div style={{ border: "1px solid var(--border)", padding: "24px 28px", marginBottom: 32, display: "flex", alignItems: "flex-start", gap: 36, flexWrap: "wrap", background: "rgba(6,15,9,0.6)" }}>
         <div>
           <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>SIGNAL CONTRACT</div>
           <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
@@ -902,11 +914,19 @@ function ExpandedView({
           <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>SIGNAL FORMULA</div>
           <div style={{ fontSize: 13, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace" }}>odds 55% · gate 30% · form 15%</div>
         </div>
-        <div>
-          <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>CADENCE</div>
-          <div style={{ fontSize: 13, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace" }}>Every 60s · gated by Δscore</div>
-        </div>
-        <div style={{ marginLeft: "auto" }}>
+        {data.gameId && (
+          <div style={{ maxWidth: 320 }}>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>GAME ID · keccak256("{data.slug}")</div>
+            <div style={{ fontSize: 12, color: "var(--amber)", fontFamily: "var(--font-mono), monospace", wordBreak: "break-all" }}>{data.gameId}</div>
+          </div>
+        )}
+        <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end" }}>
+          {data.proofTxHash && (
+            <a href={`${OKLINK_BASE}/tx/${data.proofTxHash}`} target="_blank" rel="noreferrer"
+              style={{ fontSize: 13, color: "var(--amber)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--amber)", padding: "10px 20px", display: "inline-block" }}>
+              SAMPLE TX (GAME ID IN INPUT) ↗
+            </a>
+          )}
           <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
             style={{ fontSize: 13, color: "var(--green)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--green)", padding: "10px 20px", display: "inline-block" }}>
             VIEW ALL ATTESTATIONS ↗
