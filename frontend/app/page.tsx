@@ -112,9 +112,11 @@ export default function Home() {
         }}>
           <span style={{ color: "var(--green)", fontWeight: 700 }}>LUCARNE</span>
           {" "}is a real-time on-chain intelligence terminal for the 2026 FIFA World Cup.
-          An autonomous AI agent reads match data every 60 seconds, scores each nation 0–100 based on form, squad depth, and tournament draw, then writes the result as a cryptographic attestation to{" "}
-          <span style={{ color: "var(--text-primary)" }}>X Layer</span>.
-          Click any nation to unlock a paid AI brief — generated live by Claude, gated via x402 micropayment on the OKX Onchain OS.
+          An autonomous AI agent scores all 32 nations 0–100 every 60 seconds and writes the result as a cryptographic attestation to{" "}
+          <span style={{ color: "var(--text-primary)" }}>X Layer</span>
+          {" "}— immutable, timestamped, verifiable by anyone.{" "}
+          <span style={{ color: "var(--green)" }}>We called Aston Villa to win the UEL Final. The signal was on-chain 3 hours before kickoff. Villa won.</span>
+          {" "}Click any nation to unlock a paid AI brief — generated live by Claude, gated via x402 micropayment on the OKX Onchain OS.
         </p>
       </div>
 
