@@ -1,6 +1,9 @@
 export const SIGNAL_ATTESTOR          = "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81" as const;
 export const MATCH_SIGNAL_ATTESTOR    = "0x9693d19C09d9dE08F4acaD288f7608552D018482" as const;
+export const MATCH_RESULT_ATTESTOR    = "0x81AF1dfF7D92ac333a785a1486822159855377bF" as const;
 export const PREDICTIONS_CONTRACT     = "0x178565919FFebC4b57ca04112d0FFFaD946Df6E7" as const;
+export const SIGNAL_POOL              = "0xd6E29fFc24231BDEeB95057876A9A72E3641A52E" as const;
+export const I_CALLED_IT_NFT          = "0xBB15f43a032c3DE6aB33fDFBfb140FA461854c1E" as const;
 export const RPC_URL              = "/api/rpc";
 export const CHAIN_ID             = 196;
 export const POLYBOT_URL          = "https://lucarne-polybot-production.up.railway.app";

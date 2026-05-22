@@ -19,5 +19,24 @@
     "chainId": 196,
     "owner": "0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3",
     "signalAttestor": "0x9693d19C09d9dE08F4acaD288f7608552D018482"
+  },
+  "SignalPool": {
+    "address": "0xd6E29fFc24231BDEeB95057876A9A72E3641A52E",
+    "deployTx": "0x3a3e94e763bb2e85acdb0fdb3f9bcac858b656bdd3d024ad6f6c38b45888784a",
+    "deployedAt": "2026-05-22T03:12:44.960Z",
+    "network": "xlayer",
+    "chainId": 196,
+    "owner": "0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3",
+    "agent": "0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3",
+    "resultAttestor": "0x81AF1dfF7D92ac333a785a1486822159855377bF"
+  },
+  "ICalledItNFT": {
+    "address": "0xBB15f43a032c3DE6aB33fDFBfb140FA461854c1E",
+    "deployTx": "0x0bae8ce46ac14f46e909627a0d8edfd4b57fc3c261821ee515c8b2d09dc7f0b0",
+    "deployedAt": "2026-05-22T03:12:44.961Z",
+    "network": "xlayer",
+    "chainId": 196,
+    "owner": "0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3",
+    "signalPool": "0xd6E29fFc24231BDEeB95057876A9A72E3641A52E"
   }
 }

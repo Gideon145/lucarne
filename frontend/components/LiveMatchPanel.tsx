@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { POLYBOT_URL, SIGNAL_ATTESTOR, MATCH_SIGNAL_ATTESTOR, OKLINK_BASE } from "@/lib/constants";
 import PredictionPanel from "./PredictionPanel";
+import BetPanel from "./BetPanel";
 
 // Local Vercel route — no Railway dependency for odds data
 const LOCAL_LIVE_MATCH_URL = "/api/live-match";
@@ -967,6 +968,9 @@ function ExpandedView({
 
       {/* ── Community predictions ──────────────────────────────────── */}
       <PredictionPanel slug={data.slug} home={home} away={away} isResolved={false} />
+
+      {/* ── Signal Pool — bet against (or with) Lucarne ────────────── */}
+      <BetPanel slug={data.slug} home={home} away={away} />
 
       {/* ── How Lucarne is different ────────────────────────────────── */}
       <div style={{ border: "1px solid rgba(0,255,133,0.2)", borderLeft: "4px solid var(--green)", padding: "24px 28px", marginBottom: 32, background: "rgba(0,255,133,0.025)" }}>
