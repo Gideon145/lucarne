@@ -1,5 +1,6 @@
-export const SIGNAL_ATTESTOR      = "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81" as const;
-export const PREDICTIONS_CONTRACT = "0x178565919FFebC4b57ca04112d0FFFaD946Df6E7" as const;
+export const SIGNAL_ATTESTOR          = "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81" as const;
+export const MATCH_SIGNAL_ATTESTOR    = "0x9693d19C09d9dE08F4acaD288f7608552D018482" as const;
+export const PREDICTIONS_CONTRACT     = "0x178565919FFebC4b57ca04112d0FFFaD946Df6E7" as const;
 export const RPC_URL              = "/api/rpc";
 export const CHAIN_ID             = 196;
 export const POLYBOT_URL          = "https://lucarne-polybot-production.up.railway.app";

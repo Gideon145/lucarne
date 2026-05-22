@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { POLYBOT_URL, SIGNAL_ATTESTOR, OKLINK_BASE } from "@/lib/constants";
+import { POLYBOT_URL, SIGNAL_ATTESTOR, MATCH_SIGNAL_ATTESTOR, OKLINK_BASE } from "@/lib/constants";
 import PredictionPanel from "./PredictionPanel";
 
 // Local Vercel route — no Railway dependency for odds data
@@ -40,6 +40,8 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     ],
     polymarketUrl: "https://polymarket.com/event/uel-scf-ast-2026-05-20",
     brief: "", homeNation: "GER", awayNation: "ENG",
+    gameId: "0xc281fcc54207a47559fb518c2f99673f1784919931ab51fab71fcc6729f4d482",
+    signalTxHash: "0x4e98f3c011ad8c512acc61805550658208370674dd82b8d3820706384aa33f65",
   },
   "ned-ere-ajx-grn-2026-05-21": {
     slug: "ned-ere-ajx-grn-2026-05-21", eventId: "static-ajx-grn",
@@ -57,6 +59,7 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     brief: "", homeNation: "NED", awayNation: "NED",
     gameId: "0xe055f62b2b266bf46db7c04a4cb083e1cd169e103c8c8dff960d34e05420c4a4",
     proofTxHash: "0x43dc866227d4b93a4a4bae3c6706c5a1d032309aa46e03390ecf9d677115c8fb",
+    signalTxHash: "0x38e3c6cd2e8abe7833839b0840c1ab8bda5afb33ea52879483288fb9dfd62daa",
   },
   "sea-fio-ata-2026-05-24": {
     slug: "sea-fio-ata-2026-05-24", eventId: "static-fio-ata",
@@ -75,6 +78,7 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     homeNation: "ITA", awayNation: "ITA",
     gameId: "0x24ba1da38dccf3520be37c13283e854e5d1f2605a1f01f983193f41d58372e89",
     proofTxHash: "0xe3553d8e0242baddac7db1256bf5f16aff3ee79c1c128051886ad036a76d3dd2",
+    signalTxHash: "0x6983a19169803ad0a03355586d289c1b644d31802ae0ae7f297eff8b50f504d5",
   },
 };
 
@@ -102,8 +106,9 @@ interface LiveMatchData {
   brief:        string;
   homeNation:   string | null;
   awayNation:   string | null;
-  gameId?:      string;
-  proofTxHash?: string;
+  gameId?:        string;
+  proofTxHash?:   string;
+  signalTxHash?:  string;
 }
 
 function parseTeams(title: string): { home: string; away: string } {
@@ -691,9 +696,9 @@ function ResultView({
       <div style={{ border: "1px solid var(--border)", padding: "24px 28px", marginBottom: 40, display: "flex", alignItems: "flex-start", gap: 36, flexWrap: "wrap", background: "rgba(6,15,9,0.6)" }}>
         <div>
           <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>SIGNAL CONTRACT</div>
-          <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
+          <a href={`${OKLINK_BASE}/address/${MATCH_SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
             style={{ fontSize: 13, color: "var(--green)", fontFamily: "var(--font-mono), monospace", textDecoration: "none" }}>
-            {SIGNAL_ATTESTOR.slice(0, 12)}…{SIGNAL_ATTESTOR.slice(-6)} ↗
+            {MATCH_SIGNAL_ATTESTOR.slice(0, 12)}…{MATCH_SIGNAL_ATTESTOR.slice(-6)} ↗
           </a>
         </div>
         <div>
@@ -704,26 +709,27 @@ function ResultView({
           <div style={{ maxWidth: 360 }}>
             <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>GAME ID · keccak256("{data.slug}")</div>
             <div style={{ fontSize: 12, color: "var(--amber)", fontFamily: "var(--font-mono), monospace", wordBreak: "break-all", marginBottom: 10 }}>{data.gameId}</div>
-            {data.proofTxHash && (
+            {data.signalTxHash && (
               <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
-                In sample tx input data:<br />
-                <span style={{ color: "var(--amber)" }}>[0]</span> = gameId — matches above hash<br />
-                <span style={{ color: "var(--green)" }}>[1]</span> = outcome &nbsp;(0=HOME · 1=DRAW · 2=AWAY)
+                Signal tx encodes: homeProb · drawProb · awayProb<br />
+                signalScore · signalCall · dataHash (inputs provenance)
               </div>
             )}
           </div>
         )}
         <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end" }}>
+          {data.signalTxHash && (
+            <a href={`${OKLINK_BASE}/tx/${data.signalTxHash}`} target="_blank" rel="noreferrer"
+              style={{ fontSize: 13, color: "var(--green)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--green)", padding: "10px 20px", display: "inline-block" }}>
+              SIGNAL TX ↗
+            </a>
+          )}
           {data.proofTxHash && (
             <a href={`${OKLINK_BASE}/tx/${data.proofTxHash}`} target="_blank" rel="noreferrer"
               style={{ fontSize: 13, color: "var(--amber)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--amber)", padding: "10px 20px", display: "inline-block" }}>
               SAMPLE PREDICTION TX ↗
             </a>
           )}
-          <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
-            style={{ fontSize: 13, color: "var(--green)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--green)", padding: "10px 20px", display: "inline-block" }}>
-            VIEW ALL ATTESTATIONS ↗
-          </a>
         </div>
       </div>
 
@@ -966,9 +972,9 @@ function ExpandedView({
       <div style={{ border: "1px solid var(--border)", padding: "24px 28px", marginBottom: 32, display: "flex", alignItems: "flex-start", gap: 36, flexWrap: "wrap", background: "rgba(6,15,9,0.6)" }}>
         <div>
           <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>SIGNAL CONTRACT</div>
-          <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
+          <a href={`${OKLINK_BASE}/address/${MATCH_SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
             style={{ fontSize: 13, color: "var(--green)", fontFamily: "var(--font-mono), monospace", textDecoration: "none" }}>
-            {SIGNAL_ATTESTOR.slice(0, 12)}…{SIGNAL_ATTESTOR.slice(-6)} ↗
+            {MATCH_SIGNAL_ATTESTOR.slice(0, 12)}…{MATCH_SIGNAL_ATTESTOR.slice(-6)} ↗
           </a>
         </div>
         <div>
@@ -983,26 +989,27 @@ function ExpandedView({
           <div style={{ maxWidth: 360 }}>
             <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>GAME ID · keccak256("{data.slug}")</div>
             <div style={{ fontSize: 12, color: "var(--amber)", fontFamily: "var(--font-mono), monospace", wordBreak: "break-all", marginBottom: 10 }}>{data.gameId}</div>
-            {data.proofTxHash && (
+            {data.signalTxHash && (
               <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
-                In sample tx input data:<br />
-                <span style={{ color: "var(--amber)" }}>[0]</span> = gameId — matches above hash<br />
-                <span style={{ color: "var(--green)" }}>[1]</span> = outcome &nbsp;(0=HOME · 1=DRAW · 2=AWAY)
+                Signal tx encodes: homeProb · drawProb · awayProb<br />
+                signalScore · signalCall · dataHash (inputs provenance)
               </div>
             )}
           </div>
         )}
         <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end" }}>
+          {data.signalTxHash && (
+            <a href={`${OKLINK_BASE}/tx/${data.signalTxHash}`} target="_blank" rel="noreferrer"
+              style={{ fontSize: 13, color: "var(--green)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--green)", padding: "10px 20px", display: "inline-block" }}>
+              SIGNAL TX ↗
+            </a>
+          )}
           {data.proofTxHash && (
             <a href={`${OKLINK_BASE}/tx/${data.proofTxHash}`} target="_blank" rel="noreferrer"
               style={{ fontSize: 13, color: "var(--amber)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--amber)", padding: "10px 20px", display: "inline-block" }}>
               SAMPLE PREDICTION TX ↗
             </a>
           )}
-          <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
-            style={{ fontSize: 13, color: "var(--green)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--green)", padding: "10px 20px", display: "inline-block" }}>
-            VIEW ALL ATTESTATIONS ↗
-          </a>
         </div>
       </div>
 
