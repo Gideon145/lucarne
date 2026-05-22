@@ -681,16 +681,23 @@ function ResultView({
           <div style={{ fontSize: 13, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace" }}>X Layer Mainnet · chainId 196</div>
         </div>
         {data.gameId && (
-          <div style={{ maxWidth: 320 }}>
+          <div style={{ maxWidth: 360 }}>
             <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>GAME ID · keccak256("{data.slug}")</div>
-            <div style={{ fontSize: 12, color: "var(--amber)", fontFamily: "var(--font-mono), monospace", wordBreak: "break-all" }}>{data.gameId}</div>
+            <div style={{ fontSize: 12, color: "var(--amber)", fontFamily: "var(--font-mono), monospace", wordBreak: "break-all", marginBottom: 10 }}>{data.gameId}</div>
+            {data.proofTxHash && (
+              <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                In sample tx input data:<br />
+                <span style={{ color: "var(--amber)" }}>[0]</span> = gameId — matches above hash<br />
+                <span style={{ color: "var(--green)" }}>[1]</span> = outcome &nbsp;(0=HOME · 1=DRAW · 2=AWAY)
+              </div>
+            )}
           </div>
         )}
         <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end" }}>
           {data.proofTxHash && (
             <a href={`${OKLINK_BASE}/tx/${data.proofTxHash}`} target="_blank" rel="noreferrer"
               style={{ fontSize: 13, color: "var(--amber)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--amber)", padding: "10px 20px", display: "inline-block" }}>
-              SAMPLE TX (GAME ID IN INPUT) ↗
+              SAMPLE PREDICTION TX ↗
             </a>
           )}
           <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
@@ -915,16 +922,23 @@ function ExpandedView({
           <div style={{ fontSize: 13, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace" }}>odds 55% · gate 30% · form 15%</div>
         </div>
         {data.gameId && (
-          <div style={{ maxWidth: 320 }}>
+          <div style={{ maxWidth: 360 }}>
             <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em", marginBottom: 8 }}>GAME ID · keccak256("{data.slug}")</div>
-            <div style={{ fontSize: 12, color: "var(--amber)", fontFamily: "var(--font-mono), monospace", wordBreak: "break-all" }}>{data.gameId}</div>
+            <div style={{ fontSize: 12, color: "var(--amber)", fontFamily: "var(--font-mono), monospace", wordBreak: "break-all", marginBottom: 10 }}>{data.gameId}</div>
+            {data.proofTxHash && (
+              <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                In sample tx input data:<br />
+                <span style={{ color: "var(--amber)" }}>[0]</span> = gameId — matches above hash<br />
+                <span style={{ color: "var(--green)" }}>[1]</span> = outcome &nbsp;(0=HOME · 1=DRAW · 2=AWAY)
+              </div>
+            )}
           </div>
         )}
         <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end" }}>
           {data.proofTxHash && (
             <a href={`${OKLINK_BASE}/tx/${data.proofTxHash}`} target="_blank" rel="noreferrer"
               style={{ fontSize: 13, color: "var(--amber)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--amber)", padding: "10px 20px", display: "inline-block" }}>
-              SAMPLE TX (GAME ID IN INPUT) ↗
+              SAMPLE PREDICTION TX ↗
             </a>
           )}
           <a href={`${OKLINK_BASE}/address/${SIGNAL_ATTESTOR}`} target="_blank" rel="noreferrer"
