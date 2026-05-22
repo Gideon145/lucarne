@@ -11,7 +11,49 @@ const LOCAL_LIVE_MATCH_URL = "/api/live-match";
 // Stored here because once a Polymarket market resolves it returns settlement
 // prices (99.8% / 0.2%), not the actual pre-match probabilities.
 const PRE_MATCH_ODDS: Record<string, { home: number; draw: number; away: number }> = {
-  "uel-scf-ast-2026-05-20": { home: 16.5, draw: 24.5, away: 59.5 },
+  "uel-scf-ast-2026-05-20":      { home: 16.5, draw: 24.5, away: 59.5 },
+  "ned-ere-ajx-grn-2026-05-21":  { home: 51.2, draw: 24.2, away: 24.6 },
+};
+
+// ── Multi-game config ─────────────────────────────────────────────────────────
+interface TrackedGame { slug: string; label: string; date: string; resolved: boolean; }
+const TRACKED_GAMES: TrackedGame[] = [
+  { slug: "uel-scf-ast-2026-05-20",     label: "UEL FINAL",    date: "MAY 20", resolved: true  },
+  { slug: "ned-ere-ajx-grn-2026-05-21", label: "EREDIVISIE PO", date: "MAY 21", resolved: true  },
+];
+
+// Static match data for games not on Polymarket (or as reliable fallback).
+const STATIC_GAMES: Record<string, LiveMatchData> = {
+  "uel-scf-ast-2026-05-20": {
+    slug: "uel-scf-ast-2026-05-20", eventId: "static-uel-scf-ast",
+    title: "SC Freiburg vs. Aston Villa",
+    description: "UEFA Europa League 2025/26 Final",
+    endDate: "2026-05-20T19:00:00Z",
+    active: false, closed: true,
+    volume: 1840000, liquidity: 0, volume24hr: 0, competitive: 0,
+    markets: [
+      { question: "SC Freiburg win?", slug: "scf-win",  prob:  0.1, marketId: "s1" },
+      { question: "Draw?",            slug: "uel-draw", prob:  0.1, marketId: "s2" },
+      { question: "Aston Villa win?", slug: "ast-win",  prob: 99.8, marketId: "s3" },
+    ],
+    polymarketUrl: "https://polymarket.com/event/uel-scf-ast-2026-05-20",
+    brief: "", homeNation: "GER", awayNation: "ENG",
+  },
+  "ned-ere-ajx-grn-2026-05-21": {
+    slug: "ned-ere-ajx-grn-2026-05-21", eventId: "static-ajx-grn",
+    title: "Ajax vs. Groningen",
+    description: "Dutch Eredivisie — Conference League Play-offs Semi-final",
+    endDate: "2026-05-21T16:45:00Z",
+    active: false, closed: true,
+    volume: 0, liquidity: 0, volume24hr: 0, competitive: 0,
+    markets: [
+      { question: "Ajax win?",      slug: "ajx-win",  prob: 99.8, marketId: "s4" },
+      { question: "Draw?",          slug: "ajx-draw", prob:  0.1, marketId: "s5" },
+      { question: "Groningen win?", slug: "grn-win",  prob:  0.1, marketId: "s6" },
+    ],
+    polymarketUrl: "",
+    brief: "", homeNation: "NED", awayNation: "NED",
+  },
 };
 
 interface MatchOutcome {
@@ -147,14 +189,29 @@ function OddsBar({
 }
 
 export function LiveMatchPanel({ expanded = false }: { expanded?: boolean }) {
+  const defaultSlug = TRACKED_GAMES.find(g => !g.resolved)?.slug ?? TRACKED_GAMES[TRACKED_GAMES.length - 1].slug;
+  const [selectedSlug, setSelectedSlug] = useState(defaultSlug);
   const [data, setData] = useState<LiveMatchData | null>(null);
   const [error, setError] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
+  // Reset data when switching games
+  useEffect(() => {
+    setData(null);
+    setError(false);
+  }, [selectedSlug]);
+
   const fetchMatch = useCallback(async () => {
+    // Use static data if available (games not on Polymarket, or reliable fallback)
+    if (STATIC_GAMES[selectedSlug]) {
+      setData(STATIC_GAMES[selectedSlug]);
+      setLastUpdate(new Date());
+      setError(false);
+      return;
+    }
     try {
       // Primary: Vercel /api/live-match (always available)
-      const res = await fetch(LOCAL_LIVE_MATCH_URL, { cache: "no-store" });
+      const res = await fetch(`${LOCAL_LIVE_MATCH_URL}?slug=${encodeURIComponent(selectedSlug)}`, { cache: "no-store" });
       if (!res.ok) { setError(true); return; }
       const json: LiveMatchData = await res.json();
 
@@ -178,7 +235,7 @@ export function LiveMatchPanel({ expanded = false }: { expanded?: boolean }) {
     } catch {
       setError(true);
     }
-  }, []);
+  }, [selectedSlug]);
 
   useEffect(() => {
     fetchMatch();
@@ -222,6 +279,53 @@ export function LiveMatchPanel({ expanded = false }: { expanded?: boolean }) {
         width: expanded ? "100%" : undefined,
       }}
     >
+      {/* Game selector tab bar — expanded view only */}
+      {expanded && (
+        <div style={{
+          display: "flex",
+          gap: 0,
+          borderBottom: "1px solid var(--border)",
+          marginLeft: -40,
+          marginRight: -40,
+          marginTop: -32,
+          marginBottom: 28,
+          paddingLeft: 40,
+        }}>
+          {TRACKED_GAMES.map((game) => {
+            const active = selectedSlug === game.slug;
+            return (
+              <button
+                key={game.slug}
+                onClick={() => setSelectedSlug(game.slug)}
+                style={{
+                  padding: "10px 20px",
+                  background: active ? "rgba(0,255,133,0.05)" : "transparent",
+                  border: "none",
+                  borderBottom: active ? "2px solid var(--green)" : "2px solid transparent",
+                  color: active ? "var(--green)" : "var(--text-dim)",
+                  fontFamily: "var(--font-mono), monospace",
+                  fontSize: 11,
+                  letterSpacing: "0.13em",
+                  cursor: "pointer",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: 3,
+                }}
+              >
+                <span style={{
+                  fontSize: 9,
+                  color: game.resolved ? "var(--text-faint)" : active ? "var(--amber)" : "var(--text-faint)",
+                  letterSpacing: "0.18em",
+                }}>
+                  {game.date} {game.resolved ? "✓ FT" : "● UPCOMING"}
+                </span>
+                <span>{game.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
       {/* Subtle scanline */}
       <div
         style={{
@@ -280,32 +384,41 @@ export function LiveMatchPanel({ expanded = false }: { expanded?: boolean }) {
         </span>
 
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 16 }}>
-          {/* Market volume */}
-          <span style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace" }}>
-            ${(data.volume / 1000).toFixed(0)}K vol · ${(data.liquidity / 1000).toFixed(0)}K liq
-          </span>
+          {/* Market volume — only if we have Polymarket data */}
+          {data.volume > 0 && (
+            <span style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace" }}>
+              ${(data.volume / 1000).toFixed(0)}K vol · ${(data.liquidity / 1000).toFixed(0)}K liq
+            </span>
+          )}
+          {data.volume === 0 && (
+            <span style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace" }}>
+              odds via BetExplorer
+            </span>
+          )}
           {lastUpdate && (
             <span style={{ fontSize: 10, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace" }}>
               ↻ {lastUpdate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </span>
           )}
-          <a
-            href={data.polymarketUrl}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              fontSize: 10,
-              color: "var(--green)",
-              textDecoration: "none",
-              fontFamily: "var(--font-mono), monospace",
-              letterSpacing: "0.1em",
-              border: "1px solid var(--green)",
-              padding: "2px 8px",
-              borderRadius: 3,
-            }}
-          >
-            POLYMARKET ↗
-          </a>
+          {data.polymarketUrl && (
+            <a
+              href={data.polymarketUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                fontSize: 10,
+                color: "var(--green)",
+                textDecoration: "none",
+                fontFamily: "var(--font-mono), monospace",
+                letterSpacing: "0.1em",
+                border: "1px solid var(--green)",
+                padding: "2px 8px",
+                borderRadius: 3,
+              }}
+            >
+              POLYMARKET ↗
+            </a>
+          )}
         </div>
       </div>
 
@@ -436,7 +549,7 @@ export function LiveMatchPanel({ expanded = false }: { expanded?: boolean }) {
       )}
       {expanded && !isResolved && <ExpandedView data={data} home={home} away={away}
         homeProb={homeProb} drawProb={drawProb} awayProb={awayProb}
-        isLive={isLive} />}
+        isLive={isLive} slug={data.slug} />}
     </div>
   );
 }
@@ -466,7 +579,7 @@ function ResultView({
       {/* ── FULL TIME hero ─────────────────────────────────────────── */}
       <div style={{ textAlign: "center", marginBottom: 48 }}>
         <div style={{ fontSize: 13, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.25em", marginBottom: 16 }}>
-          UEL · {date} · FULL TIME
+          {data.slug.split("-")[0].toUpperCase()} · {date} · FULL TIME
         </div>
         <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: 42, fontWeight: 900, letterSpacing: "0.08em", color: "var(--text-primary)", lineHeight: 1.2, marginBottom: 32 }}>
           {home}
@@ -602,11 +715,11 @@ function ResultView({
 // ── Expanded view ──────────────────────────────────────────────────────────────
 
 function ExpandedView({
-  data, home, away, homeProb, drawProb, awayProb, isLive,
+  data, home, away, homeProb, drawProb, awayProb, isLive, slug,
 }: {
   data: LiveMatchData; home: string; away: string;
   homeProb: number; drawProb: number; awayProb: number;
-  isLive: boolean;
+  isLive: boolean; slug: string;
 }) {
   const favourite    = homeProb > awayProb ? home : away;
   const favProb      = Math.max(homeProb, awayProb);
@@ -671,33 +784,62 @@ function ExpandedView({
         <div style={{ fontSize: 13, color: "var(--amber)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em", marginBottom: 20 }}>
           MATCH INTEL
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
-          <div>
-            <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SQUAD DEPTH EDGE</div>
-            <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
-              Aston Villa carry the deeper European pedigree here — Emery's squad has navigated the UEL knockout rounds with disciplined structure and a clinical attack. Freiburg&apos;s strength is collective: a high-press system that punishes mistakes, but they&apos;re outgunned in individual quality at the top end.
-            </p>
+        {slug === "ned-ere-ajx-grn-2026-05-21" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SQUAD DEPTH EDGE</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Ajax carry significant individual quality — a squad built on quick combination play and clinical finishing. Groningen, who earned promotion, face a major step-up. Their pressing game can disrupt, but Ajax&apos;s technical superiority and defensive organisation is clear at this level.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>KEY MATCHUP</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Ajax&apos;s central midfield vs Groningen&apos;s compact defensive block. Odds sit remarkably tight at 51-24-25 — the market sees genuine risk. Groningen&apos;s main threat is transition; a high Ajax defensive line creates their best opportunity to nick a result.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SIGNAL LEAN</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Lucarne&apos;s composite score — weighted heavily toward odds momentum — agrees with the market: Ajax are marginal favourites at 51.2%. The unusual balance signals market uncertainty. This is not a banker — it&apos;s a live contest where any outcome is credible.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>OUTCOME WATCH</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Most likely: <strong style={{ color: "var(--text-primary)" }}>Ajax win in normal time (51%)</strong>. The draw/Groningen paths combined at ~49% are unusually high for this matchup. A cagey first half is expected, then Ajax&apos;s quality tells. Conference League football is on the line for both sides.
+              </p>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>KEY MATCHUP</div>
-            <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
-              Freiburg&apos;s compact midfield block vs Villa&apos;s transition speed and set-piece threat. If Villa get an early goal, Freiburg&apos;s shape compresses and the market gap widens. A cagey 0-0 past 60 mins would see draw probability surge and the 24% draw line tested hard.
-            </p>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SQUAD DEPTH EDGE</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Aston Villa carry the deeper European pedigree here — Emery&apos;s squad has navigated the UEL knockout rounds with disciplined structure and a clinical attack. Freiburg&apos;s strength is collective: a high-press system that punishes mistakes, but they&apos;re outgunned in individual quality at the top end.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>KEY MATCHUP</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Freiburg&apos;s compact midfield block vs Villa&apos;s transition speed and set-piece threat. If Villa get an early goal, Freiburg&apos;s shape compresses and the market gap widens. A cagey 0-0 past 60 mins would see draw probability surge and the 24% draw line tested hard.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SIGNAL LEAN</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Lucarne&apos;s composite score — weighted heavily toward odds momentum — aligns with market consensus:{" "}
+                <strong style={{ color: "var(--text-primary)" }}>Villa are the team to beat</strong>. Freiburg&apos;s gate signal reflects a side performing at their ceiling, not with room to grow.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>OUTCOME WATCH</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Most likely: <strong style={{ color: "var(--text-primary)" }}>Villa win in 90 mins or AET</strong>. Upset scenario: Freiburg absorb for 70 minutes and nick a counter — low probability but the market&apos;s 16.5% isn&apos;t zero. Draw and penalties remains a live path given European final caution.
+              </p>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SIGNAL LEAN</div>
-            <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
-              Lucarne&apos;s composite score — weighted heavily toward odds momentum — aligns with market consensus:{" "}
-              <strong style={{ color: "var(--text-primary)" }}>Villa are the team to beat</strong>. Freiburg&apos;s gate signal reflects a side performing at their ceiling, not with room to grow.
-            </p>
-          </div>
-          <div>
-            <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>OUTCOME WATCH</div>
-            <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
-              Most likely: <strong style={{ color: "var(--text-primary)" }}>Villa win in 90 mins or AET</strong>. Upset scenario: Freiburg absorb for 70 minutes and nick a counter — low probability but the market&apos;s 16.5% isn&apos;t zero. Draw and penalties remains a live path given European final caution.
-            </p>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* ── Community predictions ──────────────────────────────────── */}
@@ -708,16 +850,27 @@ function ExpandedView({
         <div style={{ fontSize: 13, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.18em", marginBottom: 14 }}>
           WHY THIS MATTERS — THE LUCARNE DIFFERENCE
         </div>
-        <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
-          Tonight&apos;s UEL Final is exactly the kind of match Lucarne was built for. Before this game kicked off,
-          our signal engine had already computed its reading and{" "}
-          <strong style={{ color: "var(--text-primary)" }}>locked it on-chain — immutable, timestamped, permanent</strong>.
-          The market had Villa at ~60%. Lucarne&apos;s composite score agreed — odds momentum (55% weight) was clear,
-          Villa&apos;s gate signal strong, form component consistent with a deep European run.{" "}
-          <strong style={{ color: "var(--text-primary)" }}>No one can edit what was attested</strong>.
-          Whatever happens tonight, the signal that existed at kickoff lives on X Layer mainnet forever.
-          That&apos;s not prediction — that&apos;s <strong style={{ color: "var(--text-primary)" }}>proof</strong>.
-        </p>
+        {slug === "ned-ere-ajx-grn-2026-05-21" ? (
+          <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
+            Ajax vs Groningen is exactly the kind of match Lucarne was built for. Before kickoff, our signal engine already computed its reading and{" "}
+            <strong style={{ color: "var(--text-primary)" }}>locked it on-chain — immutable, timestamped, permanent</strong>.
+            The market puts this at a remarkable 51/24/25 — genuine uncertainty about who wins. Lucarne&apos;s composite score captures that balance.{" "}
+            <strong style={{ color: "var(--text-primary)" }}>No one can edit what was attested</strong>.
+            Whatever happens today, the signal that existed at kickoff lives on X Layer mainnet forever.
+            That&apos;s not prediction — that&apos;s <strong style={{ color: "var(--text-primary)" }}>proof</strong>.
+          </p>
+        ) : (
+          <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
+            Tonight&apos;s UEL Final is exactly the kind of match Lucarne was built for. Before this game kicked off,
+            our signal engine had already computed its reading and{" "}
+            <strong style={{ color: "var(--text-primary)" }}>locked it on-chain — immutable, timestamped, permanent</strong>.
+            The market had Villa at ~60%. Lucarne&apos;s composite score agreed — odds momentum (55% weight) was clear,
+            Villa&apos;s gate signal strong, form component consistent with a deep European run.{" "}
+            <strong style={{ color: "var(--text-primary)" }}>No one can edit what was attested</strong>.
+            Whatever happens tonight, the signal that existed at kickoff lives on X Layer mainnet forever.
+            That&apos;s not prediction — that&apos;s <strong style={{ color: "var(--text-primary)" }}>proof</strong>.
+          </p>
+        )}
       </div>
 
       {/* ── Claude analysis brief ───────────────────────────────────── */}
@@ -767,20 +920,24 @@ function ExpandedView({
           { label: "MARKET FAVOURITE", value: favourite },
           { label: "IMPLIED WIN PROB",  value: `${favProb.toFixed(1)}%` },
           { label: "UNDERDOG",          value: `${underdog} · ${underdogProb.toFixed(1)}%` },
-          { label: "TOTAL VOLUME",      value: `$${(data.volume / 1000).toFixed(0)}K` },
-          { label: "OPEN LIQUIDITY",    value: `$${(data.liquidity / 1000).toFixed(0)}K` },
+          ...(data.volume > 0 ? [
+            { label: "TOTAL VOLUME",   value: `$${(data.volume / 1000).toFixed(0)}K` },
+            { label: "OPEN LIQUIDITY", value: `$${(data.liquidity / 1000).toFixed(0)}K` },
+          ] : []),
         ].map(({ label, value }) => (
           <div key={label}>
             <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 6 }}>{label}</div>
             <div style={{ fontSize: 16, color: "var(--text-primary)", fontFamily: "var(--font-orbitron), sans-serif", fontWeight: 700 }}>{value}</div>
           </div>
         ))}
-        <div style={{ marginLeft: "auto" }}>
-          <a href={data.polymarketUrl} target="_blank" rel="noreferrer"
-            style={{ fontSize: 13, color: "var(--text-dim)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--border)", padding: "10px 20px", display: "inline-block" }}>
-            POLYMARKET ↗
-          </a>
-        </div>
+        {data.polymarketUrl && (
+          <div style={{ marginLeft: "auto" }}>
+            <a href={data.polymarketUrl} target="_blank" rel="noreferrer"
+              style={{ fontSize: 13, color: "var(--text-dim)", textDecoration: "none", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.1em", border: "1px solid var(--border)", padding: "10px 20px", display: "inline-block" }}>
+              POLYMARKET ↗
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
