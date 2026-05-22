@@ -44,7 +44,7 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     signalTxHash:  "0x4e98f3c011ad8c512acc61805550658208370674dd82b8d3820706384aa33f65",
     resolvedTxHash: "0x48de570075c862184c854d2ad0ca4c8ea2666808fb05e1e55310368968cd9467",
     signalCorrect: true,
-  }
+  },
   "ned-ere-ajx-grn-2026-05-21": {
     slug: "ned-ere-ajx-grn-2026-05-21", eventId: "static-ajx-grn",
     title: "Ajax vs. Groningen",
