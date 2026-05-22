@@ -850,6 +850,34 @@ function ExpandedView({
               </p>
             </div>
           </div>
+        ) : slug === "sea-fio-ata-2026-05-24" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SQUAD DEPTH EDGE</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Atalanta hold the individual quality edge — Scamacca and De Ketelaere lead a side that spent much of the season in European contention, finishing 7th with 58 pts. Fiorentina&apos;s squad is more than capable at home but their late-season motivation is limited with European football out of reach. The 17-point table gap tells the story in quality terms.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>KEY MATCHUP</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Atalanta&apos;s technical midfield against Fiorentina&apos;s defensive organisation at the Artemio Franchi. Fiorentina beat Atalanta 1-0 here in March with a disciplined low block. Atalanta&apos;s best path through is wide — their wing threat is the clearest edge against a compact home defence.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SIGNAL LEAN</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Lucarne&apos;s composite score aligns with the market:{" "}
+                <strong style={{ color: "var(--text-primary)" }}>Atalanta are the narrow favourite at 42%</strong>. However the home factor and Fiorentina&apos;s recent H2H record at this ground closes the gap significantly. Both teams in inconsistent late-season form — the signal does not strongly favour either outcome.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>OUTCOME WATCH</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Most likely: <strong style={{ color: "var(--text-primary)" }}>Atalanta win or draw (67% combined)</strong>. But Fiorentina have beaten Atalanta here before and a home upset is live at 33%. A cagey, tight contest is expected — if it&apos;s level at 60 mins, Atalanta&apos;s need for Conference League football means they push hard. The result matters far more to one side.
+              </p>
+            </div>
+          </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
             <div>
@@ -896,6 +924,16 @@ function ExpandedView({
             The market puts this at a remarkable 51/24/25 — genuine uncertainty about who wins. Lucarne&apos;s composite score captures that balance.{" "}
             <strong style={{ color: "var(--text-primary)" }}>No one can edit what was attested</strong>.
             Whatever happens today, the signal that existed at kickoff lives on X Layer mainnet forever.
+            That&apos;s not prediction — that&apos;s <strong style={{ color: "var(--text-primary)" }}>proof</strong>.
+          </p>
+        ) : slug === "sea-fio-ata-2026-05-24" ? (
+          <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
+            Fiorentina vs Atalanta is exactly the kind of signal Lucarne was built to capture. Before kickoff, our engine read the market at{" "}
+            <strong style={{ color: "var(--text-primary)" }}>Atalanta 42% · Draw 25% · Fiorentina 33%</strong>{" "}
+            and locked that reading on-chain — immutable, timestamped, permanent. Atalanta are chasing Conference League football;
+            Fiorentina have home advantage and a recent win at this ground. The signal captures the tension: a close contest where motivation, venue, and form all point in different directions.{" "}
+            <strong style={{ color: "var(--text-primary)" }}>No one can edit what was attested</strong>.
+            Whatever the result, the signal that existed at kickoff lives on X Layer mainnet forever.
             That&apos;s not prediction — that&apos;s <strong style={{ color: "var(--text-primary)" }}>proof</strong>.
           </p>
         ) : (
