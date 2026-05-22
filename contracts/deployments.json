@@ -38,5 +38,51 @@
     "chainId": 196,
     "owner": "0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3",
     "signalPool": "0xd6E29fFc24231BDEeB95057876A9A72E3641A52E"
+  },
+  "proofTxHashes": {
+    "oklink": "https://www.oklink.com/xlayer",
+    "signals": {
+      "uel-scf-ast-2026-05-20": {
+        "label": "UEL Final — Villarreal vs Freiburg (signal: AWAY / Freiburg)",
+        "signalTx": "0x4e98f3c011ad8c512acc61805550658208370674dd82b8d3820706384aa33f65",
+        "resolveTx": "0x48de570075c862184c854d2ad0ca4c8ea2666808fb05e1e55310368968cd9467",
+        "signalCorrect": true,
+        "block": "xlayer-mainnet"
+      },
+      "ned-ere-ajx-grn-2026-05-21": {
+        "label": "Eredivisie PO — Ajax vs Groningen (signal: HOME / Ajax)",
+        "signalTx": "0x38e3c6cd2e8abe7833839b0840c1ab8bda5afb33ea52879483288fb9dfd62daa",
+        "resolveTx": null,
+        "signalCorrect": null,
+        "block": "xlayer-mainnet"
+      },
+      "sea-fio-ata-2026-05-24": {
+        "label": "Serie A — Fiorentina vs Atalanta (signal: AWAY / Atalanta)",
+        "signalTx": "0x6983a19169803ad0a03355586d289c1b644d31802ae0ae7f297eff8b50f504d5",
+        "resolveTx": null,
+        "signalCorrect": null,
+        "block": "xlayer-mainnet"
+      }
+    },
+    "pools": {
+      "sea-fio-ata-2026-05-24": {
+        "label": "SignalPool — Fiorentina vs Atalanta",
+        "contract": "0xd6E29fFc24231BDEeB95057876A9A72E3641A52E",
+        "agentStakeTx": "0x291c672c3e3af5ee96ccf4e1ef5fa43258399f1876ef2a805b05e2b256b0b002",
+        "agentStakeBlock": 60651062,
+        "agentOutcome": "AWAY",
+        "agentAmount": "0.05 OKB",
+        "bets": [
+          {
+            "betTx": "0x9176860e7fe9c53142ef399f316fa7a988e8b8219c3c58dcd2658060c2e3da81",
+            "betBlock": 60651795,
+            "user": "0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3",
+            "outcome": "AWAY",
+            "amount": "0.01 OKB",
+            "note": "First live bet on Lucarne SignalPool"
+          }
+        ]
+      }
+    }
   }
 }
