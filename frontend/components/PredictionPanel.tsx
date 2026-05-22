@@ -143,13 +143,23 @@ export default function PredictionPanel({
     setStatus("pending");
     try {
       const eth = (window as any).ethereum;
-      const walletClient = createWalletClient({ chain: xlayer, transport: custom(eth) });
+      const walletClient  = createWalletClient({ chain: xlayer, transport: custom(eth) });
+      const publicClient  = createPublicClient({ chain: xlayer, transport: http("https://rpc.xlayer.tech") });
+
+      // Fetch pending nonce explicitly — X Layer RPC can return stale values
+      // causing "nonce too low" errors if pending txs aren't reflected.
+      const nonce = await publicClient.getTransactionCount({
+        address: addr as `0x${string}`,
+        blockTag: "pending",
+      });
+
       const hash = await walletClient.writeContract({
         address: PREDICTIONS_CONTRACT,
         abi: ABI,
         functionName: "submitPrediction",
         args: [gameId, outcome],
         account: addr as `0x${string}`,
+        nonce,
       });
       setTxHash(hash);
       setStatus("submitted");
