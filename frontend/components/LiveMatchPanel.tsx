@@ -13,6 +13,7 @@ const LOCAL_LIVE_MATCH_URL = "/api/live-match";
 const PRE_MATCH_ODDS: Record<string, { home: number; draw: number; away: number }> = {
   "uel-scf-ast-2026-05-20":      { home: 16.5, draw: 24.5, away: 59.5 },
   "ned-ere-ajx-grn-2026-05-21":  { home: 51.2, draw: 24.2, away: 24.6 },
+  "sea-fio-ata-2026-05-24":      { home: 33.0, draw: 25.0, away: 42.0 },
 };
 
 // ── Multi-game config ─────────────────────────────────────────────────────────
@@ -20,6 +21,7 @@ interface TrackedGame { slug: string; label: string; date: string; resolved: boo
 const TRACKED_GAMES: TrackedGame[] = [
   { slug: "uel-scf-ast-2026-05-20",     label: "UEL FINAL",    date: "MAY 20", resolved: true  },
   { slug: "ned-ere-ajx-grn-2026-05-21", label: "EREDIVISIE PO", date: "MAY 21", resolved: true  },
+  { slug: "sea-fio-ata-2026-05-24",     label: "SERIE A",      date: "MAY 22", resolved: false },
 ];
 
 // Static match data for games not on Polymarket (or as reliable fallback).
@@ -55,6 +57,22 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     brief: "", homeNation: "NED", awayNation: "NED",
     gameId: "0xe055f62b2b266bf46db7c04a4cb083e1cd169e103c8c8dff960d34e05420c4a4",
     proofTxHash: "0x43dc866227d4b93a4a4bae3c6706c5a1d032309aa46e03390ecf9d677115c8fb",
+  },
+  "sea-fio-ata-2026-05-24": {
+    slug: "sea-fio-ata-2026-05-24", eventId: "static-fio-ata",
+    title: "Fiorentina vs. Atalanta",
+    description: "Italian Serie A — Matchday 37",
+    endDate: "2026-05-22T18:45:00Z",
+    active: true, closed: false,
+    volume: 0, liquidity: 0, volume24hr: 0, competitive: 0,
+    markets: [
+      { question: "Fiorentina win?", slug: "fio-win",  prob: 33.0, marketId: "s7" },
+      { question: "Draw?",           slug: "sea-draw", prob: 25.0, marketId: "s8" },
+      { question: "Atalanta win?",   slug: "ata-win",  prob: 42.0, marketId: "s9" },
+    ],
+    polymarketUrl: "https://polymarket.com/sports/sea/sea-fio-ata-2026-05-24",
+    brief: "Atalanta (7th, 58 pts) travel to Artemio Franchi needing a result for Conference League football. Fiorentina (15th) hold home advantage and beat Atalanta 1-0 here in March. Both squads in inconsistent late-season form. Market edges Atalanta at 42% but the home factor keeps this open.",
+    homeNation: "ITA", awayNation: "ITA",
   },
 };
 
