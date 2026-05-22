@@ -57,6 +57,22 @@ const POOL_ABI = [
 // kickoff: ISO 8601 UTC — used to compute the on-chain deadline
 
 const MATCHES = {
+  // ── EREDIVISIE PLAYOFF — Ajax vs Groningen — May 21 2026 ──────────────────
+  "ned-ere-ajx-grn-2026-05-21": {
+    label:       "Eredivisie PO — Ajax vs Groningen",
+    kickoff:     "2026-05-21T19:30:00Z",
+    signalCall:  0,     // HOME (Ajax)
+    stakeAmount: "0.05",
+  },
+
+  // ── SERIE A — Fiorentina vs Atalanta — May 22 2026 ────────────────────────
+  "sea-fio-ata-2026-05-24": {
+    label:       "Serie A — Fiorentina vs Atalanta",
+    kickoff:     "2026-05-22T18:45:00Z",
+    signalCall:  2,     // AWAY (Atalanta)
+    stakeAmount: "0.05",
+  },
+
   // ── UEFA Conference League Final — Crystal Palace vs Rayo Vallecano — May 27 2026
   "uecl-cpa-ray-2026-05-27": {
     label:       "UECL Final — Crystal Palace vs Rayo Vallecano",
