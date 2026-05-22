@@ -1,7 +1,11 @@
 import hre from "hardhat";
 import "dotenv/config";
 import { readFileSync, writeFileSync } from "fs";
-import { resolve } from "path";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = dirname(__filename);
 
 async function main() {
   const connection = await hre.network.getOrCreate();
