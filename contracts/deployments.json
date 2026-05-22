@@ -10,5 +10,14 @@
   "ChampionCrest": "0x4C44cCd7FdE8e73FFb259d505F04CaF7fde792cc",
   "deployedAt": "2026-05-19T20:37:15.851Z",
   "LucarnePredictions": "0x178565919FFebC4b57ca04112d0FFFaD946Df6E7",
-  "MatchSignalAttestor": "0x9693d19C09d9dE08F4acaD288f7608552D018482"
+  "MatchSignalAttestor": "0x9693d19C09d9dE08F4acaD288f7608552D018482",
+  "MatchResultAttestor": {
+    "address": "0x81AF1dfF7D92ac333a785a1486822159855377bF",
+    "deployTx": "0x4940ba5e62bbd6c9aa8380073a1a460757f4854608f328611a2b0069f92c215a",
+    "deployedAt": "2026-05-22T02:32:27.972Z",
+    "network": "xlayer",
+    "chainId": 196,
+    "owner": "0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3",
+    "signalAttestor": "0x9693d19C09d9dE08F4acaD288f7608552D018482"
+  }
 }

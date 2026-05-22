@@ -41,8 +41,10 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     polymarketUrl: "https://polymarket.com/event/uel-scf-ast-2026-05-20",
     brief: "", homeNation: "GER", awayNation: "ENG",
     gameId: "0xc281fcc54207a47559fb518c2f99673f1784919931ab51fab71fcc6729f4d482",
-    signalTxHash: "0x4e98f3c011ad8c512acc61805550658208370674dd82b8d3820706384aa33f65",
-  },
+    signalTxHash:  "0x4e98f3c011ad8c512acc61805550658208370674dd82b8d3820706384aa33f65",
+    resolvedTxHash: "0x48de570075c862184c854d2ad0ca4c8ea2666808fb05e1e55310368968cd9467",
+    signalCorrect: true,
+  }
   "ned-ere-ajx-grn-2026-05-21": {
     slug: "ned-ere-ajx-grn-2026-05-21", eventId: "static-ajx-grn",
     title: "Ajax vs. Groningen",
@@ -109,6 +111,8 @@ interface LiveMatchData {
   gameId?:        string;
   proofTxHash?:   string;
   signalTxHash?:  string;
+  resolvedTxHash?: string;   // MatchResultAttestor resolve() tx
+  signalCorrect?:  boolean;  // was the pre-match signal call right?
 }
 
 function parseTeams(title: string): { home: string; away: string } {
@@ -691,6 +695,52 @@ function ResultView({
 
       {/* ── Community predictions (resolved — show results, no submit) */}
       <PredictionPanel slug={data.slug} home={home} away={away} isResolved={true} />
+
+      {/* ── Signal verdict ─────────────────────────────────────── */}
+      {data.resolvedTxHash != null && (
+        <div style={{
+          border: `1px solid ${data.signalCorrect ? "var(--green)" : "#e05252"}`,
+          padding: "20px 28px",
+          marginBottom: 32,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 16,
+          background: data.signalCorrect ? "rgba(0,255,133,0.04)" : "rgba(224,82,82,0.04)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            <div style={{
+              fontSize: 28,
+              fontFamily: "var(--font-orbitron), sans-serif",
+              fontWeight: 900,
+              color: data.signalCorrect ? "var(--green)" : "#e05252",
+              letterSpacing: "0.05em",
+            }}>
+              {data.signalCorrect ? "✓ SIGNAL CORRECT" : "✗ SIGNAL WRONG"}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.7 }}>
+              Pre-kickoff call locked on-chain · verified after result<br />
+              Computed by MatchResultAttestor against MatchSignalAttestor
+            </div>
+          </div>
+          <a
+            href={`${OKLINK_BASE}/tx/${data.resolvedTxHash}`}
+            target="_blank" rel="noreferrer"
+            style={{
+              fontSize: 13,
+              color: data.signalCorrect ? "var(--green)" : "#e05252",
+              textDecoration: "none",
+              fontFamily: "var(--font-mono), monospace",
+              letterSpacing: "0.1em",
+              border: `1px solid ${data.signalCorrect ? "var(--green)" : "#e05252"}`,
+              padding: "10px 20px",
+              display: "inline-block",
+            }}>
+            VERDICT TX ↗
+          </a>
+        </div>
+      )}
 
       {/* ── On-chain proof ─────────────────────────────────────────── */}
       <div style={{ border: "1px solid var(--border)", padding: "24px 28px", marginBottom: 40, display: "flex", alignItems: "flex-start", gap: 36, flexWrap: "wrap", background: "rgba(6,15,9,0.6)" }}>
