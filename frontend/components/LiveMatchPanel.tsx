@@ -73,6 +73,8 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     polymarketUrl: "https://polymarket.com/sports/sea/sea-fio-ata-2026-05-24",
     brief: "Atalanta (7th, 58 pts) travel to Artemio Franchi needing a result for Conference League football. Fiorentina (15th) hold home advantage and beat Atalanta 1-0 here in March. Both squads in inconsistent late-season form. Market edges Atalanta at 42% but the home factor keeps this open.",
     homeNation: "ITA", awayNation: "ITA",
+    gameId: "0x24ba1da38dccf3520be37c13283e854e5d1f2605a1f01f983193f41d58372e89",
+    proofTxHash: "0xe3553d8e0242baddac7db1256bf5f16aff3ee79c1c128051886ad036a76d3dd2",
   },
 };
 
