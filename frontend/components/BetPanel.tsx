@@ -11,7 +11,7 @@ import {
   parseEther,
   formatEther,
 } from "viem";
-import { SIGNAL_POOL, OKLINK_BASE, AGENT_WALLET } from "@/lib/constants";
+import { SIGNAL_POOL, I_CALLED_IT_NFT, OKLINK_BASE, AGENT_WALLET } from "@/lib/constants";
 
 // ── ABIs ──────────────────────────────────────────────────────────────────────
 
@@ -125,6 +125,7 @@ export default function BetPanel({ slug, home, away }: { slug: string; home: str
   const [status,    setStatus]    = useState<"idle" | "pending" | "done" | "error">("idle");
   const [txHash,    setTxHash]    = useState<string | null>(null);
   const [errMsg,    setErrMsg]    = useState<string | null>(null);
+  const [hasMinted, setHasMinted] = useState(false);
 
   const gameId = keccak256(toBytes(slug)) as `0x${string}`;
 
@@ -160,6 +161,21 @@ export default function BetPanel({ slug, home, away }: { slug: string; home: str
       }
 
       setPool({ homeBucket, drawBucket, awayBucket, agentStake, agentCall, open, settled, winOutcome, deadline: deadline as bigint, userStakes });
+
+      // Check if wallet already minted NFT for this game
+      if (addr) {
+        try {
+          const minted = await publicClient.readContract({
+            address: I_CALLED_IT_NFT,
+            abi: [{ name: "mintedToken", type: "function", stateMutability: "view",
+              inputs: [{ name: "gameId", type: "bytes32" }, { name: "", type: "address" }],
+              outputs: [{ name: "", type: "uint256" }] }] as const,
+            functionName: "mintedToken",
+            args: [gameId, addr as `0x${string}`],
+          });
+          setHasMinted((minted as bigint) > 0n);
+        } catch { /* ignore */ }
+      }
     } catch {
       setPool(null);
     }
@@ -560,8 +576,14 @@ export default function BetPanel({ slug, home, away }: { slug: string; home: str
           </div>
 
         ) : (
-          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-mono), monospace", textAlign: "center", padding: "16px 0" }}>
-            Kickoff passed · Pool awaiting settlement once result is on-chain
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, padding: "16px 0" }}>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-mono), monospace", textAlign: "center" }}>
+              Kickoff passed · settle the pool once the result is on-chain
+            </div>
+            {wallet
+              ? <SettleButton gameId={gameId} wallet={wallet} onSettled={() => fetchPool(wallet)} />
+              : <button onClick={connectWallet} style={{ padding: "14px 28px", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-mono), monospace", fontSize: 13, cursor: "pointer" }}>CONNECT TO SETTLE</button>
+            }
           </div>
         )}
 
@@ -587,6 +609,22 @@ export default function BetPanel({ slug, home, away }: { slug: string; home: str
             {errMsg}
           </div>
         )}
+        {/* I Called It NFT mint — show when user has any stake and hasn't minted yet */}
+        {wallet && pool.userStakes.some(s => s > 0n) && !hasMinted && (
+          <MintNFTButton
+            gameId={gameId}
+            slug={slug}
+            wallet={wallet}
+            userStakes={pool.userStakes}
+            onMinted={() => setHasMinted(true)}
+          />
+        )}
+        {wallet && pool.userStakes.some(s => s > 0n) && hasMinted && (
+          <div style={{ marginTop: 18, fontSize: 12, color: "#00ff85", fontFamily: "var(--font-mono), monospace" }}>
+            ✓ I CALLED IT NFT MINTED
+          </div>
+        )}
+
         {wallet && (
           <div style={{ marginTop: 18, fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-mono), monospace" }}>
             {wallet.slice(0, 10)}...{wallet.slice(-6)}{" "}
@@ -594,6 +632,128 @@ export default function BetPanel({ slug, home, away }: { slug: string; home: str
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Settle button ────────────────────────────────────────────────────────────────
+
+function SettleButton({ gameId, wallet, onSettled }: { gameId: `0x${string}`; wallet: string; onSettled: () => void }) {
+  const [status, setStatus] = useState<"idle" | "pending" | "done" | "error">("idle");
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  const SETTLE_ABI = [
+    { name: "settle", type: "function", stateMutability: "nonpayable",
+      inputs: [{ name: "gameId", type: "bytes32" }], outputs: [] },
+  ] as const;
+
+  async function settle() {
+    const eth = (window as any).ethereum;
+    if (!eth) return;
+    setStatus("pending"); setErrMsg(null);
+    try {
+      const walletClient = createWalletClient({ chain: xlayer, transport: custom(eth) });
+      const hash = await walletClient.writeContract({
+        address: SIGNAL_POOL, abi: SETTLE_ABI, functionName: "settle",
+        args: [gameId], account: wallet as `0x${string}`,
+      });
+      setTxHash(hash); setStatus("done");
+      setTimeout(onSettled, 4000);
+    } catch (e: any) {
+      setStatus("error");
+      const raw = e?.shortMessage ?? e?.message ?? "Settle failed";
+      setErrMsg(raw.length > 120 ? raw.slice(0, 120) + "..." : raw);
+    }
+  }
+
+  if (status === "done" && txHash) return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <span style={{ fontSize: 14, color: "#00ff85", fontFamily: "var(--font-mono), monospace", fontWeight: 700 }}>✓ POOL SETTLED</span>
+      <a href={`${OKLINK_BASE}/tx/${txHash}`} target="_blank" rel="noreferrer"
+        style={{ fontSize: 12, color: "#00ff85", fontFamily: "var(--font-mono), monospace", textDecoration: "none", border: "1px solid #00ff85", padding: "4px 12px" }}>
+        VIEW TX
+      </a>
+    </div>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+      <button onClick={settle} disabled={status === "pending"}
+        style={{ padding: "14px 36px", background: "rgba(240,180,41,0.1)", border: "2px solid #f0b429", color: "#f0b429",
+          fontFamily: "var(--font-mono), monospace", fontSize: 14, letterSpacing: "0.14em", fontWeight: 700,
+          cursor: status === "pending" ? "not-allowed" : "pointer", opacity: status === "pending" ? 0.6 : 1 }}>
+        {status === "pending" ? "SETTLING..." : "SETTLE POOL"}
+      </button>
+      {status === "error" && errMsg && (
+        <div style={{ fontSize: 12, color: "#e05252", fontFamily: "var(--font-mono), monospace" }}>{errMsg}</div>
+      )}
+    </div>
+  );
+}
+
+// ── Mint NFT button ────────────────────────────────────────────────────────────
+
+function MintNFTButton({ gameId, slug, wallet, userStakes, onMinted }: {
+  gameId: `0x${string}`; slug: string; wallet: string;
+  userStakes: [bigint, bigint, bigint]; onMinted: () => void;
+}) {
+  const [status, setStatus] = useState<"idle" | "pending" | "done" | "error">("idle");
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  const MINT_ABI = [
+    { name: "mint", type: "function", stateMutability: "nonpayable",
+      inputs: [{ name: "gameId", type: "bytes32" }, { name: "gameSlug", type: "string" }, { name: "outcome", type: "uint8" }],
+      outputs: [{ name: "tokenId", type: "uint256" }] },
+  ] as const;
+
+  // Use the outcome they staked on (first non-zero bucket)
+  const outcome = userStakes[0] > 0n ? 0 : userStakes[1] > 0n ? 1 : 2;
+
+  async function mintNFT() {
+    const eth = (window as any).ethereum;
+    if (!eth) return;
+    setStatus("pending"); setErrMsg(null);
+    try {
+      const walletClient = createWalletClient({ chain: xlayer, transport: custom(eth) });
+      const hash = await walletClient.writeContract({
+        address: I_CALLED_IT_NFT, abi: MINT_ABI, functionName: "mint",
+        args: [gameId, slug, outcome], account: wallet as `0x${string}`,
+      });
+      setTxHash(hash); setStatus("done");
+      onMinted();
+    } catch (e: any) {
+      setStatus("error");
+      const raw = e?.shortMessage ?? e?.message ?? "Mint failed";
+      setErrMsg(raw.length > 120 ? raw.slice(0, 120) + "..." : raw);
+    }
+  }
+
+  if (status === "done" && txHash) return (
+    <div style={{ marginTop: 18, display: "flex", alignItems: "center", gap: 12 }}>
+      <span style={{ fontSize: 13, color: "#00ff85", fontFamily: "var(--font-mono), monospace", fontWeight: 700 }}>✓ NFT MINTED</span>
+      <a href={`${OKLINK_BASE}/tx/${txHash}`} target="_blank" rel="noreferrer"
+        style={{ fontSize: 12, color: "#00ff85", fontFamily: "var(--font-mono), monospace", textDecoration: "none", border: "1px solid #00ff85", padding: "4px 12px" }}>
+        VIEW TX
+      </a>
+    </div>
+  );
+
+  return (
+    <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.15em" }}>
+        YOU STAKED — CLAIM YOUR PROOF
+      </div>
+      <button onClick={mintNFT} disabled={status === "pending"}
+        style={{ padding: "13px 28px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff",
+          fontFamily: "var(--font-mono), monospace", fontSize: 13, letterSpacing: "0.12em", fontWeight: 700,
+          cursor: status === "pending" ? "not-allowed" : "pointer", opacity: status === "pending" ? 0.6 : 1 }}>
+        {status === "pending" ? "MINTING..." : "MINT I CALLED IT NFT (FREE)"}
+      </button>
+      {status === "error" && errMsg && (
+        <div style={{ fontSize: 12, color: "#e05252", fontFamily: "var(--font-mono), monospace" }}>{errMsg}</div>
+      )}
     </div>
   );
 }
