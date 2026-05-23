@@ -94,10 +94,10 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     endDate: "2026-05-23T17:00:00Z",
     active: false, closed: true,
     volume: 0, liquidity: 0, volume24hr: 0, competitive: 0,
+    markets: [
       { question: "Bayern win?",    slug: "bay-win",  prob: 65.0, marketId: "s10" },
       { question: "Draw?",          slug: "bay-draw", prob: 20.0, marketId: "s11" },
       { question: "Stuttgart win?", slug: "stt-win",  prob: 15.0, marketId: "s12" },
-      { question: "Bologna win?", slug: "bol-win",  prob: 15.0, marketId: "s12" },
     ],
     polymarketUrl: "",
     brief: "Bayern Munich face Stuttgart in the DFB Pokal Final at Berlin Olympiastadion. Lucarne signal locked Bayern as a high-conviction call before kickoff.",
@@ -105,9 +105,9 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     gameId: "0x844d508ea2b7fa3dae588dfed6d809995b04f5729d7595a20f011fd3b841d528",
     signalTxHash: "0x81ad7e719a192354a2f76d460b83d95110607031c1571ca72692d106cbfeb0d7",
     proofTxHash: "0xe2bd4b93051056ba9638048e776d8b54336e5816a4733edddf7ed53bee860f7f",
-    proofTxHash: "0xe2bd4b93051056ba9638048e776d8b54336e5816a4733edddf7ed53bee860f7f",
     signalCorrect: true,
-    actualResult: "3-0 BAYERN WIN",
+    actualResult: "HOME_WIN",
+  },
   "lla-bar-val-2026-05-23": {
     slug: "lla-bar-val-2026-05-23", eventId: "static-rma-ath",
     title: "Real Madrid vs. Athletic Club",
@@ -115,10 +115,10 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     endDate: "2026-05-23T19:00:00Z",
     active: false, closed: true,
     volume: 0, liquidity: 0, volume24hr: 0, competitive: 0,
+    markets: [
       { question: "Real Madrid win?",   slug: "rma-win",  prob: 68.0, marketId: "s13" },
       { question: "Draw?",              slug: "rma-draw", prob: 20.0, marketId: "s14" },
       { question: "Athletic Club win?", slug: "ath-win",  prob: 12.0, marketId: "s15" },
-      { question: "Valencia win?",  slug: "val-win",  prob: 12.0, marketId: "s15" },
     ],
     polymarketUrl: "",
     brief: "Real Madrid close their La Liga campaign at the Santiago Bernabeu against Athletic Club. Lucarne signal locked Real Madrid at 68% before kickoff.",
@@ -126,9 +126,9 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     gameId: "0x2411ce7f1f9d924781472689184677c1a3c57703b61f51c55752f713d997a0c0",
     signalTxHash: "0xeec67755b145f961c35bfbf93c80a5b52232abcea71716e4ed1eb1f3555c29e5",
     proofTxHash: "0x54e2e03f4e8196424c17df2a4aa56a680089ff3484dda4fc1fdb658b559f4b40",
-    proofTxHash: "0x54e2e03f4e8196424c17df2a4aa56a680089ff3484dda4fc1fdb658b559f4b40",
     signalCorrect: true,
-    actualResult: "4-2 REAL MADRID WIN",
+    actualResult: "HOME_WIN",
+  },
 };
 
 interface MatchOutcome {
@@ -1125,21 +1125,19 @@ function ExpandedView({
           </p>
         ) : slug === "sea-int-bol-2026-05-23" ? (
           <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
-            Bayern vs Stuttgart is exactly the kind of signal Lucarne was built to capture. Before kickoff, our engine read the market at{
-            <strong style={{ color: "var(--text-primary)" }}>Bayern 65% &middot; Draw 20% &middot; Stuttgart 15%</strong>{
-            and locked that reading on-chain &mdash; immutable, timestamped, permanent. Bayern&apos;s experience in finals, squad depth, and consistent form all compound into a high-conviction signal.{
+            Bayern vs Stuttgart is exactly the kind of signal Lucarne was built to capture. Before kickoff, our engine read the market at{" "}
+            <strong style={{ color: "var(--text-primary)" }}>Bayern 65% &middot; Draw 20% &middot; Stuttgart 15%</strong>{" "}
+            and locked that reading on-chain &mdash; immutable, timestamped, permanent. Bayern&apos;s experience in finals, squad depth, and consistent form all compound into a high-conviction signal.{" "}
             <strong style={{ color: "var(--text-primary)" }}>No one can edit what was attested</strong>.
             The signal lived on X Layer mainnet before kickoff. Bayern won 3-0. That&apos;s not prediction &mdash; that&apos;s <strong style={{ color: 'var(--text-primary)' }}>proof</strong>.
-            That&apos;s not prediction — that&apos;s <strong style={{ color: "var(--text-primary)" }}>proof</strong>.
           </p>
         ) : slug === "lla-bar-val-2026-05-23" ? (
           <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
-            Real Madrid vs Athletic Club is a high-conviction signal from Lucarne. Our engine read the market at{
-            <strong style={{ color: "var(--text-primary)" }}>Real Madrid 68% &middot; Draw 20% &middot; Athletic Club 12%</strong>{
-            and locked a signal score of <strong style={{ color: "var(--text-primary)" }}>65</strong> on-chain before kickoff &mdash; immutable, timestamped, permanent. When odds, gate, and form data all align this cleanly, the model has no ambiguity.{
+            Real Madrid vs Athletic Club is a high-conviction signal from Lucarne. Our engine read the market at{" "}
+            <strong style={{ color: "var(--text-primary)" }}>Real Madrid 68% &middot; Draw 20% &middot; Athletic Club 12%</strong>{" "}
+            and locked a signal score of <strong style={{ color: "var(--text-primary)" }}>65</strong> on-chain before kickoff &mdash; immutable, timestamped, permanent. When odds, gate, and form data all align this cleanly, the model has no ambiguity.{" "}
             <strong style={{ color: "var(--text-primary)" }}>No one can edit what was attested</strong>.
             The signal lived on X Layer mainnet before kickoff. Real Madrid won 4-2. That&apos;s not prediction &mdash; that&apos;s <strong style={{ color: 'var(--text-primary)' }}>proof</strong>.
-            That&apos;s not prediction — that&apos;s <strong style={{ color: "var(--text-primary)" }}>proof</strong>.
           </p>
         ) : slug === "sea-fio-ata-2026-05-24" ? (
           <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
