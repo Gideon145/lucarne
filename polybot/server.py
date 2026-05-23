@@ -1059,10 +1059,11 @@ async def get_fixtures(country: str):
 
 
 @app.get("/match/{team1}/{team2}")
-async def get_match_odds(team1: str, team2: str):
+async def get_match_odds(request: Request, team1: str, team2: str):
     """
     Returns H2H win/draw/loss probabilities and AI brief for a matchup.
     Derives match probabilities from Polymarket tournament winner odds.
+    Requires x402 micropayment (0.01 USDC on X Layer) via X-Payment header.
     """
     team1 = team1.upper()
     team2 = team2.upper()
@@ -1071,6 +1072,24 @@ async def get_match_odds(team1: str, team2: str):
         raise HTTPException(status_code=404, detail=f"Unknown country: {team1}")
     if team2 not in COUNTRY_NAMES:
         raise HTTPException(status_code=404, detail=f"Unknown country: {team2}")
+
+    # ── x402 payment gate ────────────────────────────────────────────────────
+    payment_header = request.headers.get("X-Payment")
+    valid, _ = verify_x402_payment(payment_header)
+    if not valid:
+        name1 = COUNTRY_NAMES.get(team1, team1)
+        name2 = COUNTRY_NAMES.get(team2, team2)
+        pmt = make_402_payload(
+            resource_url=str(request.url),
+            description=f"LUCARNE Match Intel Brief — {name1} vs {name2} (WC 2026)",
+        )
+        encoded = base64.b64encode(json.dumps(pmt).encode()).decode()
+        return JSONResponse(
+            status_code=402,
+            content={"error": "Payment required", "x402": pmt},
+            headers={"X-Payment-Required": encoded},
+        )
+    # ─────────────────────────────────────────────────────────────────────────
 
     cache_key = f"match_{team1}_{team2}"
     alt_key   = f"match_{team2}_{team1}"

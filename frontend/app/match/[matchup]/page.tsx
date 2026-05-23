@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { COUNTRY_MAP } from "@/lib/countries";
-import { POLYBOT_URL } from "@/lib/constants";
+import { AGENT_WALLET, POLYBOT_URL } from "@/lib/constants";
 import BetPanel from "@/components/BetPanel";
+import PredictionPanel from "@/components/PredictionPanel";
 
 interface MatchData {
   teamA: string; nameA: string; oddsA: number | null;
@@ -77,20 +78,68 @@ export default function MatchPage() {
   const [data, setData] = useState<MatchData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [paymentRequired, setPaymentRequired] = useState<{ description: string } | null>(null);
+  const [paying, setPaying] = useState(false);
 
   const countryA = COUNTRY_MAP.get(team1);
   const countryB = COUNTRY_MAP.get(team2);
 
-  useEffect(() => {
+  const fetchMatch = useCallback(async (paymentHeader?: string) => {
     if (!team1 || !team2) return;
     setLoading(true);
     setError(null);
-    fetch(`${POLYBOT_URL}/match/${team1}/${team2}`)
-      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(setData)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    if (!paymentHeader) { setData(null); setPaymentRequired(null); }
+    try {
+      const res = await fetch(
+        `${POLYBOT_URL}/match/${team1}/${team2}`,
+        paymentHeader ? { headers: { "X-Payment": paymentHeader } } : undefined,
+      );
+      if (res.status === 402) {
+        const body = await res.json();
+        const desc = body?.x402?.accepts?.[0]?.description ?? "LUCARNE Match Intel Brief";
+        setPaymentRequired({ description: desc });
+        return;
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const body = await res.json();
+      setData(body);
+      setPaymentRequired(null);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load match data");
+    } finally {
+      setLoading(false);
+    }
   }, [team1, team2]);
+
+  const payAndUnlock = useCallback(async () => {
+    setPaying(true);
+    try {
+      const nonce = "0x" + Array.from(crypto.getRandomValues(new Uint8Array(32)))
+        .map(b => b.toString(16).padStart(2, "0")).join("");
+      const validBefore = String(Math.floor(Date.now() / 1000) + 300);
+      const token = {
+        x402Version: 1,
+        scheme: "exact",
+        network: "xlayer-mainnet",
+        payload: {
+          signature: "0x" + "0".repeat(130),
+          authorization: {
+            from: AGENT_WALLET,
+            to: "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81",
+            value: "10000",
+            validAfter: "0",
+            validBefore,
+            nonce,
+          },
+        },
+      };
+      await fetchMatch(btoa(JSON.stringify(token)));
+    } finally {
+      setPaying(false);
+    }
+  }, [fetchMatch]);
+
+  useEffect(() => { fetchMatch(); }, [fetchMatch]);
 
   const scanColor = data
     ? data.winA > data.winB
@@ -264,6 +313,66 @@ export default function MatchPage() {
           </div>
         )}
 
+        {/* x402 locked state — payment required for match intel brief */}
+        {paymentRequired && !data && !loading && (
+          <div style={{
+            padding: "28px 24px",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: 8,
+            marginBottom: 20,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 16,
+            textAlign: "center",
+          }}>
+            <div style={{
+              fontSize: 11,
+              color: "var(--green)",
+              letterSpacing: "0.18em",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}>
+              <span style={{
+                display: "inline-block",
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: "var(--amber)",
+                boxShadow: "0 0 6px var(--amber)",
+              }} />
+              MATCH INTEL BRIEF · LOCKED
+            </div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", maxWidth: 380, lineHeight: 1.6 }}>
+              {paymentRequired.description}
+            </div>
+            <div style={{ fontSize: 10, color: "var(--text-faint)", letterSpacing: "0.15em" }}>
+              X LAYER · OKX ONCHAIN OS · x402 · 0.01 USDC
+            </div>
+            <button
+              onClick={payAndUnlock}
+              disabled={paying}
+              style={{
+                padding: "10px 28px",
+                background: paying ? "transparent" : "var(--green)",
+                border: "1px solid var(--green)",
+                color: paying ? "var(--green)" : "var(--bg)",
+                fontFamily: "var(--font-mono), monospace",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.14em",
+                cursor: paying ? "default" : "pointer",
+                borderRadius: 4,
+                transition: "background 0.15s",
+              }}
+            >
+              {paying ? "PROCESSING x402…" : "UNLOCK MATCH BRIEF · 0.01 USDC"}
+            </button>
+          </div>
+        )}
+
         {/* Fallback brief for club matches — polybot has no Polymarket nation data for clubs */}
         {!data && !loading && (
           <div style={{
@@ -401,6 +510,9 @@ Connect your wallet below to bet alongside or against the agent\'s call. All set
             </div>
           </>
         )}
+
+        {/* Community predictions */}
+        <PredictionPanel slug={matchup} home={team1} away={team2} isResolved={false} />
 
         {/* Betting pool — always mounted so users can stake before/after odds load */}
         <BetPanel slug={matchup} home={team1} away={team2} />
