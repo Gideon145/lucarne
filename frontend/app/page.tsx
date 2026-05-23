@@ -48,12 +48,29 @@ export default function Home() {
 
   return (
     <div className="hud-grid" style={{ minHeight: "100vh" }}>
+      <style>{`
+        .hp-sub { font-size: 13px; color: var(--text-dim); letter-spacing: 0.08em; }
+        .hp-updated { font-size: 13px; color: var(--text-dim); }
+        .hp-main-grid { display: grid; grid-template-columns: 1fr 280px; gap: 0; max-width: 1400px; margin: 0 auto; width: 100%; }
+        .hp-nation-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        .hp-feed { padding: 20px 16px; height: calc(100vh - 160px); position: sticky; top: 160px; overflow-y: auto; }
+        @media (max-width: 768px) {
+          .hp-sub { display: none; }
+          .hp-updated { display: none; }
+          .hp-main-grid { grid-template-columns: 1fr; }
+          .hp-nation-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+          .hp-feed { display: none; }
+        }
+        @media (max-width: 480px) {
+          .hp-nation-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+      `}</style>
 
       {/* ── Top Bar ──────────────────────────────────────────────────────── */}
       <header
         style={{
           borderBottom: "1px solid var(--border)",
-          padding: "14px 24px",
+          padding: "clamp(10px, 2vw, 14px) clamp(14px, 3vw, 24px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -62,6 +79,8 @@ export default function Home() {
           position: "sticky",
           top: 0,
           zIndex: 50,
+          flexWrap: "wrap",
+          gap: 8,
         }}
       >
         {/* Logo */}
@@ -69,7 +88,7 @@ export default function Home() {
           <span
             style={{
               fontFamily: "var(--font-orbitron), sans-serif",
-              fontSize: 28,
+              fontSize: "clamp(20px, 5vw, 28px)",
               fontWeight: 900,
               letterSpacing: "0.15em",
               color: "var(--green)",
@@ -78,16 +97,16 @@ export default function Home() {
           >
             LUCARNE
           </span>
-          <span style={{ fontSize: 13, color: "var(--text-dim)", letterSpacing: "0.08em" }}>
+          <span className="hp-sub">
             World Cup Signal Intelligence
           </span>
         </div>
 
         {/* Status pills */}
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
           <StatusPill label="AGENT" live={agentLive} />
           <StatusPill label="POLYBOT" live={polybotLive} />
-          <div style={{ fontSize: 13, color: "var(--text-dim)" }}>
+          <div className="hp-updated">
             Updated {lastRefreshStr}
           </div>
         </div>
@@ -96,7 +115,7 @@ export default function Home() {
       {/* ── Stats Banner ─────────────────────────────────────────────────── */}
       <div
         style={{
-          padding: "14px 24px 12px",
+          padding: "14px clamp(14px,3vw,24px) 12px",
           borderBottom: "1px solid var(--border)",
           background: "rgba(0,255,133,0.02)",
         }}
@@ -218,19 +237,9 @@ export default function Home() {
       {filter === "LIVE" ? (
         <LiveMatchPanel expanded />
       ) : (
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 280px",
-          gap: 0,
-          maxWidth: 1400,
-          margin: "0 auto",
-          width: "100%",
-          padding: "0",
-        }}
-      >
+      <div className="hp-main-grid" style={{ padding: 0 }}>
         {/* Nation Grid */}
-        <div style={{ padding: "20px 24px", borderRight: "1px solid var(--border)" }}>
+        <div style={{ padding: "clamp(12px,2.5vw,20px) clamp(14px,3vw,24px)", borderRight: "1px solid var(--border)" }}>
           {loading ? (
             <SkeletonGrid />
           ) : filtered.length === 0 ? (
@@ -238,13 +247,7 @@ export default function Home() {
               No nations in {filter} regime right now.
             </div>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-                gap: 12,
-              }}
-            >
+            <div className="hp-nation-grid">
               {filtered.map((nation) => (
                 <NationCard
                   key={nation.iso3}
@@ -279,7 +282,7 @@ export default function Home() {
         </div>
 
         {/* Live Feed Sidebar */}
-        <div style={{ padding: "20px 16px", height: "calc(100vh - 160px)", position: "sticky", top: 160 }}>
+        <div className="hp-feed">
           <LiveFeed feed={feed} />
         </div>
       </div>

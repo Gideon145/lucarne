@@ -368,6 +368,21 @@ export default function SurvivorPage() {
       fontFamily: "var(--font-mono, monospace)",
       padding: "0 0 60px",
     }}>
+      <style>{`
+        .sp-header-sub { font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 0.2em; }
+        .sp-layout { max-width: 1020px; margin: 0 auto; padding: 32px 24px; display: flex; gap: 28px; align-items: flex-start; }
+        .sp-sidebar { width: 190px; flex-shrink: 0; position: sticky; top: 80px; }
+        .sp-big { font-family: var(--font-orbitron, sans-serif); font-size: clamp(24px, 7vw, 36px); font-weight: 900; }
+        .sp-h1 { font-family: var(--font-orbitron, sans-serif); font-size: clamp(22px, 6vw, 32px); font-weight: 900; margin: 0 0 10px; letter-spacing: 0.05em; color: #fff; }
+        @media (max-width: 768px) {
+          .sp-layout { flex-direction: column; padding: 20px 16px; gap: 0; }
+          .sp-sidebar { width: 100%; position: static; margin-top: 20px; }
+          .sp-header-sub { display: none; }
+        }
+        @media (max-width: 480px) {
+          .sp-layout { padding: 16px 12px; }
+        }
+      `}</style>
 
       {/* Header */}
       <header style={{ borderBottom: "1px solid var(--border, rgba(255,255,255,0.08))", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(6,15,9,0.95)", backdropFilter: "blur(8px)", position: "sticky", top: 0, zIndex: 50 }}>
@@ -375,7 +390,7 @@ export default function SurvivorPage() {
           <a href="/" style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 22, fontWeight: 900, letterSpacing: "0.15em", color: "var(--green, #00ff88)", textDecoration: "none", textShadow: "0 0 16px var(--green-glow, #00ff8844)" }}>
             LUCARNE
           </a>
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", letterSpacing: "0.2em" }}>
+          <span className="sp-header-sub">
             ▸ HOT SEAT POOL
           </span>
         </div>
@@ -390,12 +405,12 @@ export default function SurvivorPage() {
         )}
       </header>
 
-      <div style={{ maxWidth: 1020, margin: "0 auto", padding: "32px 24px", display: "flex", gap: 28, alignItems: "flex-start" }}>
+      <div className="sp-layout">
         <div style={{ flex: 1, minWidth: 0 }}>
 
         {/* Title */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 32, fontWeight: 900, margin: "0 0 10px", letterSpacing: "0.05em", color: "#fff" }}>
+          <h1 className="sp-h1">
             HOT SEAT POOL
           </h1>
           <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, lineHeight: 1.7, margin: 0 }}>
@@ -412,21 +427,21 @@ export default function SurvivorPage() {
             <div style={{ display: "flex", gap: 28, flexWrap: "wrap", alignItems: "flex-end" }}>
               <div>
                 <div style={dimLabel}>ROUND</div>
-                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 36, fontWeight: 900, color: "var(--green, #00ff88)" }}>{pool.round}</div>
+                <div className="sp-big" style={{ color: "var(--green, #00ff88)" }}>{pool.round}</div>
               </div>
               <div>
                 <div style={dimLabel}>POT</div>
-                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 36, fontWeight: 900, color: "#fbbf24" }}>
+                <div className="sp-big" style={{ color: "#fbbf24" }}>
                   {parseFloat(formatEther(pool.pot)).toFixed(4)} OKB
                 </div>
               </div>
               <div>
                 <div style={dimLabel}>SURVIVORS</div>
-                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 36, fontWeight: 900 }}>{pool.survivors.length}</div>
+                <div className="sp-big">{pool.survivors.length}</div>
               </div>
               <div>
                 <div style={dimLabel}>PLAYERS</div>
-                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 36, fontWeight: 900, color: "var(--text-dim, #9ca3af)" }}>{pool.playerCount}</div>
+                <div className="sp-big" style={{ color: "var(--text-dim, #9ca3af)" }}>{pool.playerCount}</div>
               </div>
               <div>
                 <div style={dimLabel}>STATUS</div>
@@ -586,7 +601,7 @@ export default function SurvivorPage() {
         </div>{/* end left col */}
 
         {/* Right: nation tally sidebar */}
-        <div style={{ width: 190, flexShrink: 0, position: "sticky", top: 80 }}>
+        <div className="sp-sidebar">
           <div style={{ background: "rgba(0,255,136,0.04)", border: "1px solid rgba(0,255,136,0.13)", borderRadius: 10, padding: "16px", backdropFilter: "blur(6px)" }}>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", letterSpacing: "0.18em", marginBottom: 14 }}>NATIONS IN POOL</div>
             {Object.keys(nationTally).length === 0 ? (

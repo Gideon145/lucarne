@@ -171,3 +171,12 @@ html, body {
 
 .filter-tab:hover { color: var(--text-primary); border-color: var(--border-glow); }
 .filter-tab.active { color: var(--void); background: var(--green); border-color: var(--green); }
+
+/* ── Mobile Base ─────────────────────────────────────────────────────────── */
+@media (max-width: 599px) {
+  .filter-tab {
+    padding: 5px 10px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+}

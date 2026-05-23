@@ -87,7 +87,7 @@ export default function Leaderboard() {
             <div style={{ fontSize: "0.85rem", color: "var(--gold)", letterSpacing: "0.2em", marginBottom: "0.25rem" }}>
               ⬢ I CALLED IT — LEADERBOARD
             </div>
-            <h1 style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: "2.4rem", margin: 0, color: "var(--text-primary)" }}>
+            <h1 style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: "clamp(1.5rem, 6vw, 2.4rem)", margin: 0, color: "var(--text-primary)" }}>
               ON-CHAIN PROOF RANKING
             </h1>
             <div style={{ color: "var(--text-dim)", fontSize: "0.95rem", marginTop: "0.4rem" }}>

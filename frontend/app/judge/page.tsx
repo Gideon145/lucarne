@@ -146,7 +146,7 @@ export default function JudgePage() {
               <div style={{ fontSize: "0.9rem", color: "var(--green)", letterSpacing: "0.2em", marginBottom: "0.25rem" }}>
                 ⬢ JUDGE MODE — X LAYER X CUP HACKATHON
               </div>
-              <h1 style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: "3rem", margin: 0, color: "var(--text-primary)" }}>
+              <h1 style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: "clamp(1.8rem, 7vw, 3rem)", margin: 0, color: "var(--text-primary)" }}>
                 LUCARNE
               </h1>
               <div style={{ color: "var(--text-dim)", fontSize: "1.1rem", marginTop: "0.25rem" }}>
@@ -165,7 +165,7 @@ export default function JudgePage() {
           <div style={{ fontSize: "0.85rem", color: "var(--text-dim)", letterSpacing: "0.2em" }}>
             LIFETIME MAINNET TRANSACTIONS · AGENT WALLET · LIVE FROM X LAYER RPC
           </div>
-          <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: "5.5rem", color: "var(--green)", lineHeight: 1, marginTop: "0.5rem" }}>
+          <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: "clamp(2.5rem, 10vw, 5.5rem)", color: "var(--green)", lineHeight: 1, marginTop: "0.5rem" }}>
             {nonce !== null ? nonce.toLocaleString() : loading ? "…" : "—"}
           </div>
           <div style={{ color: "var(--text-dim)", fontSize: "1rem", marginTop: "0.75rem" }}>
