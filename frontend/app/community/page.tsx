@@ -167,14 +167,6 @@ export default function CommunityFavourite() {
         </div>
 
 
-        {/* ── Total Count ─────────────────────────────────────────────────── */}
-        {!loading && (
-          <div style={{ marginBottom: "1.5rem", display: "flex", alignItems: "baseline", gap: 8 }}>
-            <span style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 36, fontWeight: 900, color: "rgba(0,255,133,0.95)", textShadow: "0 0 20px rgba(0,255,133,0.3)" }}>{total.toLocaleString()}</span>
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}>FANS HAVE PICKED THEIR COUNTRY</span>
-          </div>
-        )}
-
         {/* ── Thank You ───────────────────────────────────────────────────── */}
         {thanks && (
           <div style={{ background: "rgba(0,255,133,0.07)", border: "1px solid rgba(0,255,133,0.3)", borderRadius: 10, padding: "2rem 1.5rem", marginBottom: "2rem", textAlign: "center" }}>
