@@ -74,6 +74,13 @@ const POOL_WRITE_ABI = [
     inputs:  [{ name: "gameId", type: "bytes32" }],
     outputs: [],
   },
+  {
+    name: "reclaimNoWinner",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs:  [{ name: "gameId", type: "bytes32" }, { name: "outcome", type: "uint8" }],
+    outputs: [],
+  },
 ] as const;
 
 // ── Chain ─────────────────────────────────────────────────────────────────────

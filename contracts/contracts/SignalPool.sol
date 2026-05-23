@@ -88,6 +88,13 @@ contract SignalPool {
         uint256 payout
     );
 
+    event NoWinnerReclaimed(
+        bytes32 indexed gameId,
+        address indexed claimant,
+        uint8   outcome,
+        uint256 amount
+    );
+
     // ── Constructor ───────────────────────────────────────────────────────────
 
     constructor(address _owner, address _agent, address _resultAttestor) {
@@ -195,6 +202,31 @@ contract SignalPool {
         require(ok, "Transfer failed");
 
         emit Claimed(gameId, msg.sender, payout);
+    }
+
+    /**
+     * @notice Reclaim your stake when the pool has settled but the winning bucket is empty
+     *         (no one staked on the actual outcome — common when agent is wrong and no
+     *         counterparty exists). Anyone can reclaim their own stake from any losing bucket.
+     * @param gameId  keccak256(slug) — same id used when staking
+     * @param outcome The outcome bucket you originally staked on
+     */
+    function reclaimNoWinner(bytes32 gameId, uint8 outcome) external {
+        Pool storage p = _pools[gameId];
+        require(p.settled,                        "Not settled yet");
+        require(p.buckets[p.winOutcome] == 0,     "Winners exist - use claim()");
+
+        uint256 stake = _stakes[gameId][outcome][msg.sender];
+        require(stake > 0,                        "Nothing to reclaim");
+
+        // CEI: zero out before transfer
+        _stakes[gameId][outcome][msg.sender] = 0;
+        p.buckets[outcome] -= stake;
+
+        (bool ok, ) = payable(msg.sender).call{value: stake}("");
+        require(ok, "Transfer failed");
+
+        emit NoWinnerReclaimed(gameId, msg.sender, outcome, stake);
     }
 
     // ── Views ─────────────────────────────────────────────────────────────────
