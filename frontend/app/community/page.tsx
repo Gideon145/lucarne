@@ -137,23 +137,48 @@ export default function CommunityFavourite() {
 
   return (
     <main style={{ minHeight: "100vh", background: "var(--void, #030A06)", color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-mono, monospace)" }}>
+      <style>{`
+        .cm-header { padding: 12px 16px; }
+        .cm-logo { font-size: 24px; }
+        .cm-nav { display: flex; gap: 8px; flex-wrap: wrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .cm-nav::-webkit-scrollbar { display: none; }
+        .cm-container { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem; }
+        .cm-h1 { font-size: clamp(1.5rem, 7vw, 2.8rem); margin: 0 0 0.75rem; font-family: var(--font-orbitron, sans-serif); color: rgba(255,255,255,0.95); line-height: 1.1; }
+        .cm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 30vw), 1fr)); gap: 12px; margin-bottom: 2.5rem; }
+        .cm-thanks { background: rgba(0,255,133,0.07); border: 1px solid rgba(0,255,133,0.3); border-radius: 10px; padding: 2rem 1.5rem; margin-bottom: 2rem; text-align: center; }
+        .cm-thanks-title { font-family: var(--font-orbitron, sans-serif); font-size: clamp(1.2rem, 5vw, 1.6rem); font-weight: 900; color: rgba(0,255,133,0.95); margin-bottom: 8px; }
+        .cm-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: flex-end; justify-content: center; z-index: 200; padding: 0; }
+        .cm-modal-inner { background: #060F09; border: 1px solid rgba(0,255,133,0.25); border-radius: 12px 12px 0 0; padding: 1.5rem; width: 100%; max-width: 480px; }
+        @media (min-width: 600px) {
+          .cm-modal-overlay { align-items: center; padding: 20px; }
+          .cm-modal-inner { border-radius: 10px; max-width: 380px; }
+          .cm-header { padding: 14px 24px; }
+          .cm-logo { font-size: 24px; }
+        }
+        @media (max-width: 599px) {
+          .cm-container { padding: 1.25rem 0.85rem; }
+          .cm-grid { gap: 8px; }
+          .cm-thanks { padding: 1.5rem 1rem; }
+          .cm-logo { font-size: 20px !important; }
+        }
+      `}</style>
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <header style={{ borderBottom: "1px solid rgba(0,255,133,0.15)", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(6,15,9,0.95)", backdropFilter: "blur(8px)", position: "sticky", top: 0, zIndex: 50, flexWrap: "wrap", gap: 10 }}>
-        <a href="/" style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 24, fontWeight: 900, color: "var(--green, #00FF85)", textDecoration: "none", letterSpacing: "0.15em", textShadow: "0 0 18px rgba(0,255,133,0.4)" }}>LUCARNE</a>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <header className="cm-header" style={{ borderBottom: "1px solid rgba(0,255,133,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(6,15,9,0.95)", backdropFilter: "blur(8px)", position: "sticky", top: 0, zIndex: 50, flexWrap: "wrap", gap: 8 }}>
+        <a href="/" className="cm-logo" style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontWeight: 900, color: "var(--green, #00FF85)", textDecoration: "none", letterSpacing: "0.15em", textShadow: "0 0 18px rgba(0,255,133,0.4)" }}>LUCARNE</a>
+        <div className="cm-nav">
           <a href="/" style={navBtn(false)}>LIVE PREDICTIONS</a>
           <a href="/survivor" style={navBtn(false)}>HOT SEAT POOL</a>
           <a href="/community" style={navBtn(true)}>COMMUNITY FAVOURITE</a>
         </div>
       </header>
 
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "2rem 1.25rem" }}>
+      <div className="cm-container">
 
         {/* ── Intro ──────────────────────────────────────────────────────── */}
         <div style={{ marginBottom: "2rem" }}>
           <div style={{ fontSize: 11, color: "rgba(0,255,133,0.7)", letterSpacing: "0.2em", marginBottom: 6 }}>⬢ COMMUNITY FAVOURITE — FIFA WORLD CUP 2026</div>
-          <h1 style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: "2.8rem", margin: "0 0 0.75rem", color: "rgba(255,255,255,0.95)", lineHeight: 1.1 }}>
+          <h1 className="cm-h1">
             WHO DO YOU BACK?
           </h1>
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.8, color: "rgba(255,255,255,0.5)", maxWidth: 640 }}>
@@ -169,9 +194,9 @@ export default function CommunityFavourite() {
 
         {/* ── Thank You ───────────────────────────────────────────────────── */}
         {thanks && (
-          <div style={{ background: "rgba(0,255,133,0.07)", border: "1px solid rgba(0,255,133,0.3)", borderRadius: 10, padding: "2rem 1.5rem", marginBottom: "2rem", textAlign: "center" }}>
+          <div className="cm-thanks">
             <img src={`https://flagcdn.com/w80/${thanks.iso2}.png`} alt={thanks.name} width={72} height={48} style={{ objectFit: "cover", borderRadius: 4, display: "block", margin: "0 auto 1rem" }} />
-            <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: "1.6rem", fontWeight: 900, color: "rgba(0,255,133,0.95)", marginBottom: 8 }}>THANK YOU FOR YOUR ENTRY!</div>
+            <div className="cm-thanks-title">THANK YOU FOR YOUR ENTRY!</div>
             <div style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", lineHeight: 1.8 }}>
               You&apos;re backing <strong style={{ color: "rgba(255,255,255,0.9)" }}>{thanks.name}</strong> for WC 2026.<br />
               Follow <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={{ color: "rgba(0,255,133,0.8)", textDecoration: "none" }}>@lucarne_xyz</a>{" "}
@@ -184,7 +209,7 @@ export default function CommunityFavourite() {
         {!voted && (
           <>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", letterSpacing: "0.14em", marginBottom: "0.75rem" }}>CLICK TO PICK YOUR COUNTRY</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12, marginBottom: "2.5rem" }}>
+            <div className="cm-grid">
               {NATIONS.map(n => (
                 <button
                   key={n.iso3}
@@ -207,10 +232,10 @@ export default function CommunityFavourite() {
       {/* ── Entry Modal ─────────────────────────────────────────────────── */}
       {modal && (
         <div
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}
+          className="cm-modal-overlay"
           onClick={e => { if (e.target === e.currentTarget) setModal(null); }}
         >
-          <div style={{ background: "#060F09", border: "1px solid rgba(0,255,133,0.25)", borderRadius: 10, padding: "1.75rem", width: "100%", maxWidth: 380 }}>
+          <div className="cm-modal-inner">
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "1.25rem" }}>
               <img src={`https://flagcdn.com/w40/${modal.iso2}.png`} alt={modal.name} width={36} height={24} style={{ objectFit: "cover", borderRadius: 3 }} />
               <div>
