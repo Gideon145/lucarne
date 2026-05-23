@@ -1,0 +1,77 @@
+import { kv } from "@vercel/kv";
+import { NextRequest, NextResponse } from "next/server";
+
+export const runtime = "edge";
+
+const NATIONS = [
+  "ARG","BRA","FRA","ENG","ESP","GER","POR","NED",
+  "ITA","URU","COL","MEX","USA","JAP","KOR","MAR",
+  "CAN","BEL","CRO","SEN","NGA","ECU","AUS","TUR",
+  "CHE","EGY","IRN","SAU","DEN","SRB","VEN","CMR",
+];
+
+function normaliseHandle(raw: string): string | null {
+  const h = raw.trim().replace(/^@/, "").toLowerCase();
+  if (!/^[a-z0-9_]{1,15}$/.test(h)) return null;
+  return h;
+}
+
+// GET /api/fan-vote → { tallies: Record<string,number>, total: number }
+export async function GET() {
+  try {
+    const keys = NATIONS.map(c => `fan:tally:${c}`);
+    const values = await kv.mget<number[]>(...keys);
+    const tallies: Record<string, number> = {};
+    let total = 0;
+    NATIONS.forEach((c, i) => {
+      const v = Number(values[i] ?? 0);
+      tallies[c] = v;
+      total += v;
+    });
+    return NextResponse.json({ tallies, total });
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
+}
+
+// POST /api/fan-vote — body: { country: string, xHandle: string }
+export async function POST(req: NextRequest) {
+  try {
+    const { country, xHandle } = await req.json();
+
+    if (!NATIONS.includes(country)) {
+      return NextResponse.json({ error: "Invalid country" }, { status: 400 });
+    }
+
+    const handle = normaliseHandle(xHandle ?? "");
+    if (!handle) {
+      return NextResponse.json({ error: "Invalid X handle (1-15 chars, letters/numbers/_)" }, { status: 400 });
+    }
+
+    // One vote per X handle
+    const alreadyVoted = await kv.sismember("fan:voted", handle);
+    if (alreadyVoted) {
+      return NextResponse.json({ error: "already_voted" }, { status: 409 });
+    }
+
+    await Promise.all([
+      kv.incr(`fan:tally:${country}`),
+      kv.sadd("fan:voted", handle),
+      kv.rpush("fan:entries", JSON.stringify({ country, xHandle: handle, ts: Date.now() })),
+    ]);
+
+    const keys = NATIONS.map(c => `fan:tally:${c}`);
+    const values = await kv.mget<number[]>(...keys);
+    let total = 0;
+    const tallies: Record<string, number> = {};
+    NATIONS.forEach((c, i) => {
+      const v = Number(values[i] ?? 0);
+      tallies[c] = v;
+      total += v;
+    });
+
+    return NextResponse.json({ success: true, tallies, total });
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
+}

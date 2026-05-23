@@ -160,7 +160,13 @@ export default function Home() {
             href="/survivor"
             style={{ fontSize: 10, color: "var(--green)", textDecoration: "none", fontWeight: 700, border: "1px solid var(--green)", padding: "3px 8px", borderRadius: 4, letterSpacing: "0.1em" }}
           >
-            🎮 SURVIVOR POOL
+            🎮 HOT SEAT POOL
+          </a>
+          <a
+            href="/community"
+            style={{ fontSize: 10, color: "var(--green)", textDecoration: "none", fontWeight: 700, border: "1px solid var(--green)", padding: "3px 8px", borderRadius: 4, letterSpacing: "0.1em" }}
+          >
+            ★ COMMUNITY FAVOURITE
           </a>
           <a
             href="/leaderboard"
@@ -277,6 +283,7 @@ export default function Home() {
             <div>LUCARNE · OKX X Layer Build-X · Signal-gated attestations every 60s</div>
             <div style={{ marginTop: 8, maxWidth: 720, margin: "8px auto 0" }}>
               <a href="/judge" style={{ color: "var(--green)", textDecoration: "none", marginRight: 12 }}>JUDGE MODE</a>
+              <a href="/community" style={{ color: "var(--green)", textDecoration: "none", marginRight: 12 }}>COMMUNITY FAVOURITE</a>
               <a href="/leaderboard" style={{ color: "var(--gold)", textDecoration: "none", marginRight: 12 }}>LEADERBOARD</a>
               <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={{ color: "var(--text-dim)", textDecoration: "none" }}>@lucarne_xyz ↗</a>
             </div>
