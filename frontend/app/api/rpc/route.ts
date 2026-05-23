@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "edge"; // Edge runtime — avoids Fluid Active CPU billing
+
 /**
  * RPC proxy — forwards JSON-RPC requests to X Layer mainnet.
  * Running on Vercel avoids Railway IP blocks and browser CORS restrictions.

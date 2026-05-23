@@ -189,7 +189,7 @@ export function useAttestations(): AttestationState {
     fetchPolybot();
     fetchContract();
 
-    const contractTimer = setInterval(fetchContract, 15_000);
+    const contractTimer = setInterval(fetchContract, 60_000); // agent writes every 60s — no need to poll faster
     const polybotTimer  = setInterval(fetchPolybot, 60_000);
 
     return () => {
