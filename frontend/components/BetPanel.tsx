@@ -11,7 +11,7 @@ import {
   parseEther,
   formatEther,
 } from "viem";
-import { SIGNAL_POOL, I_CALLED_IT_NFT, OKLINK_BASE, AGENT_WALLET } from "@/lib/constants";
+import { SIGNAL_POOL, SIGNAL_POOL_V1, I_CALLED_IT_NFT, OKLINK_BASE, AGENT_WALLET } from "@/lib/constants";
 
 // ── ABIs ──────────────────────────────────────────────────────────────────────
 
@@ -126,13 +126,14 @@ function pct(part: bigint, total: bigint): string {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function BetPanel({ slug, home, away }: { slug: string; home: string; away: string }) {
-  const [pool,      setPool]      = useState<PoolState | null>(null);
-  const [wallet,    setWallet]    = useState<string | null>(null);
-  const [betAmount, setBetAmount] = useState("0.01");
-  const [status,    setStatus]    = useState<"idle" | "pending" | "done" | "error">("idle");
-  const [txHash,    setTxHash]    = useState<string | null>(null);
-  const [errMsg,    setErrMsg]    = useState<string | null>(null);
-  const [hasMinted, setHasMinted] = useState(false);
+  const [pool,         setPool]         = useState<PoolState | null>(null);
+  const [poolContract, setPoolContract] = useState<`0x${string}`>(SIGNAL_POOL as `0x${string}`);
+  const [wallet,       setWallet]       = useState<string | null>(null);
+  const [betAmount,    setBetAmount]    = useState("0.01");
+  const [status,       setStatus]       = useState<"idle" | "pending" | "done" | "error">("idle");
+  const [txHash,       setTxHash]       = useState<string | null>(null);
+  const [errMsg,       setErrMsg]       = useState<string | null>(null);
+  const [hasMinted,    setHasMinted]    = useState(false);
 
   const gameId = keccak256(toBytes(slug)) as `0x${string}`;
 
@@ -145,24 +146,43 @@ export default function BetPanel({ slug, home, away }: { slug: string; home: str
 
   const fetchPool = useCallback(async (addr?: string) => {
     try {
-      const [poolResult, deadline] = await Promise.all([
-        publicClient.readContract({
-          address: SIGNAL_POOL, abi: POOL_READ_ABI, functionName: "getPool", args: [gameId],
-        }),
-        publicClient.readContract({
-          address: SIGNAL_POOL, abi: POOL_READ_ABI, functionName: "deadlines", args: [gameId],
-        }),
+      // Try v2 first; if no pool staked there, fall back to v1
+      let contractAddr: `0x${string}` = SIGNAL_POOL as `0x${string}`;
+      let [poolResult, deadline] = await Promise.all([
+        publicClient.readContract({ address: contractAddr, abi: POOL_READ_ABI, functionName: "getPool", args: [gameId] }),
+        publicClient.readContract({ address: contractAddr, abi: POOL_READ_ABI, functionName: "deadlines", args: [gameId] }),
       ]);
 
-      const [homeBucket, drawBucket, awayBucket, agentStake, agentCall, open, settled, winOutcome] =
+      let [homeBucket, drawBucket, awayBucket, agentStake, agentCall, open, settled, winOutcome] =
         poolResult as [bigint, bigint, bigint, bigint, number, boolean, boolean, number];
+
+      if ((agentStake as bigint) === 0n) {
+        // No pool on v2 — check v1
+        try {
+          const [r1, d1] = await Promise.all([
+            publicClient.readContract({ address: SIGNAL_POOL_V1 as `0x${string}`, abi: POOL_READ_ABI, functionName: "getPool", args: [gameId] }),
+            publicClient.readContract({ address: SIGNAL_POOL_V1 as `0x${string}`, abi: POOL_READ_ABI, functionName: "deadlines", args: [gameId] }),
+          ]);
+          const [hb1,,, as1] = r1 as [bigint, bigint, bigint, bigint, number, boolean, boolean, number];
+          if ((as1 as bigint) > 0n) {
+            contractAddr = SIGNAL_POOL_V1 as `0x${string}`;
+            poolResult   = r1;
+            deadline     = d1;
+            [homeBucket, drawBucket, awayBucket, agentStake, agentCall, open, settled, winOutcome] =
+              r1 as [bigint, bigint, bigint, bigint, number, boolean, boolean, number];
+          }
+          void hb1;
+        } catch { /* v1 not available — keep v2 result */ }
+      }
+
+      setPoolContract(contractAddr);
 
       let userStakes: [bigint, bigint, bigint] = [0n, 0n, 0n];
       if (addr && open) {
         const [u0, u1, u2] = await Promise.all([
-          publicClient.readContract({ address: SIGNAL_POOL, abi: POOL_READ_ABI, functionName: "getUserStake", args: [gameId, 0, addr as `0x${string}`] }),
-          publicClient.readContract({ address: SIGNAL_POOL, abi: POOL_READ_ABI, functionName: "getUserStake", args: [gameId, 1, addr as `0x${string}`] }),
-          publicClient.readContract({ address: SIGNAL_POOL, abi: POOL_READ_ABI, functionName: "getUserStake", args: [gameId, 2, addr as `0x${string}`] }),
+          publicClient.readContract({ address: contractAddr, abi: POOL_READ_ABI, functionName: "getUserStake", args: [gameId, 0, addr as `0x${string}`] }),
+          publicClient.readContract({ address: contractAddr, abi: POOL_READ_ABI, functionName: "getUserStake", args: [gameId, 1, addr as `0x${string}`] }),
+          publicClient.readContract({ address: contractAddr, abi: POOL_READ_ABI, functionName: "getUserStake", args: [gameId, 2, addr as `0x${string}`] }),
         ]);
         userStakes = [u0 as bigint, u1 as bigint, u2 as bigint];
       }
@@ -232,7 +252,7 @@ export default function BetPanel({ slug, home, away }: { slug: string; home: str
       const walletClient = createWalletClient({ chain: xlayer, transport: custom(eth) });
 
       const hash = await walletClient.writeContract({
-        address:      SIGNAL_POOL,
+        address:      poolContract,
         abi:          POOL_WRITE_ABI,
         functionName: "bet",
         args:         [gameId, outcome],
@@ -469,7 +489,7 @@ export default function BetPanel({ slug, home, away }: { slug: string; home: str
                     <div style={{ fontSize: 16, color: "#00ff85", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", fontWeight: 700 }}>
                       YOU WON · EST. PAYOUT: {fmt(payout)} OKB
                     </div>
-                    <ClaimButton gameId={gameId} wallet={wallet} connectWallet={connectWallet} />
+                    <ClaimButton gameId={gameId} wallet={wallet} poolAddress={poolContract} connectWallet={connectWallet} />
                   </div>
                 );
               }
@@ -588,7 +608,7 @@ export default function BetPanel({ slug, home, away }: { slug: string; home: str
               Kickoff passed · settle the pool once the result is on-chain
             </div>
             {wallet
-              ? <SettleButton gameId={gameId} wallet={wallet} onSettled={() => fetchPool(wallet)} />
+              ? <SettleButton gameId={gameId} wallet={wallet} poolAddress={poolContract} onSettled={() => fetchPool(wallet)} />
               : <button onClick={connectWallet} style={{ padding: "14px 28px", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-mono), monospace", fontSize: 13, cursor: "pointer" }}>CONNECT TO SETTLE</button>
             }
           </div>
@@ -646,7 +666,7 @@ export default function BetPanel({ slug, home, away }: { slug: string; home: str
 
 // ── Settle button ────────────────────────────────────────────────────────────────
 
-function SettleButton({ gameId, wallet, onSettled }: { gameId: `0x${string}`; wallet: string; onSettled: () => void }) {
+function SettleButton({ gameId, wallet, poolAddress, onSettled }: { gameId: `0x${string}`; wallet: string; poolAddress: `0x${string}`; onSettled: () => void }) {
   const [status, setStatus] = useState<"idle" | "pending" | "done" | "error">("idle");
   const [txHash, setTxHash] = useState<string | null>(null);
   const [errMsg, setErrMsg] = useState<string | null>(null);
@@ -663,7 +683,7 @@ function SettleButton({ gameId, wallet, onSettled }: { gameId: `0x${string}`; wa
     try {
       const walletClient = createWalletClient({ chain: xlayer, transport: custom(eth) });
       const hash = await walletClient.writeContract({
-        address: SIGNAL_POOL, abi: SETTLE_ABI, functionName: "settle",
+        address: poolAddress, abi: SETTLE_ABI, functionName: "settle",
         args: [gameId], account: wallet as `0x${string}`,
       });
       setTxHash(hash); setStatus("done");
@@ -768,7 +788,7 @@ function MintNFTButton({ gameId, slug, wallet, userStakes, onMinted }: {
 
 // ── Claim button ───────────────────────────────────────────────────────────────
 
-function ClaimButton({ gameId, wallet, connectWallet }: { gameId: `0x${string}`; wallet: string | null; connectWallet: () => void }) {
+function ClaimButton({ gameId, wallet, poolAddress, connectWallet }: { gameId: `0x${string}`; wallet: string | null; poolAddress: `0x${string}`; connectWallet: () => void }) {
   const [status, setStatus] = useState<"idle" | "pending" | "done" | "error">("idle");
   const [txHash, setTxHash] = useState<string | null>(null);
   const [errMsg, setErrMsg] = useState<string | null>(null);
@@ -786,7 +806,7 @@ function ClaimButton({ gameId, wallet, connectWallet }: { gameId: `0x${string}`;
     try {
       const walletClient = createWalletClient({ chain: xlayer, transport: custom(eth) });
       const hash = await walletClient.writeContract({
-        address: SIGNAL_POOL, abi: CLAIM_ABI, functionName: "claim",
+        address: poolAddress, abi: CLAIM_ABI, functionName: "claim",
         args: [gameId], account: wallet as `0x${string}`,
       });
       setTxHash(hash);
