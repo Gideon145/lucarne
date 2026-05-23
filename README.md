@@ -262,7 +262,7 @@ lucarne/
 
 ## Track Coverage — X Layer X Cup
 
-The hackathon names six eligible build tracks. Lucarne lands cleanly in four of them, with verifiable on-chain proof for each:
+During the hackathon we built across five of the eligible tracks. Every track has shipped code and verifiable on-chain proof:
 
 | Track | Status | On-Chain Proof |
 |---|---|---|
@@ -270,8 +270,7 @@ The hackathon names six eligible build tracks. Lucarne lands cleanly in four of 
 | **Trading** | ✅ Shipped | [`SignalPool v2`](https://www.oklink.com/xlayer/address/0xEe15Dc83cD4AcD16D8698831d468B1FE12ccEa67) parimutuel pool — real OKB stakes, real user bets, real settlement; agent bonds every match call |
 | **NFT** | ✅ Shipped | [`ICalledItNFT v2`](https://www.oklink.com/xlayer/address/0xBC2200d99980661fef938eE72001BAaE496F0adf) soulbound ERC-721 — real mints [`0x01ec8778…`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de), [`0xdc7120d5…`](https://www.oklink.com/xlayer/tx/0xdc7120d57a82670e9773f09404df5f0ef0c95aedeba5083de25f566175158321) |
 | **AI Agent** | ✅ Shipped | Autonomous 60s loop on agent wallet [`0xC8D9…47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) (14,000+ mainnet tx). Claude-powered AI briefs gated by **x402** on **OKX Onchain OS** |
-| **Social** | ⚪ Partial | Public build log on [x.com/lucarne_xyz](https://x.com/lucarne_xyz); share-to-X embedded in every match result card; [`/leaderboard`](https://frontend-sigma-two-60.vercel.app/leaderboard) ranks wallets by on-chain NFT count |
-| **GameFi** | ⚪ Out of scope | Lucarne is a *prediction-and-proof* protocol, not a game loop. We did not bolt on XP/quests to chase the box — every other layer is real |
+| **Social** | ✅ Shipped | Live build broadcast on [x.com/lucarne_xyz](https://x.com/lucarne_xyz); share-to-X button fires on every NFT-mint confirmation (pre-filled tweet with match link); [`/leaderboard`](https://frontend-sigma-two-60.vercel.app/leaderboard) ranks wallets by on-chain proven call count |
 
 ---
 

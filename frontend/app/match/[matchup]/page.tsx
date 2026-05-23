@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { COUNTRY_MAP } from "@/lib/countries";
 import { POLYBOT_URL } from "@/lib/constants";
+import BetPanel from "@/components/BetPanel";
 
 interface MatchData {
   teamA: string; nameA: string; oddsA: number | null;
@@ -357,6 +358,10 @@ export default function MatchPage() {
             </div>
           </>
         )}
+
+        {/* Betting pool — always mounted so users can stake before/after odds load */}
+        <BetPanel slug={matchup} home={team1} away={team2} />
+
       </div>
     </main>
   );
