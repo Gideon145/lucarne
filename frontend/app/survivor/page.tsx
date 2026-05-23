@@ -211,7 +211,7 @@ export default function SurvivorPage() {
           addrs.map(addr =>
             publicClient.readContract({ address: SURVIVOR_POOL, abi: ABI, functionName: "players", args: [addr as `0x${string}`] })
           )
-        ) as readonly [string, boolean, boolean][];
+        ) as unknown as [string, boolean, boolean][];
         picks.forEach(p => {
           if (p[2]) {
             const iso3 = bytes3ToIso3(p[0]);
