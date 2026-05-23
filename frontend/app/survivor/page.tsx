@@ -67,6 +67,13 @@ const ABI = [
     inputs: [{ name: "newPick", type: "bytes3" }],
     outputs: [],
   },
+  {
+    name: "playerList",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "uint256" }],
+    outputs: [{ type: "address" }],
+  },
 ] as const;
 
 // ── Nations available in the signal system ────────────────────────────────────
@@ -171,6 +178,7 @@ export default function SurvivorPage() {
   const [txHash,    setTxHash]    = useState<string | null>(null);
   const [errMsg,    setErrMsg]    = useState<string | null>(null);
   const [loading,   setLoading]   = useState(true);
+  const [nationTally, setNationTally] = useState<Record<string, number>>({});
 
   // ── Public client (read-only) ───────────────────────────────────────────────
   const publicClient = createPublicClient({ chain: xlayer, transport: http("https://rpc.xlayer.tech") });
@@ -188,6 +196,31 @@ export default function SurvivorPage() {
         publicClient.readContract({ address: SURVIVOR_POOL, abi: ABI, functionName: "playerCount" }),
       ]);
       const hotSeatIso3 = bytes3ToIso3(lastHotSeat as string);
+
+      // Build nation tally from all player picks
+      const count = Number(playerCount);
+      const tally: Record<string, number> = {};
+      if (count > 0) {
+        const cap = Math.min(count, 60);
+        const addrs = await Promise.all(
+          Array.from({ length: cap }, (_, i) =>
+            publicClient.readContract({ address: SURVIVOR_POOL, abi: ABI, functionName: "playerList", args: [BigInt(i)] })
+          )
+        ) as string[];
+        const picks = await Promise.all(
+          addrs.map(addr =>
+            publicClient.readContract({ address: SURVIVOR_POOL, abi: ABI, functionName: "players", args: [addr as `0x${string}`] })
+          )
+        ) as readonly [string, boolean, boolean][];
+        picks.forEach(p => {
+          if (p[2]) {
+            const iso3 = bytes3ToIso3(p[0]);
+            if (iso3) tally[iso3] = (tally[iso3] ?? 0) + 1;
+          }
+        });
+      }
+      setNationTally(tally);
+
       setPool({
         round:        Number(round),
         pot:          pot as bigint,
@@ -316,7 +349,7 @@ export default function SurvivorPage() {
 
   const dimLabel: React.CSSProperties = {
     fontSize: 10,
-    color: "var(--text-dim, #6b7280)",
+    color: "rgba(255,255,255,0.45)",
     letterSpacing: "0.2em",
     marginBottom: 6,
   };
@@ -342,7 +375,7 @@ export default function SurvivorPage() {
           <a href="/" style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 22, fontWeight: 900, letterSpacing: "0.15em", color: "var(--green, #00ff88)", textDecoration: "none", textShadow: "0 0 16px var(--green-glow, #00ff8844)" }}>
             LUCARNE
           </a>
-          <span style={{ fontSize: 10, color: "var(--text-dim, #6b7280)", letterSpacing: "0.2em" }}>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", letterSpacing: "0.2em" }}>
             ▸ HOT SEAT POOL
           </span>
         </div>
@@ -357,14 +390,15 @@ export default function SurvivorPage() {
         )}
       </header>
 
-      <div style={{ maxWidth: 680, margin: "0 auto", padding: "32px 24px" }}>
+      <div style={{ maxWidth: 1020, margin: "0 auto", padding: "32px 24px", display: "flex", gap: 28, alignItems: "flex-start" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
 
         {/* Title */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 32, fontWeight: 900, margin: "0 0 10px", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ fontSize: 36 }}>⚽</span> HOT SEAT POOL
+          <h1 style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 32, fontWeight: 900, margin: "0 0 10px", letterSpacing: "0.05em", color: "#fff" }}>
+            HOT SEAT POOL
           </h1>
-          <p style={{ color: "var(--text-dim, #9ca3af)", fontSize: 14, lineHeight: 1.7, margin: 0 }}>
+          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, lineHeight: 1.7, margin: 0 }}>
             Each round the nation with the <span style={{ color: "#ef4444", fontWeight: 700 }}>lowest momentum score</span> gets torched.
             If you picked them — you&apos;re out. Last survivor(s) split the pot. Entry: 0.001 OKB.
           </p>
@@ -414,7 +448,7 @@ export default function SurvivorPage() {
         {/* How it works */}
         <div style={{ ...card, borderColor: "rgba(0,255,136,0.12)" }}>
           <div style={dimLabel}>HOW IT WORKS</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 13, lineHeight: 1.8, color: "var(--text-dim, #9ca3af)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 13, lineHeight: 1.8, color: "rgba(255,255,255,0.7)" }}>
             <span>1. Enter with 0.001 OKB and pick one nation.</span>
             <span>2. The owner calls <code style={{ color: "var(--green, #00ff88)", background: "rgba(0,255,136,0.06)", padding: "1px 5px", borderRadius: 3 }}>nextRound()</code> after each World Cup match day.</span>
             <span>3. The nation with the <span style={{ color: "#ef4444", fontWeight: 700 }}>lowest momentum score</span> that round goes in the hot seat — all pickers get eliminated.</span>
@@ -510,7 +544,7 @@ export default function SurvivorPage() {
                     href={`${OKLINK_BASE}/address/${addr}`}
                     target="_blank"
                     rel="noreferrer"
-                    style={{ fontFamily: "var(--font-mono, monospace)", fontSize: 12, color: addr.toLowerCase() === wallet?.toLowerCase() ? "var(--green, #00ff88)" : "var(--text-dim, #9ca3af)", textDecoration: "none" }}
+                    style={{ fontFamily: "var(--font-mono, monospace)", fontSize: 12, color: addr.toLowerCase() === wallet?.toLowerCase() ? "var(--green, #00ff88)" : "rgba(255,255,255,0.6)", textDecoration: "none" }}
                   >
                     {addr.toLowerCase() === wallet?.toLowerCase() ? "● YOU — " : ""}{short(addr)}
                   </a>
@@ -539,15 +573,37 @@ export default function SurvivorPage() {
         )}
 
         {/* Footer links */}
-        <div style={{ fontSize: 10, color: "var(--text-dim, #6b7280)", letterSpacing: "0.12em", marginTop: 8 }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.12em", marginTop: 8 }}>
           <a href={`${OKLINK_BASE}/address/${SURVIVOR_POOL}`} target="_blank" rel="noreferrer" style={{ color: "var(--green, #00ff88)", textDecoration: "none" }}>
             CONTRACT ↗
           </a>
           {"  ·  "}
-          <a href="/leaderboard" style={{ color: "var(--text-dim, #6b7280)", textDecoration: "none" }}>
+          <a href="/leaderboard" style={{ color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>
             LEADERBOARD ↗
           </a>
           {"  ·  NOT FINANCIAL ADVICE · 18+ · SELF-CUSTODIAL"}
+        </div>
+        </div>{/* end left col */}
+
+        {/* Right: nation tally sidebar */}
+        <div style={{ width: 190, flexShrink: 0, position: "sticky", top: 80 }}>
+          <div style={{ background: "rgba(0,255,136,0.04)", border: "1px solid rgba(0,255,136,0.13)", borderRadius: 10, padding: "16px", backdropFilter: "blur(6px)" }}>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", letterSpacing: "0.18em", marginBottom: 14 }}>NATIONS IN POOL</div>
+            {Object.keys(nationTally).length === 0 ? (
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>No entries yet. Opens at kickoff.</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {Object.entries(nationTally)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([iso3, cnt]) => (
+                    <div key={iso3} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <FlagBadge iso3={iso3} size="sm" />
+                      <span style={{ fontSize: 15, fontWeight: 900, color: "#fff", fontFamily: "var(--font-orbitron, sans-serif)" }}>×{cnt}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </main>

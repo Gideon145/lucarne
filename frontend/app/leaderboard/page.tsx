@@ -38,10 +38,10 @@ async function rpc(method: string, params: unknown[]): Promise<any> {
 
 async function fetchMintHolders(): Promise<Holder[]> {
   const tally = new Map<string, number>();
-  for (const addr of [NFT_V1, NFT_V2]) {FROM_BLOCK
+  for (const addr of [NFT_V1, NFT_V2]) {
     try {
       const logs: { topics: string[] }[] = await rpc("eth_getLogs", [
-        { address: addr, topics: [TRANSFER_TOPIC, ZERO_TOPIC], fromBlock: "0x0", toBlock: "latest" },
+        { address: addr, topics: [TRANSFER_TOPIC, ZERO_TOPIC], fromBlock: FROM_BLOCK, toBlock: "latest" },
       ]);
       for (const log of logs) {
         // topic[2] = to address (32-byte padded)
