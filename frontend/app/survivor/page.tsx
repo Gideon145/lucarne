@@ -85,6 +85,36 @@ const NATIONS: { iso3: string; name: string; flag: string }[] = [
   { iso3: "MAR", name: "Morocco",      flag: "🇲🇦" },
 ];
 
+// ── ISO3 → ISO2 map (for flagcdn.com) ────────────────────────────────────────
+
+const ISO3_TO_ISO2: Record<string, string> = {
+  ARG: "ar", BRA: "br", FRA: "fr", ENG: "gb-eng", ESP: "es",
+  GER: "de", POR: "pt", NED: "nl", ITA: "it",  URU: "uy",
+  COL: "co", MEX: "mx", USA: "us", JAP: "jp",  KOR: "kr", MAR: "ma",
+};
+
+function FlagBadge({ iso3, size = "md" }: { iso3: string; size?: "sm" | "md" | "lg" }) {
+  const iso2 = ISO3_TO_ISO2[iso3] ?? iso3.toLowerCase().slice(0, 2);
+  const nation = NATIONS.find(n => n.iso3 === iso3);
+  const imgW = size === "lg" ? 36 : size === "sm" ? 18 : 28;
+  const fontSize = size === "lg" ? 18 : size === "sm" ? 11 : 15;
+  const pad = size === "lg" ? "8px 14px" : size === "sm" ? "3px 8px" : "6px 12px";
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(0,255,136,0.07)", border: "1px solid rgba(0,255,136,0.22)", borderRadius: 8, padding: pad }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`https://flagcdn.com/w40/${iso2}.png`}
+        alt={nation?.name ?? iso3}
+        width={imgW}
+        style={{ borderRadius: 3, display: "block", objectFit: "cover" }}
+      />
+      <span style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize, fontWeight: 900, letterSpacing: "0.08em" }}>
+        {iso3}
+      </span>
+    </span>
+  );
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Convert 3-char ISO code to bytes3 hex (right-padded with 0x prefix) */
@@ -261,11 +291,12 @@ export default function SurvivorPage() {
   // ── Styles ────────────────────────────────────────────────────────────────
 
   const card: React.CSSProperties = {
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(0,255,136,0.04)",
+    border: "1px solid rgba(0,255,136,0.11)",
     borderRadius: 10,
     padding: "20px 24px",
     marginBottom: 16,
+    backdropFilter: "blur(6px)",
   };
 
   const dimLabel: React.CSSProperties = {
@@ -278,7 +309,17 @@ export default function SurvivorPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <main style={{ minHeight: "100vh", background: "var(--bg, #060f09)", color: "var(--text-primary, #e8f5e9)", fontFamily: "var(--font-mono, monospace)", padding: "0 0 60px" }}>
+    <main style={{
+      minHeight: "100vh",
+      background: [
+        "radial-gradient(ellipse 90% 28% at 50% 0%, rgba(0,255,136,0.08) 0%, transparent 65%)",
+        "repeating-linear-gradient(180deg, rgba(0,50,0,0.52) 0px, rgba(0,50,0,0.52) 56px, rgba(0,30,0,0.38) 56px, rgba(0,30,0,0.38) 112px)",
+        "#050e07",
+      ].join(", "),
+      color: "var(--text-primary, #e8f5e9)",
+      fontFamily: "var(--font-mono, monospace)",
+      padding: "0 0 60px",
+    }}>
 
       {/* Header */}
       <header style={{ borderBottom: "1px solid var(--border, rgba(255,255,255,0.08))", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(6,15,9,0.95)", backdropFilter: "blur(8px)", position: "sticky", top: 0, zIndex: 50 }}>
@@ -305,8 +346,8 @@ export default function SurvivorPage() {
 
         {/* Title */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 26, fontWeight: 900, margin: "0 0 8px", letterSpacing: "0.05em" }}>
-            SURVIVOR POOL
+          <h1 style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 26, fontWeight: 900, margin: "0 0 8px", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 30 }}>⚽</span> SURVIVOR POOL
           </h1>
           <p style={{ color: "var(--text-dim, #9ca3af)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>
             Pick one nation per round. If their momentum score drops below 30, you&apos;re eliminated.
@@ -363,9 +404,7 @@ export default function SurvivorPage() {
             <div style={{ display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
               <div>
                 <div style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: "0.15em", marginBottom: 4 }}>PICK</div>
-                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 20, fontWeight: 900 }}>
-                  {NATIONS.find(n => n.iso3 === player.pick)?.flag ?? ""} {player.pick}
-                </div>
+                <FlagBadge iso3={player.pick} size="md" />
               </div>
               <div>
                 <div style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: "0.15em", marginBottom: 4 }}>STATUS</div>
@@ -401,7 +440,7 @@ export default function SurvivorPage() {
                   >
                     {NATIONS.map(n => (
                       <option key={n.iso3} value={n.iso3} style={{ background: "#0d1f12" }}>
-                        {n.flag} {n.iso3} — {n.name}
+                        {n.iso3} — {n.name}
                       </option>
                     ))}
                   </select>
