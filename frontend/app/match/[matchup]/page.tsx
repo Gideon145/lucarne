@@ -68,7 +68,11 @@ export default function MatchPage() {
   const params = useParams();
   const router = useRouter();
   const matchup = (params?.matchup as string) ?? "";
-  const [team1, team2] = matchup.toUpperCase().split("-");
+  // Slug format: {comp}-{home}-{away}-{year}-{month}-{day}  (6 parts)
+  // or shorter:  {home}-{away}-{year}-{month}-{day}         (5 parts)
+  const _parts = matchup.toUpperCase().split("-");
+  const team1 = _parts.length >= 6 ? (_parts[1] ?? "") : (_parts[0] ?? "");
+  const team2 = _parts.length >= 6 ? (_parts[2] ?? "") : (_parts[1] ?? "");
 
   const [data, setData] = useState<MatchData | null>(null);
   const [loading, setLoading] = useState(true);
