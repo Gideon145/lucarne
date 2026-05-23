@@ -102,6 +102,34 @@ const MATCHES = {
     signalScore:   39,
     signalCall:    2,    // AWAY (Atalanta)
   },
+
+  // ── SERIE A — Inter Milan vs Bologna — May 23 2026 ───────────────────────
+  "sea-int-bol-2026-05-23": {
+    label:         "Serie A — Inter Milan vs Bologna",
+    kickoff:       "2026-05-23T18:45:00Z",
+    homeProb:      65,
+    drawProb:      20,
+    awayProb:      15,
+    homeFormScore: 50,
+    awayFormScore: 35,
+    // HOME favoured: 65×0.55 + 57×0.30 + 50×0.15 = 35.75+17.10+7.50 = 60.35 → 60
+    signalScore:   60,
+    signalCall:    0,    // HOME (Inter)
+  },
+
+  // ── LA LIGA — Barcelona vs Valencia — May 23 2026 ────────────────────────
+  "lla-bar-val-2026-05-23": {
+    label:         "La Liga — Barcelona vs Valencia",
+    kickoff:       "2026-05-23T19:00:00Z",
+    homeProb:      68,
+    drawProb:      20,
+    awayProb:      12,
+    homeFormScore: 58,
+    awayFormScore: 22,
+    // HOME favoured: 68×0.55 + 63×0.30 + 58×0.15 = 37.40+18.90+8.70 = 65.00 → 65
+    signalScore:   65,
+    signalCall:    0,    // HOME (Barcelona)
+  },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

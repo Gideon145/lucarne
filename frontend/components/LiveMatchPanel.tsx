@@ -22,7 +22,9 @@ interface TrackedGame { slug: string; label: string; date: string; resolved: boo
 const TRACKED_GAMES: TrackedGame[] = [
   { slug: "uel-scf-ast-2026-05-20",     label: "UEL FINAL",    date: "MAY 20", resolved: true  },
   { slug: "ned-ere-ajx-grn-2026-05-21", label: "EREDIVISIE PO", date: "MAY 21", resolved: true  },
-  { slug: "sea-fio-ata-2026-05-24",     label: "SERIE A",      date: "MAY 22", resolved: false },
+  { slug: "sea-fio-ata-2026-05-24",     label: "SERIE A",      date: "MAY 22", resolved: true  },
+  { slug: "sea-int-bol-2026-05-23",     label: "SERIE A",      date: "MAY 23", resolved: false },
+  { slug: "lla-bar-val-2026-05-23",     label: "LA LIGA",      date: "MAY 23", resolved: false },
 ];
 
 // Static match data for games not on Polymarket (or as reliable fallback).
@@ -69,7 +71,7 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     title: "Fiorentina vs. Atalanta",
     description: "Italian Serie A — Matchday 37",
     endDate: "2026-05-22T18:45:00Z",
-    active: true, closed: false,
+    active: false, closed: true,
     volume: 0, liquidity: 0, volume24hr: 0, competitive: 0,
     markets: [
       { question: "Fiorentina win?", slug: "fio-win",  prob: 33.0, marketId: "s7" },
@@ -82,6 +84,44 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     gameId: "0x24ba1da38dccf3520be37c13283e854e5d1f2605a1f01f983193f41d58372e89",
     proofTxHash: "0xe3553d8e0242baddac7db1256bf5f16aff3ee79c1c128051886ad036a76d3dd2",
     signalTxHash: "0x6983a19169803ad0a03355586d289c1b644d31802ae0ae7f297eff8b50f504d5",
+  },
+  "sea-int-bol-2026-05-23": {
+    slug: "sea-int-bol-2026-05-23", eventId: "static-int-bol",
+    title: "Inter Milan vs. Bologna",
+    description: "Italian Serie A — Matchday 38",
+    endDate: "2026-05-23T18:45:00Z",
+    active: true, closed: false,
+    volume: 0, liquidity: 0, volume24hr: 0, competitive: 0,
+    markets: [
+      { question: "Inter win?",   slug: "int-win",  prob: 65.0, marketId: "s10" },
+      { question: "Draw?",        slug: "int-draw", prob: 20.0, marketId: "s11" },
+      { question: "Bologna win?", slug: "bol-win",  prob: 15.0, marketId: "s12" },
+    ],
+    polymarketUrl: "",
+    brief: "Inter Milan at San Siro on the final day — a side that defined the season. Bologna have been one of Serie A’s more coherent mid-table outfits but face an insurmountable quality gap away at the champions. Inter’s home record and squad depth make this a high-conviction home signal.",
+    homeNation: "ITA", awayNation: "ITA",
+    gameId: "0x844d508ea2b7fa3dae588dfed6d809995b04f5729d7595a20f011fd3b841d528",
+    signalTxHash: "0x81ad7e719a192354a2f76d460b83d95110607031c1571ca72692d106cbfeb0d7",
+    proofTxHash: "0xe2bd4b93051056ba9638048e776d8b54336e5816a4733edddf7ed53bee860f7f",
+  },
+  "lla-bar-val-2026-05-23": {
+    slug: "lla-bar-val-2026-05-23", eventId: "static-bar-val",
+    title: "Barcelona vs. Valencia",
+    description: "La Liga — Matchday 38",
+    endDate: "2026-05-23T19:00:00Z",
+    active: true, closed: false,
+    volume: 0, liquidity: 0, volume24hr: 0, competitive: 0,
+    markets: [
+      { question: "Barcelona win?", slug: "bar-win",  prob: 68.0, marketId: "s13" },
+      { question: "Draw?",          slug: "bar-draw", prob: 20.0, marketId: "s14" },
+      { question: "Valencia win?",  slug: "val-win",  prob: 12.0, marketId: "s15" },
+    ],
+    polymarketUrl: "",
+    brief: "Barcelona close their La Liga campaign at the Spotify Camp Nou. Valencia arrive as a side that has spent the season fighting off relegation pressure. The gap in squad quality, home advantage, and motivation all point in one direction. Lucarne’s signal score hits 65 — the highest of any club game this cycle.",
+    homeNation: "ESP", awayNation: "ESP",
+    gameId: "0x2411ce7f1f9d924781472689184677c1a3c57703b61f51c55752f713d997a0c0",
+    signalTxHash: "0xeec67755b145f961c35bfbf93c80a5b52232abcea71716e4ed1eb1f3555c29e5",
+    proofTxHash: "0x54e2e03f4e8196424c17df2a4aa56a680089ff3484dda4fc1fdb658b559f4b40",
   },
 };
 
@@ -907,6 +947,60 @@ function ExpandedView({
               </p>
             </div>
           </div>
+        ) : slug === "sea-int-bol-2026-05-23" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SQUAD DEPTH EDGE</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Inter Milan have spent the season as the most complete squad in Serie A. At San Siro on the final day, they face a Bologna side that has been organised but limited in attacking quality. The individual gap between these two squads is significant — Inter&apos;s front line and midfield engine outclass this opposition on paper.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>KEY MATCHUP</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Inter&apos;s high-press system vs Bologna&apos;s compact defensive shape. Bologna&apos;s best result here would require a clean sheet and a counter. Inter&apos;s home record and finishing make that an unlikely scenario. The 65/20/15 split reflects that clearly.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SIGNAL LEAN</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Lucarne&apos;s composite score lands at <strong style={{ color: "var(--text-primary)" }}>60</strong> — a clear HOME signal. Odds weight (55%) captures market confidence, gate (30%) reflects San Siro home advantage, form (15%) adds Inter&apos;s consistent late-season output. No ambiguity here.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>OUTCOME WATCH</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Most likely: <strong style={{ color: "var(--text-primary)" }}>Inter win at San Siro (65%)</strong>. Draw is the secondary path at 20% — possible if Inter rotate heavily with nothing left to play for. Bologna win at 15% requires an upset. Final-day atmosphere favours the home side.
+              </p>
+            </div>
+          </div>
+        ) : slug === "lla-bar-val-2026-05-23" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SQUAD DEPTH EDGE</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Barcelona&apos;s squad has been the most dangerous in La Liga this season — Lamine Yamal, Lewandowski, and a deep bench make them a different class at the Spotify Camp Nou. Valencia have spent the season fighting off relegation pressure and arrive with limited quality and lower motivation for this fixture.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>KEY MATCHUP</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Barcelona&apos;s attacking fluidity vs Valencia&apos;s defensive resilience. Valencia&apos;s best path is a low block and a late counter — but Barcelona&apos;s press and quick transition make that extremely difficult at Camp Nou. The 68% home probability reflects a near-banker for experienced bettors.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>SIGNAL LEAN</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Lucarne&apos;s composite score reaches <strong style={{ color: "var(--text-primary)" }}>65</strong> — the highest of any club game this cycle. Odds (68% × 0.55), gate (63 × 0.30), and form (58 × 0.15) all align. This is a signal where the model, the market, and the form data point to the same outcome with the least uncertainty.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.12em", marginBottom: 8 }}>OUTCOME WATCH</div>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 1.8 }}>
+                Most likely: <strong style={{ color: "var(--text-primary)" }}>Barcelona win at Camp Nou (68%)</strong>. Draw is the main risk at 20% if Valencia park the bus and Barcelona rotate. Valencia win at 12% is the tail risk. Final-day energy at Camp Nou makes a home performance the clear base case.
+              </p>
+            </div>
+          </div>
         ) : slug === "sea-fio-ata-2026-05-24" ? (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
             <div>
@@ -984,6 +1078,24 @@ function ExpandedView({
             The market puts this at a remarkable 51/24/25 — genuine uncertainty about who wins. Lucarne&apos;s composite score captures that balance.{" "}
             <strong style={{ color: "var(--text-primary)" }}>No one can edit what was attested</strong>.
             Whatever happens today, the signal that existed at kickoff lives on X Layer mainnet forever.
+            That&apos;s not prediction — that&apos;s <strong style={{ color: "var(--text-primary)" }}>proof</strong>.
+          </p>
+        ) : slug === "sea-int-bol-2026-05-23" ? (
+          <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
+            Inter vs Bologna is exactly the kind of signal Lucarne was built to capture. Before kickoff, our engine read the market at{" "}
+            <strong style={{ color: "var(--text-primary)" }}>Inter 65% · Draw 20% · Bologna 15%</strong>{" "}
+            and locked that reading on-chain — immutable, timestamped, permanent. Inter&apos;s home advantage at San Siro, squad depth, and late-season consistency all compound into a high-conviction signal.{" "}
+            <strong style={{ color: "var(--text-primary)" }}>No one can edit what was attested</strong>.
+            Whatever the result, the signal that existed at kickoff lives on X Layer mainnet forever.
+            That&apos;s not prediction — that&apos;s <strong style={{ color: "var(--text-primary)" }}>proof</strong>.
+          </p>
+        ) : slug === "lla-bar-val-2026-05-23" ? (
+          <p style={{ margin: 0, fontSize: 15, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
+            Barcelona vs Valencia is the highest-conviction signal Lucarne has posted. Our engine read the market at{" "}
+            <strong style={{ color: "var(--text-primary)" }}>Barcelona 68% · Draw 20% · Valencia 12%</strong>{" "}
+            and locked a signal score of <strong style={{ color: "var(--text-primary)" }}>65</strong> on-chain before kickoff — immutable, timestamped, permanent. When odds, gate, and form data all align this cleanly, the model has no ambiguity.{" "}
+            <strong style={{ color: "var(--text-primary)" }}>No one can edit what was attested</strong>.
+            Whatever the result, the signal lives on X Layer mainnet forever.
             That&apos;s not prediction — that&apos;s <strong style={{ color: "var(--text-primary)" }}>proof</strong>.
           </p>
         ) : slug === "sea-fio-ata-2026-05-24" ? (

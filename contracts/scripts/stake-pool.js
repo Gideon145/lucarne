@@ -73,6 +73,22 @@ const MATCHES = {
     stakeAmount: "0.05",
   },
 
+  // ── SERIE A — Inter Milan vs Bologna — May 23 2026 ──────────────────────
+  "sea-int-bol-2026-05-23": {
+    label:       "Serie A — Inter Milan vs Bologna",
+    kickoff:     "2026-05-23T18:45:00Z",
+    signalCall:  0,     // HOME (Inter)
+    stakeAmount: "0.05",
+  },
+
+  // ── LA LIGA — Barcelona vs Valencia — May 23 2026 ─────────────────────────
+  "lla-bar-val-2026-05-23": {
+    label:       "La Liga — Barcelona vs Valencia",
+    kickoff:     "2026-05-23T19:00:00Z",
+    signalCall:  0,     // HOME (Barcelona)
+    stakeAmount: "0.05",
+  },
+
   // ── UEFA Conference League Final — Crystal Palace vs Rayo Vallecano — May 27 2026
   "uecl-cpa-ray-2026-05-27": {
     label:       "UECL Final — Crystal Palace vs Rayo Vallecano",
