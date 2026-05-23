@@ -78,7 +78,6 @@ function useCountdown(target: number) {
 }
 
 export default function CommunityFavourite() {
-  const [tallies, setTallies] = useState<Record<string, number>>({});
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -89,6 +88,7 @@ export default function CommunityFavourite() {
   const [submitErr, setSubmitErr] = useState<string | null>(null);
   const [voted, setVoted] = useState<string | null>(null); // iso3 user voted for
   const [alreadyVoted, setAlreadyVoted] = useState(false);
+  const [thanks, setThanks] = useState<{ iso3: string; iso2: string; name: string } | null>(null);
 
   const countdown = useCountdown(GIVEAWAY_END);
 
@@ -96,8 +96,7 @@ export default function CommunityFavourite() {
     try {
       const res = await fetch("/api/fan-vote");
       const data = await res.json();
-      if (data.tallies) {
-        setTallies(data.tallies);
+      if (data.total !== undefined) {
         setTotal(data.total);
       }
     } finally {
@@ -143,7 +142,8 @@ export default function CommunityFavourite() {
       }
       localStorage.setItem("lucarne_fan_vote", modal.iso3);
       setVoted(modal.iso3);
-      if (data.tallies) { setTallies(data.tallies); setTotal(data.total); }
+      if (data.total !== undefined) setTotal(data.total);
+      setThanks(modal);
       setModal(null);
     } catch {
       setSubmitErr("Network error — try again");
@@ -220,10 +220,26 @@ export default function CommunityFavourite() {
         </div>
 
         {/* ── Total Count ─────────────────────────────────────────────────── */}
-        <div style={{ marginBottom: "1.5rem", display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 36, fontWeight: 900, color: "rgba(0,255,133,0.95)", textShadow: "0 0 20px rgba(0,255,133,0.3)" }}>{total.toLocaleString()}</span>
-          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}>FANS HAVE PICKED THEIR COUNTRY</span>
-        </div>
+        {!loading && (
+          <div style={{ marginBottom: "1.5rem", display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 36, fontWeight: 900, color: "rgba(0,255,133,0.95)", textShadow: "0 0 20px rgba(0,255,133,0.3)" }}>{total.toLocaleString()}</span>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}>FANS HAVE PICKED THEIR COUNTRY</span>
+          </div>
+        )}
+
+        {/* ── Thank You ───────────────────────────────────────────────────── */}
+        {thanks && (
+          <div style={{ background: "rgba(0,255,133,0.07)", border: "1px solid rgba(0,255,133,0.3)", borderRadius: 10, padding: "2rem 1.5rem", marginBottom: "2rem", textAlign: "center" }}>
+            <img src={`https://flagcdn.com/w80/${thanks.iso2}.png`} alt={thanks.name} width={56} height={37} style={{ objectFit: "cover", borderRadius: 4, marginBottom: "0.75rem", display: "block", margin: "0 auto 0.75rem" }} />
+            <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: "1.35rem", fontWeight: 900, color: "rgba(0,255,133,0.95)", marginBottom: 6 }}>YOU&apos;RE IN THE DRAW!</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.7 }}>
+              Thanks for backing <strong style={{ color: "rgba(255,255,255,0.9)" }}>{thanks.name}</strong>.<br />
+              Winner announced on{" "}
+              <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={{ color: "rgba(0,255,133,0.8)", textDecoration: "none" }}>@lucarne_xyz</a>{" "}
+              when the timer runs out. Good luck!
+            </div>
+          </div>
+        )}
 
         {/* ── Flag Grid ───────────────────────────────────────────────────── */}
         {!voted && !countdown.over && (
@@ -243,30 +259,6 @@ export default function CommunityFavourite() {
             </div>
           </>
         )}
-
-        {/* ── Standings ───────────────────────────────────────────────────── */}
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.14em", marginBottom: "0.75rem" }}>
-          {loading ? "LOADING STANDINGS…" : "LIVE STANDINGS"}
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {sorted.map((n, i) => {
-            const count = tallies[n.iso3] ?? 0;
-            const pct = total > 0 ? (count / total) * 100 : 0;
-            const isMe = voted === n.iso3;
-            return (
-              <div key={n.iso3} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 8px", borderRadius: 6, background: isMe ? "rgba(0,255,133,0.05)" : "transparent", border: isMe ? "1px solid rgba(0,255,133,0.15)" : "1px solid transparent" }}>
-                <span style={{ width: 20, textAlign: "right", fontSize: 11, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{i + 1}</span>
-                <img src={`https://flagcdn.com/w40/${n.iso2}.png`} alt={n.name} width={24} height={16} style={{ objectFit: "cover", borderRadius: 2, flexShrink: 0 }} />
-                <span style={{ width: 110, fontSize: 12, color: isMe ? "rgba(0,255,133,0.9)" : "rgba(255,255,255,0.75)", flexShrink: 0 }}>{n.name}</span>
-                <div style={{ flex: 1, background: "rgba(255,255,255,0.06)", borderRadius: 3, height: 6, overflow: "hidden" }}>
-                  <div style={{ width: `${(count / topCount) * 100}%`, height: "100%", background: isMe ? "rgba(0,255,133,0.8)" : "rgba(0,255,133,0.35)", borderRadius: 3, transition: "width 0.6s ease" }} />
-                </div>
-                <span style={{ width: 42, textAlign: "right", fontSize: 11, color: "rgba(255,255,255,0.5)", flexShrink: 0 }}>{pct.toFixed(1)}%</span>
-                <span style={{ width: 28, textAlign: "right", fontSize: 11, color: "rgba(255,255,255,0.35)", flexShrink: 0 }}>{count}</span>
-              </div>
-            );
-          })}
-        </div>
 
         <footer style={{ marginTop: "2.5rem", textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.2)", lineHeight: 1.8 }}>
           NOT FINANCIAL ADVICE · 18+ · GIVEAWAY WINNER SELECTED RANDOMLY FROM ALL ENTRIES · PRIZE PAID IN OKB ON X LAYER
