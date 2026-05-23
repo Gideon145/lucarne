@@ -1,7 +1,12 @@
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 const NATIONS = [
   "ARG","BRA","FRA","ENG","ESP","GER","POR","NED",
@@ -20,7 +25,7 @@ function normaliseHandle(raw: string): string | null {
 export async function GET() {
   try {
     const keys = NATIONS.map(c => `fan:tally:${c}`);
-    const values = await kv.mget<number[]>(...keys);
+    const values = await redis.mget<number[]>(...keys);
     const tallies: Record<string, number> = {};
     let total = 0;
     NATIONS.forEach((c, i) => {
@@ -49,19 +54,19 @@ export async function POST(req: NextRequest) {
     }
 
     // One vote per X handle
-    const alreadyVoted = await kv.sismember("fan:voted", handle);
+    const alreadyVoted = await redis.sismember("fan:voted", handle);
     if (alreadyVoted) {
       return NextResponse.json({ error: "already_voted" }, { status: 409 });
     }
 
     await Promise.all([
-      kv.incr(`fan:tally:${country}`),
-      kv.sadd("fan:voted", handle),
-      kv.rpush("fan:entries", JSON.stringify({ country, xHandle: handle, ts: Date.now() })),
+      redis.incr(`fan:tally:${country}`),
+      redis.sadd("fan:voted", handle),
+      redis.rpush("fan:entries", JSON.stringify({ country, xHandle: handle, ts: Date.now() })),
     ]);
 
     const keys = NATIONS.map(c => `fan:tally:${c}`);
-    const values = await kv.mget<number[]>(...keys);
+    const values = await redis.mget<number[]>(...keys);
     let total = 0;
     const tallies: Record<string, number> = {};
     NATIONS.forEach((c, i) => {

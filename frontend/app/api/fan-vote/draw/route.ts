@@ -1,7 +1,12 @@
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 // GET /api/fan-vote/draw?secret=YOUR_SECRET
 // Returns all entries + randomly selected winner. Keep the secret in DRAW_SECRET env var.
@@ -12,7 +17,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const raw = await kv.lrange<string>("fan:entries", 0, -1);
+    const raw = await redis.lrange<string>("fan:entries", 0, -1);
     const entries = raw.map(e => (typeof e === "string" ? JSON.parse(e) : e));
 
     if (entries.length === 0) {
