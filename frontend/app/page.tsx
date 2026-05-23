@@ -156,6 +156,18 @@ export default function Home() {
           >
             🤖 {AGENT_WALLET.slice(0, 8)}…
           </a>
+          <a
+            href="/survivor"
+            style={{ fontSize: 10, color: "var(--green)", textDecoration: "none", fontWeight: 700, border: "1px solid var(--green)", padding: "3px 8px", borderRadius: 4, letterSpacing: "0.1em" }}
+          >
+            🎮 SURVIVOR POOL
+          </a>
+          <a
+            href="/leaderboard"
+            style={{ fontSize: 10, color: "var(--text-dim)", textDecoration: "none", letterSpacing: "0.1em" }}
+          >
+            🏆 LEADERBOARD
+          </a>
         </div>
       </div>
 
