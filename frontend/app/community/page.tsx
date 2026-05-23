@@ -2,8 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 
-// Giveaway ends May 26 2026 00:00 UTC (48 hours from launch)
-const GIVEAWAY_END = new Date("2026-05-26T00:00:00Z").getTime();
 
 const NATIONS: { iso3: string; iso2: string; name: string }[] = [
   // CONMEBOL
@@ -62,20 +60,7 @@ const NATIONS: { iso3: string; iso2: string; name: string }[] = [
   { iso3: "NZL", iso2: "nz",     name: "New Zealand"        },
 ];
 
-function pad(n: number) { return String(n).padStart(2, "0"); }
 
-function useCountdown(target: number) {
-  const [diff, setDiff] = useState(Math.max(0, target - Date.now()));
-  useEffect(() => {
-    const id = setInterval(() => setDiff(Math.max(0, target - Date.now())), 1000);
-    return () => clearInterval(id);
-  }, [target]);
-  const d = Math.floor(diff / 86_400_000);
-  const h = Math.floor((diff % 86_400_000) / 3_600_000);
-  const m = Math.floor((diff % 3_600_000) / 60_000);
-  const s = Math.floor((diff % 60_000) / 1_000);
-  return { d, h, m, s, over: diff === 0 };
-}
 
 export default function CommunityFavourite() {
   const [total, setTotal] = useState(0);
@@ -87,10 +72,7 @@ export default function CommunityFavourite() {
   const [submitting, setSubmitting] = useState(false);
   const [submitErr, setSubmitErr] = useState<string | null>(null);
   const [voted, setVoted] = useState<string | null>(null); // iso3 user voted for
-  const [alreadyVoted, setAlreadyVoted] = useState(false);
   const [thanks, setThanks] = useState<{ iso3: string; iso2: string; name: string } | null>(null);
-
-  const countdown = useCountdown(GIVEAWAY_END);
 
   const fetchTallies = useCallback(async () => {
     try {
@@ -108,12 +90,12 @@ export default function CommunityFavourite() {
     fetchTallies();
     // Check localStorage for prior vote
     const stored = localStorage.getItem("lucarne_fan_vote");
-    if (stored) setVoted(stored);
+    if (stored) {
+      setVoted(stored);
+      const n = NATIONS.find(x => x.iso3 === stored);
+      if (n) setThanks(n);
+    }
   }, [fetchTallies]);
-
-  const topCount = Math.max(1, ...Object.values(tallies));
-
-  const sorted = [...NATIONS].sort((a, b) => (tallies[b.iso3] ?? 0) - (tallies[a.iso3] ?? 0));
 
   async function submitVote() {
     if (!modal) return;
@@ -132,8 +114,7 @@ export default function CommunityFavourite() {
       });
       const data = await res.json();
       if (res.status === 409) {
-        setAlreadyVoted(true);
-        setModal(null);
+        setSubmitErr("This X handle has already entered.");
         return;
       }
       if (!res.ok) {
@@ -161,9 +142,8 @@ export default function CommunityFavourite() {
       <header style={{ borderBottom: "1px solid rgba(0,255,133,0.15)", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(6,15,9,0.95)", backdropFilter: "blur(8px)", position: "sticky", top: 0, zIndex: 50, flexWrap: "wrap", gap: 10 }}>
         <a href="/" style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 24, fontWeight: 900, color: "var(--green, #00FF85)", textDecoration: "none", letterSpacing: "0.15em", textShadow: "0 0 18px rgba(0,255,133,0.4)" }}>LUCARNE</a>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <a href="/" style={navBtn(false)}>LIVE</a>
+          <a href="/" style={navBtn(false)}>LIVE PREDICTIONS</a>
           <a href="/survivor" style={navBtn(false)}>HOT SEAT POOL</a>
-          <a href="/leaderboard" style={navBtn(false)}>LEADERBOARD</a>
           <a href="/community" style={navBtn(true)}>COMMUNITY FAVOURITE</a>
         </div>
       </header>
@@ -173,51 +153,19 @@ export default function CommunityFavourite() {
         {/* ── Intro ──────────────────────────────────────────────────────── */}
         <div style={{ marginBottom: "2rem" }}>
           <div style={{ fontSize: 11, color: "rgba(0,255,133,0.7)", letterSpacing: "0.2em", marginBottom: 6 }}>⬢ COMMUNITY FAVOURITE — FIFA WORLD CUP 2026</div>
-          <h1 style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: "2.2rem", margin: "0 0 0.75rem", color: "rgba(255,255,255,0.95)", lineHeight: 1.1 }}>
+          <h1 style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: "2.8rem", margin: "0 0 0.75rem", color: "rgba(255,255,255,0.95)", lineHeight: 1.1 }}>
             WHO DO YOU BACK?
           </h1>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.8, color: "rgba(255,255,255,0.5)", maxWidth: 640 }}>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.8, color: "rgba(255,255,255,0.5)", maxWidth: 640 }}>
             <strong style={{ color: "rgba(255,255,255,0.8)" }}>LUCARNE</strong> is a real-time on-chain AI signal terminal for World Cup 2026 — scoring all 48 nations every 60 seconds on{" "}
             <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={{ color: "rgba(0,255,133,0.8)", textDecoration: "none" }}>X Layer</a>.
-            Pick your favourite nation below to enter the <strong style={{ color: "rgba(0,255,133,0.9)" }}>0.2 OKB giveaway</strong> — one random fan wins when the timer runs out.
+            Pick your favourite nation and enter your X handle to show your support.
             Explore{" "}
-            <a href="/survivor" style={{ color: "rgba(0,255,133,0.8)", textDecoration: "none" }}>Hot Seat Pool</a>,{" "}
-            <a href="/leaderboard" style={{ color: "rgba(0,255,133,0.8)", textDecoration: "none" }}>Leaderboard</a>, or{" "}
-            <a href="/" style={{ color: "rgba(0,255,133,0.8)", textDecoration: "none" }}>Live Dashboard</a>.
+            <a href="/survivor" style={{ color: "rgba(0,255,133,0.8)", textDecoration: "none" }}>Hot Seat Pool</a>{" "}or{" "}
+            <a href="/" style={{ color: "rgba(0,255,133,0.8)", textDecoration: "none" }}>Live Predictions</a>.
           </p>
         </div>
 
-        {/* ── Giveaway Banner ────────────────────────────────────────────── */}
-        <div style={{ background: "rgba(0,255,133,0.06)", border: "1px solid rgba(0,255,133,0.2)", borderRadius: 8, padding: "1rem 1.25rem", marginBottom: "2rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <div>
-            <div style={{ fontSize: 11, color: "rgba(0,255,133,0.7)", letterSpacing: "0.18em", marginBottom: 4 }}>0.2 OKB GIVEAWAY</div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
-              Pick any country → enter your X handle → you&apos;re in the draw.
-              {voted && (
-                <span style={{ color: "rgba(0,255,133,0.9)", marginLeft: 8 }}>
-                  ✓ You backed <strong>{nation(voted)?.name}</strong>
-                </span>
-              )}
-              {alreadyVoted && (
-                <span style={{ color: "rgba(255,200,0,0.9)", marginLeft: 8 }}>
-                  Handle already entered — only one entry per person.
-                </span>
-              )}
-            </div>
-          </div>
-          <div style={{ textAlign: "right" }}>
-            {countdown.over ? (
-              <span style={{ fontFamily: "var(--font-orbitron, sans-serif)", color: "rgba(0,255,133,0.9)", fontSize: 13, fontWeight: 700 }}>DRAW CLOSED</span>
-            ) : (
-              <>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: "0.14em", marginBottom: 3 }}>GIVEAWAY ENDS IN</div>
-                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 15, fontWeight: 900, color: "rgba(0,255,133,0.95)", textShadow: "0 0 10px rgba(0,255,133,0.35)" }}>
-                  {countdown.d}d {pad(countdown.h)}h {pad(countdown.m)}m {pad(countdown.s)}s
-                </div>
-              </>
-            )}
-          </div>
-        </div>
 
         {/* ── Total Count ─────────────────────────────────────────────────── */}
         {!loading && (
@@ -230,22 +178,22 @@ export default function CommunityFavourite() {
         {/* ── Thank You ───────────────────────────────────────────────────── */}
         {thanks && (
           <div style={{ background: "rgba(0,255,133,0.07)", border: "1px solid rgba(0,255,133,0.3)", borderRadius: 10, padding: "2rem 1.5rem", marginBottom: "2rem", textAlign: "center" }}>
-            <img src={`https://flagcdn.com/w80/${thanks.iso2}.png`} alt={thanks.name} width={56} height={37} style={{ objectFit: "cover", borderRadius: 4, marginBottom: "0.75rem", display: "block", margin: "0 auto 0.75rem" }} />
-            <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: "1.35rem", fontWeight: 900, color: "rgba(0,255,133,0.95)", marginBottom: 6 }}>YOU&apos;RE IN THE DRAW!</div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.7 }}>
-              Thanks for backing <strong style={{ color: "rgba(255,255,255,0.9)" }}>{thanks.name}</strong>.<br />
-              Winner announced on{" "}
-              <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={{ color: "rgba(0,255,133,0.8)", textDecoration: "none" }}>@lucarne_xyz</a>{" "}
-              when the timer runs out. Good luck!
+            <img src={`https://flagcdn.com/w80/${thanks.iso2}.png`} alt={thanks.name} width={72} height={48} style={{ objectFit: "cover", borderRadius: 4, display: "block", margin: "0 auto 1rem" }} />
+            <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: "1.6rem", fontWeight: 900, color: "rgba(0,255,133,0.95)", marginBottom: 8 }}>THANK YOU FOR YOUR ENTRY!</div>
+            <div style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", lineHeight: 1.8 }}>
+              You&apos;re backing <strong style={{ color: "rgba(255,255,255,0.9)" }}>{thanks.name}</strong> for WC 2026.<br />
+              Follow <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={{ color: "rgba(0,255,133,0.8)", textDecoration: "none" }}>@lucarne_xyz</a>{" "}
+              for live signals.
             </div>
+            <button onClick={() => { localStorage.removeItem("lucarne_fan_vote"); setVoted(null); setThanks(null); }} style={{ marginTop: "1.25rem", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 5, color: "rgba(255,255,255,0.35)", fontSize: 11, padding: "5px 14px", cursor: "pointer", letterSpacing: "0.1em" }}>CHANGE PICK</button>
           </div>
         )}
 
         {/* ── Flag Grid ───────────────────────────────────────────────────── */}
-        {!voted && !countdown.over && (
+        {!voted && (
           <>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.14em", marginBottom: "0.75rem" }}>CLICK TO PICK YOUR COUNTRY</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 10, marginBottom: "2.5rem" }}>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", letterSpacing: "0.14em", marginBottom: "0.75rem" }}>CLICK TO PICK YOUR COUNTRY</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12, marginBottom: "2.5rem" }}>
               {NATIONS.map(n => (
                 <button
                   key={n.iso3}
@@ -253,7 +201,7 @@ export default function CommunityFavourite() {
                   style={flagBtn}
                 >
                   <img src={`https://flagcdn.com/w40/${n.iso2}.png`} alt={n.name} width={28} height={18} style={{ objectFit: "cover", borderRadius: 2, display: "block" }} />
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", letterSpacing: "0.05em", lineHeight: 1.2 }}>{n.name}</span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", letterSpacing: "0.04em", lineHeight: 1.2 }}>{n.name}</span>
                 </button>
               ))}
             </div>
@@ -261,7 +209,7 @@ export default function CommunityFavourite() {
         )}
 
         <footer style={{ marginTop: "2.5rem", textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.2)", lineHeight: 1.8 }}>
-          NOT FINANCIAL ADVICE · 18+ · GIVEAWAY WINNER SELECTED RANDOMLY FROM ALL ENTRIES · PRIZE PAID IN OKB ON X LAYER
+          NOT FINANCIAL ADVICE · LUCARNE ON-CHAIN TERMINAL FOR FIFA WORLD CUP 2026
         </footer>
       </div>
 
@@ -303,7 +251,7 @@ export default function CommunityFavourite() {
                 disabled={submitting || !handle.trim()}
                 style={{ flex: 1, padding: "10px 0", background: submitting || !handle.trim() ? "rgba(0,255,133,0.15)" : "rgba(0,255,133,0.2)", border: "1px solid rgba(0,255,133,0.4)", borderRadius: 6, color: submitting || !handle.trim() ? "rgba(0,255,133,0.4)" : "rgba(0,255,133,0.95)", fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 11, fontWeight: 700, cursor: submitting || !handle.trim() ? "not-allowed" : "pointer", letterSpacing: "0.1em" }}
               >
-                {submitting ? "ENTERING…" : "ENTER DRAW"}
+                {submitting ? "SUBMITTING…" : "PICK THIS COUNTRY"}
               </button>
               <button
                 onClick={() => setModal(null)}
@@ -314,8 +262,9 @@ export default function CommunityFavourite() {
             </div>
 
             <div style={{ marginTop: "0.85rem", fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
-              One entry per X handle. Winner announced on{" "}
-              <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={{ color: "rgba(0,255,133,0.6)", textDecoration: "none" }}>@lucarne_xyz</a>.
+              One entry per X handle. Follow{" "}
+              <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={{ color: "rgba(0,255,133,0.6)", textDecoration: "none" }}>@lucarne_xyz</a>{" "}
+              for live WC 2026 signals.
             </div>
           </div>
         </div>
@@ -325,11 +274,11 @@ export default function CommunityFavourite() {
 }
 
 const navBtn = (active: boolean): React.CSSProperties => ({
-  fontSize: 10,
+  fontSize: 12,
   color: active ? "rgba(0,255,133,0.95)" : "rgba(255,255,255,0.4)",
   textDecoration: "none",
   border: active ? "1px solid rgba(0,255,133,0.4)" : "1px solid transparent",
-  padding: "4px 10px",
+  padding: "5px 12px",
   borderRadius: 4,
   letterSpacing: "0.08em",
   fontFamily: "var(--font-mono, monospace)",
@@ -340,11 +289,11 @@ const flagBtn: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  gap: 6,
-  padding: "10px 8px",
+  gap: 8,
+  padding: "12px 10px",
   background: "rgba(255,255,255,0.03)",
   border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: 7,
+  borderRadius: 8,
   cursor: "pointer",
   transition: "border-color 0.15s, background 0.15s",
   fontFamily: "inherit",

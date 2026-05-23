@@ -156,24 +156,6 @@ export default function Home() {
           >
             🤖 {AGENT_WALLET.slice(0, 8)}…
           </a>
-          <a
-            href="/survivor"
-            style={{ fontSize: 10, color: "var(--green)", textDecoration: "none", fontWeight: 700, border: "1px solid var(--green)", padding: "3px 8px", borderRadius: 4, letterSpacing: "0.1em" }}
-          >
-            🎮 HOT SEAT POOL
-          </a>
-          <a
-            href="/community"
-            style={{ fontSize: 10, color: "var(--green)", textDecoration: "none", fontWeight: 700, border: "1px solid var(--green)", padding: "3px 8px", borderRadius: 4, letterSpacing: "0.1em" }}
-          >
-            ★ COMMUNITY FAVOURITE
-          </a>
-          <a
-            href="/leaderboard"
-            style={{ fontSize: 10, color: "var(--text-dim)", textDecoration: "none", letterSpacing: "0.1em" }}
-          >
-            🏆 LEADERBOARD
-          </a>
         </div>
       </div>
 
@@ -189,7 +171,7 @@ export default function Home() {
           flexWrap: "wrap",
         }}
       >
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {REGIME_FILTERS.map((f) => (
             <button
               key={f}
@@ -215,6 +197,9 @@ export default function Home() {
               {f}
             </button>
           ))}
+          <a href="/survivor" className="filter-tab" style={{ textDecoration: "none" }}>HOT SEAT POOL</a>
+          <a href="/community" className="filter-tab" style={{ textDecoration: "none" }}>COMMUNITY FAVOURITE</a>
+          <a href="/leaderboard" className="filter-tab" style={{ textDecoration: "none" }}>LEADERBOARD</a>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
           {(["score", "regime", "recent"] as const).map((s) => (
