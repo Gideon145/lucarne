@@ -7,6 +7,7 @@ export const SIGNAL_POOL_V1           = "0xd6E29fFc24231BDEeB95057876A9A72E3641A
 export const I_CALLED_IT_NFT          = "0xBC2200d99980661fef938eE72001BAaE496F0adf" as const; // v2
 export const I_CALLED_IT_NFT_V1       = "0xBB15f43a032c3DE6aB33fDFBfb140FA461854c1E" as const; // v1
 export const SURVIVOR_POOL            = "0x7250E9480A025bF59EedD271DFB88C5BC2f8c12F" as const;
+export const HOT_SEAT_POOL            = "0x6B05e098a1fE4cF58D0eF28b26604a2BbdE244c6" as const;
 export const RPC_URL              = "/api/rpc";
 export const CHAIN_ID             = 196;
 export const POLYBOT_URL          = "https://lucarne-polybot-production.up.railway.app";

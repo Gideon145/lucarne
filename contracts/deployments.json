@@ -84,5 +84,31 @@
         ]
       }
     }
+  },
+  "HotSeatPool": {
+    "address": "0x6B05e098a1fE4cF58D0eF28b26604a2BbdE244c6",
+    "deployTx": "0xef209dcf395155d0bb6e42e7f707b89c7a85754709e4346e5c8d7b6cc6c8af7c",
+    "deployedAt": "2026-05-23T08:43:10.275Z",
+    "network": "xlayer",
+    "chainId": 196,
+    "attestor": "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81",
+    "nations": [
+      "ARG",
+      "BRA",
+      "FRA",
+      "ENG",
+      "ESP",
+      "GER",
+      "POR",
+      "NED",
+      "ITA",
+      "URU",
+      "COL",
+      "MEX",
+      "USA",
+      "JAP",
+      "KOR",
+      "MAR"
+    ]
   }
 }

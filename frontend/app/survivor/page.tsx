@@ -19,7 +19,9 @@ import {
   parseEther,
   toHex,
 } from "viem";
-import { SURVIVOR_POOL, OKLINK_BASE } from "@/lib/constants";
+import { HOT_SEAT_POOL, OKLINK_BASE } from "@/lib/constants";
+
+const SURVIVOR_POOL = HOT_SEAT_POOL; // HotSeatPool — lowest momentum nation cut each round
 
 // ── Chain ─────────────────────────────────────────────────────────────────────
 
@@ -33,10 +35,13 @@ const xlayer = {
 // ── ABI ───────────────────────────────────────────────────────────────────────
 
 const ABI = [
-  { name: "round",        type: "function", stateMutability: "view",    inputs: [], outputs: [{ type: "uint256" }] },
-  { name: "pot",          type: "function", stateMutability: "view",    inputs: [], outputs: [{ type: "uint256" }] },
-  { name: "gameOver",     type: "function", stateMutability: "view",    inputs: [], outputs: [{ type: "bool"    }] },
-  { name: "getSurvivors", type: "function", stateMutability: "view",    inputs: [], outputs: [{ type: "address[]" }] },
+  { name: "round",         type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { name: "pot",           type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { name: "gameOver",      type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "bool"    }] },
+  { name: "getSurvivors",  type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "address[]" }] },
+  { name: "lastHotSeat",   type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "bytes3"   }] },
+  { name: "lastHotScore",  type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint8"    }] },
+  { name: "playerCount",   type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   {
     name: "players",
     type: "function",
@@ -144,6 +149,9 @@ interface PoolState {
   pot: bigint;
   gameOver: boolean;
   survivors: string[];
+  lastHotSeat: string;  // ISO3 of nation cut last round
+  lastHotScore: number;
+  playerCount: number;
 }
 
 interface PlayerState {
@@ -170,17 +178,24 @@ export default function SurvivorPage() {
   // ── Fetch pool state ────────────────────────────────────────────────────────
   const fetchPool = useCallback(async (walletAddr?: string) => {
     try {
-      const [round, pot, gameOver, survivors] = await Promise.all([
+      const [round, pot, gameOver, survivors, lastHotSeat, lastHotScore, playerCount] = await Promise.all([
         publicClient.readContract({ address: SURVIVOR_POOL, abi: ABI, functionName: "round" }),
         publicClient.readContract({ address: SURVIVOR_POOL, abi: ABI, functionName: "pot" }),
         publicClient.readContract({ address: SURVIVOR_POOL, abi: ABI, functionName: "gameOver" }),
         publicClient.readContract({ address: SURVIVOR_POOL, abi: ABI, functionName: "getSurvivors" }),
+        publicClient.readContract({ address: SURVIVOR_POOL, abi: ABI, functionName: "lastHotSeat" }),
+        publicClient.readContract({ address: SURVIVOR_POOL, abi: ABI, functionName: "lastHotScore" }),
+        publicClient.readContract({ address: SURVIVOR_POOL, abi: ABI, functionName: "playerCount" }),
       ]);
+      const hotSeatIso3 = bytes3ToIso3(lastHotSeat as string);
       setPool({
-        round:    Number(round),
-        pot:      pot as bigint,
-        gameOver: gameOver as boolean,
-        survivors: survivors as string[],
+        round:        Number(round),
+        pot:          pot as bigint,
+        gameOver:     gameOver as boolean,
+        survivors:    survivors as string[],
+        lastHotSeat:  hotSeatIso3,
+        lastHotScore: Number(lastHotScore),
+        playerCount:  Number(playerCount),
       });
 
       if (walletAddr) {
@@ -328,7 +343,7 @@ export default function SurvivorPage() {
             LUCARNE
           </a>
           <span style={{ fontSize: 10, color: "var(--text-dim, #6b7280)", letterSpacing: "0.2em" }}>
-            ▸ SURVIVOR POOL
+            ▸ HOT SEAT POOL
           </span>
         </div>
         {wallet ? (
@@ -346,12 +361,12 @@ export default function SurvivorPage() {
 
         {/* Title */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 26, fontWeight: 900, margin: "0 0 8px", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 30 }}>⚽</span> SURVIVOR POOL
+          <h1 style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 32, fontWeight: 900, margin: "0 0 10px", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 14 }}>
+            <span style={{ fontSize: 36 }}>⚽</span> HOT SEAT POOL
           </h1>
-          <p style={{ color: "var(--text-dim, #9ca3af)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>
-            Pick one nation per round. If their momentum score drops below 30, you&apos;re eliminated.
-            Last survivor(s) split the pot. Entry: 0.001 OKB.
+          <p style={{ color: "var(--text-dim, #9ca3af)", fontSize: 14, lineHeight: 1.7, margin: 0 }}>
+            Each round the nation with the <span style={{ color: "#ef4444", fontWeight: 700 }}>lowest momentum score</span> gets torched.
+            If you picked them — you&apos;re out. Last survivor(s) split the pot. Entry: 0.001 OKB.
           </p>
         </div>
 
@@ -360,40 +375,51 @@ export default function SurvivorPage() {
           <div style={{ ...card, color: "var(--text-dim)" }}>Loading pool state...</div>
         ) : pool ? (
           <div style={{ ...card }}>
-            <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 28, flexWrap: "wrap", alignItems: "flex-end" }}>
               <div>
                 <div style={dimLabel}>ROUND</div>
-                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 28, fontWeight: 900, color: "var(--green, #00ff88)" }}>{pool.round}</div>
+                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 36, fontWeight: 900, color: "var(--green, #00ff88)" }}>{pool.round}</div>
               </div>
               <div>
                 <div style={dimLabel}>POT</div>
-                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 28, fontWeight: 900, color: "#fbbf24" }}>
+                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 36, fontWeight: 900, color: "#fbbf24" }}>
                   {parseFloat(formatEther(pool.pot)).toFixed(4)} OKB
                 </div>
               </div>
               <div>
                 <div style={dimLabel}>SURVIVORS</div>
-                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 28, fontWeight: 900 }}>{pool.survivors.length}</div>
+                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 36, fontWeight: 900 }}>{pool.survivors.length}</div>
+              </div>
+              <div>
+                <div style={dimLabel}>PLAYERS</div>
+                <div style={{ fontFamily: "var(--font-orbitron, sans-serif)", fontSize: 36, fontWeight: 900, color: "var(--text-dim, #9ca3af)" }}>{pool.playerCount}</div>
               </div>
               <div>
                 <div style={dimLabel}>STATUS</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: pool.gameOver ? "#ef4444" : "var(--green, #00ff88)", letterSpacing: "0.1em" }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: pool.gameOver ? "#ef4444" : "var(--green, #00ff88)", letterSpacing: "0.12em" }}>
                   {pool.gameOver ? "● GAME OVER" : "● LIVE"}
                 </div>
               </div>
             </div>
+            {pool.lastHotSeat && pool.round > 1 && (
+              <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(239,68,68,0.2)", display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: "0.18em" }}>LAST HOT SEAT</span>
+                <FlagBadge iso3={pool.lastHotSeat} size="sm" />
+                <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 700 }}>score {pool.lastHotScore}</span>
+              </div>
+            )}
           </div>
         ) : null}
 
         {/* How it works */}
         <div style={{ ...card, borderColor: "rgba(0,255,136,0.12)" }}>
           <div style={dimLabel}>HOW IT WORKS</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 12, lineHeight: 1.7, color: "var(--text-dim, #9ca3af)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 13, lineHeight: 1.8, color: "var(--text-dim, #9ca3af)" }}>
             <span>1. Enter with 0.001 OKB and pick one nation.</span>
-            <span>2. Each round, the owner advances the game by calling <code style={{ color: "var(--green, #00ff88)", background: "rgba(0,255,136,0.06)", padding: "1px 4px", borderRadius: 3 }}>nextRound()</code>.</span>
-            <span>3. Any player whose nation&apos;s momentum score falls below 30 is eliminated.</span>
-            <span>4. You can change your pick before a round ends.</span>
-            <span>5. The last survivor(s) claim the entire pot (minus 5% protocol fee).</span>
+            <span>2. The owner calls <code style={{ color: "var(--green, #00ff88)", background: "rgba(0,255,136,0.06)", padding: "1px 5px", borderRadius: 3 }}>nextRound()</code> after each World Cup match day.</span>
+            <span>3. The nation with the <span style={{ color: "#ef4444", fontWeight: 700 }}>lowest momentum score</span> that round goes in the hot seat — all pickers get eliminated.</span>
+            <span>4. You can change your pick at any time before the round closes.</span>
+            <span>5. Last survivor(s) claim the entire pot (minus 5% protocol fee).</span>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Orbitron, Space_Mono } from "next/font/google";
 import "./globals.css";
+import CountdownBanner from "@/components/CountdownBanner";
 
 const orbitron = Orbitron({ subsets: ["latin"], variable: "--font-orbitron", display: "swap" });
 const spaceMono = Space_Mono({ weight: ["400", "700"], subsets: ["latin"], variable: "--font-mono", display: "swap" });
@@ -18,7 +19,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${orbitron.variable} ${spaceMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <CountdownBanner />
+        {children}
+      </body>
     </html>
   );
 }
