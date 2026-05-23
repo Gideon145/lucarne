@@ -65,8 +65,6 @@ export default function CountdownBanner() {
           </span>
         </>
       )}
-
-      <span style={{ fontSize: 15 }}>⚽</span>
     </div>
   );
 }

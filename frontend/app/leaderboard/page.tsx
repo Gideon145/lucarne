@@ -16,48 +16,41 @@ const NFT_V1   = "0xBB15f43a032c3DE6aB33fDFBfb140FA461854c1E";
 const NFT_V2   = "0xBC2200d99980661fef938eE72001BAaE496F0adf";
 // ownerOf(uint256) selector
 const OWNER_OF_SIG = "0x6352211e";
-// Max token IDs to probe per contract (generous cap; increases as more NFTs are minted)
-const MAX_TOKENS = 200;
+// Max token IDs to probe per contract
+const MAX_TOKENS = 50;
 
 type Holder = { addr: string; count: number };
 
-type BatchResult = { id: number; result?: string; error?: { code: number; message: string } };
-
-async function rpcBatch(calls: { id: number; method: string; params: unknown[] }[]): Promise<BatchResult[]> {
-  const res = await fetch(RPC_URL, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(calls.map(c => ({ jsonrpc: "2.0", id: c.id, method: c.method, params: c.params }))),
-  });
-  return res.json();
+async function ownerOf(nftAddr: string, tokenId: number): Promise<string | null> {
+  try {
+    const res = await fetch(RPC_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0", id: tokenId, method: "eth_call",
+        params: [
+          { to: nftAddr, data: OWNER_OF_SIG + tokenId.toString(16).padStart(64, "0") },
+          "latest",
+        ],
+      }),
+    });
+    const data = await res.json();
+    if (data.error || !data.result || data.result.length !== 66) return null;
+    const owner = "0x" + data.result.slice(26).toLowerCase();
+    return owner === "0x" + "0".repeat(40) ? null : owner;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchMintHolders(): Promise<Holder[]> {
   const tally = new Map<string, number>();
   for (const nftAddr of [NFT_V1, NFT_V2]) {
-    // Batch all ownerOf(1..MAX_TOKENS) in a single HTTP request.
-    // Tokens that don't exist return an error — we just skip them.
-    const batch = Array.from({ length: MAX_TOKENS }, (_, i) => ({
-      id: i + 1,
-      method: "eth_call",
-      params: [
-        { to: nftAddr, data: OWNER_OF_SIG + (i + 1).toString(16).padStart(64, "0") },
-        "latest",
-      ],
-    }));
-    try {
-      const results = await rpcBatch(batch);
-      for (const r of results) {
-        if (r.result && r.result.length === 66) {
-          const owner = "0x" + r.result.slice(26).toLowerCase();
-          const ZERO_ADDR = "0x" + "0".repeat(40);
-          if (owner !== ZERO_ADDR) {
-            tally.set(owner, (tally.get(owner) ?? 0) + 1);
-          }
-        }
-      }
-    } catch (e) {
-      console.warn(`[leaderboard] batch ownerOf failed for ${nftAddr}:`, e);
+    const owners = await Promise.all(
+      Array.from({ length: MAX_TOKENS }, (_, i) => ownerOf(nftAddr, i + 1))
+    );
+    for (const owner of owners) {
+      if (owner) tally.set(owner, (tally.get(owner) ?? 0) + 1);
     }
   }
   return Array.from(tally.entries())
