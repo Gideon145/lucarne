@@ -61,17 +61,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid X handle (1-15 chars, letters/numbers/_)" }, { status: 400 });
     }
 
-    // One vote per X handle
-    const alreadyVoted = await redis.sismember("fan:voted", handle);
-    if (alreadyVoted) {
-      return NextResponse.json({ error: "already_voted" }, { status: 409 });
+    // Check if handle already voted (supports changing pick)
+    const existingCountry = await redis.get<string>(`fan:handle:${handle}`);
+    if (existingCountry) {
+      // Allow changing pick: update tallies if country changed
+      if (existingCountry !== country) {
+        await Promise.all([
+          redis.decr(`fan:tally:${existingCountry}`),
+          redis.incr(`fan:tally:${country}`),
+          redis.set(`fan:handle:${handle}`, country),
+        ]);
+      }
+    } else {
+      // New vote
+      await Promise.all([
+        redis.incr(`fan:tally:${country}`),
+        redis.sadd("fan:voted", handle),
+        redis.set(`fan:handle:${handle}`, country),
+        redis.rpush("fan:entries", JSON.stringify({ country, xHandle: handle, ts: Date.now() })),
+      ]);
     }
-
-    await Promise.all([
-      redis.incr(`fan:tally:${country}`),
-      redis.sadd("fan:voted", handle),
-      redis.rpush("fan:entries", JSON.stringify({ country, xHandle: handle, ts: Date.now() })),
-    ]);
 
     const keys = NATIONS.map(c => `fan:tally:${c}`);
     const values = await redis.mget<number[]>(...keys);

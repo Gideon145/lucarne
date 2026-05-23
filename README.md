@@ -13,7 +13,7 @@
 [![Agent Wallet](https://img.shields.io/badge/Agent%20Wallet-0xC8D9...47C3-green)](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3)
 [![X Layer Mainnet](https://img.shields.io/badge/Chain-X%20Layer%20Mainnet%20196-brightgreen)](https://www.oklink.com/xlayer)
 [![Loop Interval](https://img.shields.io/badge/Loop-60s-orange)](#what-the-agent-actually-does-every-60-seconds)
-[![Nations Scored](https://img.shields.io/badge/Nations-32%20World%20Cup%202026-blue)](#)
+[![Nations Scored](https://img.shields.io/badge/Nations-48%20World%20Cup%202026-blue)](#)
 
 ### Judges — open [`/judge`](https://frontend-sigma-two-60.vercel.app/judge) for a wallet-free, one-page verification surface (live lifetime nonce, contract status, on-chain proofs). Build progress is broadcast in real time at [x.com/lucarne_xyz](https://x.com/lucarne_xyz).
 
@@ -21,7 +21,7 @@
 
 ## What Is Lucarne?
 
-Lucarne is an autonomous AI agent that scores all **32 World Cup 2026 nations 0–100 every 60 seconds** and writes each score as a cryptographic attestation directly to **X Layer Mainnet (Chain ID 196)** — immutable, timestamped, verifiable by anyone with a block explorer.
+Lucarne is an autonomous AI agent that scores all **48 World Cup 2026 nations 0–100 every 60 seconds** and writes each score as a cryptographic attestation directly to **X Layer Mainnet (Chain ID 196)** — immutable, timestamped, verifiable by anyone with a block explorer.
 
 When real matches happen, Lucarne goes further than passive scoring. The agent **stakes OKB on its own match predictions** before kickoff, **opens parimutuel pools** for users to bet against or with it, and **settles them trustlessly** from on-chain match results. Bettors who call the outcome correctly can **mint a soulbound "I Called It" NFT** as on-chain proof.
 
@@ -47,7 +47,7 @@ Lucarne fixes this with a single primitive: **on-chain attestation with economic
 |---|---|---|
 | **Frontend (Live HUD)** | https://frontend-sigma-two-60.vercel.app | Live |
 | **Agent Wallet (all tx)** | https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3 | 14,000+ tx |
-| **SignalAttestor (32 nations)** | https://www.oklink.com/xlayer/address/0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81 | Mainnet |
+| **SignalAttestor (48 nations)** | https://www.oklink.com/xlayer/address/0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81 | Mainnet |
 | **MatchSignalAttestor** | https://www.oklink.com/xlayer/address/0x9693d19C09d9dE08F4acaD288f7608552D018482 | Mainnet |
 | **MatchResultAttestor** | https://www.oklink.com/xlayer/address/0x81AF1dfF7D92ac333a785a1486822159855377bF | Mainnet |
 | **SignalPool v2** | https://www.oklink.com/xlayer/address/0xEe15Dc83cD4AcD16D8698831d468B1FE12ccEa67 | Mainnet |
@@ -98,7 +98,7 @@ Before betting Lucarne's reputation on the 2026 World Cup, we ran the **entire p
 |   Vercel             |   60s loop           |   Railway (Agent, Polybot)        |
 |                      |                      |   Vercel (Frontend)               |
 |  +----------------+  |  +----------------+  |   X Layer Mainnet (Chain 196)     |
-|  | 32 Nation Grid |  |  | SignalEngine   |  |                                   |
+|  | 48 Nation Grid |  |  | SignalEngine   |  |                                   |
 |  | Live scores    |<-+--| Polymarket +   |  |  +--------------------------+     |
 |  | Live match HUD |  |  | form + market  |  |  | SignalAttestor.sol       |     |
 |  | BetPanel       |  |  | -> 0..100 score|  |  | attest(country, score..) |     |
@@ -126,7 +126,7 @@ Before betting Lucarne's reputation on the 2026 World Cup, we ran the **entire p
 ## What The Agent Actually Does (Every 60 Seconds)
 
 ```typescript
-// Step 1: For each of 32 World Cup nations
+// Step 1: For each of 48 World Cup nations
 for (const country of COUNTRIES) {
 
   // Step 2: Compute live signal from Polymarket + form data
@@ -161,7 +161,7 @@ That's it. 60 seconds. Forever. Every meaningful score change becomes a permanen
 ## Smart Contracts (X Layer Mainnet, Chain ID 196)
 
 ### SignalAttestor.sol — `0x2Dcbd501...0FAe81`
-The 32-nation scoreboard. The agent writes here every 60 seconds when a country's score moves >3 points or 4 hours pass without a write.
+The 48-nation scoreboard. The agent writes here every 60 seconds when a country's score moves >3 points or 4 hours pass without a write.
 
 ```solidity
 function attest(bytes3 country, uint8 score, uint8 regime, bytes32 signalHash) external
@@ -195,13 +195,13 @@ Soulbound ERC-721. One mint per wallet per game. Bettors who staked on the winni
 | Component | Stack |
 |---|---|
 | **Chain** | X Layer Mainnet (Chain ID 196) — every contract, every tx |
-| **Gas Token** | OKB native — cheap enough to attest 32 nations every 60s |
+| **Gas Token** | OKB native — cheap enough to attest 48 nations every 60s |
 | **Signal Data** | Polymarket probabilities (the live odds source for every football market) |
 | **AI Briefs** | Claude (Anthropic) via **x402 HTTP micropayment protocol** on **OKX Onchain OS** |
 | **Wallet** | OKX Wallet + MetaMask (injected provider, EIP-1193) |
 | **Explorer** | OKLink (`oklink.com/xlayer`) — every tx hash in this README resolves there |
 
-OKB as native gas is what makes the 60-second loop economically viable. Attesting 32 country scores every minute on Ethereum L1 would cost thousands of dollars per day. On X Layer it costs cents. That's why Lucarne can exist.
+OKB as native gas is what makes the 60-second loop economically viable. Attesting 48 country scores every minute on Ethereum L1 would cost thousands of dollars per day. On X Layer it costs cents. That's why Lucarne can exist.
 
 ---
 
@@ -211,7 +211,7 @@ OKB as native gas is what makes the 60-second loop economically viable. Attestin
 lucarne/
 ├── agent/                   Autonomous scoring agent (Node.js / TypeScript)
 │   └── src/
-│       ├── index.ts         60s loop: score 32 nations, write to chain
+│       ├── index.ts         60s loop: score 48 nations, write to chain
 │       └── lib/
 │           ├── signal.ts    Polymarket + form -> 0..100 score + regime
 │           ├── outcome.ts   Resolves matches, writes outcomes on-chain
@@ -219,7 +219,7 @@ lucarne/
 │
 ├── contracts/               Solidity 0.8.24 · Hardhat v3 · TypeScript ESM
 │   ├── contracts/
-│   │   ├── SignalAttestor.sol           # 32-nation scoreboard
+│   │   ├── SignalAttestor.sol           # 48-nation scoreboard
 │   │   ├── MatchSignalAttestor.sol      # pre-kickoff signal lock
 │   │   ├── MatchResultAttestor.sol      # FT result + verdict
 │   │   ├── SignalPool.sol               # parimutuel pool with reclaimNoWinner
@@ -247,13 +247,13 @@ lucarne/
 
 ## What Makes Lucarne Different
 
-**1. The agent is running right now.** Not in a demo container. Not behind a "click here to start." On X Layer Mainnet, every 60 seconds, 32 countries, 14,000+ confirmed transactions in the agent wallet. Click the link, see the tx count.
+**1. The agent is running right now.** Not in a demo container. Not behind a "click here to start." On X Layer Mainnet, every 60 seconds, 48 countries, 14,000+ confirmed transactions in the agent wallet. Click the link, see the tx count.
 
 **2. Every claim is on-chain verifiable.** This README has 12+ tx hash links above. Every single one resolves on OKLink. Open OKX Wallet, switch to X Layer, paste any address — it's all there.
 
 **3. Skin in the game.** The agent doesn't just predict — it stakes OKB on every match call before kickoff. When it gets one wrong (Fiorentina/Atalanta), that OKB is gone. Real money, real consequences, real signal quality discipline.
 
-**4. World Cup timing.** Built specifically for the 2026 FIFA World Cup. 32 nations already wired into the agent loop. As group-stage matches begin, the infrastructure is already in production — no migration, no scramble.
+**4. World Cup timing.** Built specifically for the 2026 FIFA World Cup. 48 nations already wired into the agent loop. As group-stage matches begin, the infrastructure is already in production — no migration, no scramble.
 
 **5. Full OKX stack usage.** X Layer Mainnet for every contract. OKB for gas + stakes. Polymarket for data. OKX Onchain OS + x402 for paid AI briefs. OKLink for proof. This is what an OKX-native dApp looks like.
 
@@ -267,7 +267,7 @@ During the hackathon we built across six of the eligible tracks. Every track has
 
 | Track | Status | On-Chain Proof |
 |---|---|---|
-| **Prediction Markets** | ✅ Shipped | [`LucarnePredictions`](https://www.oklink.com/xlayer/address/0x178565919FFebC4b57ca04112d0FFFaD946Df6E7) community-vote contract + Polymarket as the live signal data source for all 32 nations |
+| **Prediction Markets** | ✅ Shipped | [`LucarnePredictions`](https://www.oklink.com/xlayer/address/0x178565919FFebC4b57ca04112d0FFFaD946Df6E7) community-vote contract + Polymarket as the live signal data source for all 48 nations |
 | **Trading** | ✅ Shipped | [`SignalPool v2`](https://www.oklink.com/xlayer/address/0xEe15Dc83cD4AcD16D8698831d468B1FE12ccEa67) parimutuel pool — real OKB stakes, real user bets, real settlement; agent bonds every match call |
 | **NFT** | ✅ Shipped | [`ICalledItNFT v2`](https://www.oklink.com/xlayer/address/0xBC2200d99980661fef938eE72001BAaE496F0adf) soulbound ERC-721 — real mints [`0x01ec8778…`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de), [`0xdc7120d5…`](https://www.oklink.com/xlayer/tx/0xdc7120d57a82670e9773f09404df5f0ef0c95aedeba5083de25f566175158321) |
 | **AI Agent** | ✅ Shipped | Autonomous 60s loop on agent wallet [`0xC8D9…47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) (14,000+ mainnet tx). Claude-powered AI briefs gated by **x402** on **OKX Onchain OS** |
@@ -283,7 +283,7 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
 | Skill | Where It Lives in Lucarne |
 |---|---|
 | **`okx-agent-payments-protocol`** (x402) | `polybot/server.py` — paid Claude AI briefs are gated by an x402 micropayment (`xlayer-mainnet`, USDC `0x74b7f1…6d22`, `pay-to` = agent wallet). Replay-protection via per-nonce set. Hit `GET /brief/{iso3}` → 402 → pay → 200 |
-| **`okx-dapp-discovery`** (Polymarket plugin) | Polymarket gamma-api drives the per-nation probability signal for all 32 World Cup nations and every live match (`polybot/server.py` → `POLYMARKET_IDS`, `WC_FIXTURES`) |
+| **`okx-dapp-discovery`** (Polymarket plugin) | Polymarket gamma-api drives the per-nation probability signal for all 48 World Cup nations and every live match (`polybot/server.py` → `POLYMARKET_IDS`, `WC_FIXTURES`) |
 | **`okx-onchain-gateway`** | X Layer Mainnet RPC (`https://rpc.xlayer.tech`) is the gateway for every `attest()`, `agentStake()`, `bet()`, `settle()`, `mintForGame()`, and `resolve()` transaction. The agent persists nonce across restarts and refetches pending-nonce explicitly to survive X Layer RPC quirks |
 | **`okx-agentic-wallet`** (pattern) | Agent wallet [`0xC8D9…47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) operates as a self-driven agentic wallet on X Layer — 14,000+ mainnet tx, signal-driven write gate, no human intervention in the scoring loop |
 
