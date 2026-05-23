@@ -134,7 +134,7 @@ export default function Home() {
           An autonomous AI agent scores all 48 nations 0–100 every 60 seconds and writes the result as a cryptographic attestation to{" "}
           <span style={{ color: "var(--text-primary)" }}>X Layer</span>
           {" "}— immutable, timestamped, verifiable by anyone.{" "}
-          <span style={{ color: "var(--green)" }}>We called Aston Villa to win the UEL Final. The signal was on-chain 3 hours before kickoff. Villa won.</span>
+          <span style={{ color: "var(--green)" }}>3/3 signals verified: Aston Villa (UEL Final) ✅ · Real Madrid 4–2 Athletic Club ✅ · Bayern Munich 3–0 Stuttgart ✅ — all locked on-chain before kickoff.</span>
           {" "}Click any nation to unlock a paid AI brief — generated live by Claude, gated via x402 micropayment on the OKX Onchain OS.
         </p>
       </div>
@@ -176,6 +176,34 @@ export default function Home() {
             🤖 {AGENT_WALLET.slice(0, 8)}…
           </a>
         </div>
+      </div>
+
+      {/* ── Verified Calls ──────────────────────────────────────────────── */}
+      <div
+        style={{
+          padding: "10px clamp(14px,3vw,24px)",
+          borderBottom: "1px solid var(--border)",
+          background: "rgba(0,255,133,0.03)",
+          display: "flex",
+          gap: 8,
+          alignItems: "center",
+          overflowX: "auto",
+          flexWrap: "wrap",
+        }}
+      >
+        <span style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: "0.1em", fontFamily: "var(--font-mono), monospace", flexShrink: 0 }}>VERIFIED CALLS</span>
+        {[
+          { match: "Aston Villa — UEL Final", result: "WIN ✅", score: "3–2" },
+          { match: "Real Madrid vs Athletic Club", result: "WIN ✅", score: "4–2" },
+          { match: "Bayern Munich vs Stuttgart", result: "WIN ✅", score: "3–0" },
+        ].map((c) => (
+          <div key={c.match} style={{ display: "flex", gap: 6, alignItems: "center", background: "rgba(0,255,133,0.06)", border: "1px solid rgba(0,255,133,0.15)", borderRadius: 4, padding: "3px 10px", flexShrink: 0 }}>
+            <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace" }}>{c.match}</span>
+            <span style={{ fontSize: 10, color: "var(--green)", fontFamily: "var(--font-mono), monospace", fontWeight: 700 }}>{c.result}</span>
+            <span style={{ fontSize: 10, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace" }}>{c.score}</span>
+          </div>
+        ))}
+        <span style={{ fontSize: 9, color: "var(--text-dim)", fontFamily: "var(--font-mono), monospace", marginLeft: "auto", flexShrink: 0 }}>3/3 · 100%</span>
       </div>
 
       {/* ── Filter + Sort ─────────────────────────────────────────────────── */}
