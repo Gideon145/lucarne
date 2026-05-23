@@ -8,6 +8,7 @@
 [![Judge Mode](https://img.shields.io/badge/Judge%20Mode-%2Fjudge-magenta)](https://frontend-sigma-two-60.vercel.app/judge)
 [![Judge Guide](https://img.shields.io/badge/Judge%20Guide-JUDGE__GUIDE.md-magenta)](./JUDGE_GUIDE.md)
 [![Leaderboard](https://img.shields.io/badge/Leaderboard-%2Fleaderboard-gold)](https://frontend-sigma-two-60.vercel.app/leaderboard)
+[![GameFi](https://img.shields.io/badge/Track-GameFi%20%E2%9C%85-brightgreen)](https://frontend-sigma-two-60.vercel.app/survivor)
 [![Follow on X](https://img.shields.io/badge/X-%40lucarne__xyz-black)](https://x.com/lucarne_xyz)
 [![Agent Wallet](https://img.shields.io/badge/Agent%20Wallet-0xC8D9...47C3-green)](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3)
 [![X Layer Mainnet](https://img.shields.io/badge/Chain-X%20Layer%20Mainnet%20196-brightgreen)](https://www.oklink.com/xlayer)
