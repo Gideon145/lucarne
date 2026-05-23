@@ -262,7 +262,7 @@ lucarne/
 
 ## Track Coverage — X Layer X Cup
 
-During the hackathon we built across five of the eligible tracks. Every track has shipped code and verifiable on-chain proof:
+During the hackathon we built across six of the eligible tracks. Every track has shipped code and verifiable on-chain proof:
 
 | Track | Status | On-Chain Proof |
 |---|---|---|
@@ -271,6 +271,7 @@ During the hackathon we built across five of the eligible tracks. Every track ha
 | **NFT** | ✅ Shipped | [`ICalledItNFT v2`](https://www.oklink.com/xlayer/address/0xBC2200d99980661fef938eE72001BAaE496F0adf) soulbound ERC-721 — real mints [`0x01ec8778…`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de), [`0xdc7120d5…`](https://www.oklink.com/xlayer/tx/0xdc7120d57a82670e9773f09404df5f0ef0c95aedeba5083de25f566175158321) |
 | **AI Agent** | ✅ Shipped | Autonomous 60s loop on agent wallet [`0xC8D9…47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) (14,000+ mainnet tx). Claude-powered AI briefs gated by **x402** on **OKX Onchain OS** |
 | **Social** | ✅ Shipped | Live build broadcast on [x.com/lucarne_xyz](https://x.com/lucarne_xyz); share-to-X button fires on every NFT-mint confirmation (pre-filled tweet with match link); [`/leaderboard`](https://frontend-sigma-two-60.vercel.app/leaderboard) ranks wallets by on-chain proven call count |
+| **GameFi** | ✅ Shipped | [`SurvivorPool`](https://www.oklink.com/xlayer/address/0x7250E9480A025bF59EedD271DFB88C5BC2f8c12F) — pick a nation each round, survive on momentum score ≥ 30, last survivor(s) split the pot (0.001 OKB entry). Live at [`/survivor`](https://frontend-sigma-two-60.vercel.app/survivor) |
 
 ---
 
