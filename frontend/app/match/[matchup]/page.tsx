@@ -255,7 +255,7 @@ export default function MatchPage() {
           </div>
         )}
 
-        {error && !loading && (
+        {error && !loading && !error.includes("404") && (
           <div style={{
             padding: 16,
             background: "rgba(255,80,80,0.06)",
