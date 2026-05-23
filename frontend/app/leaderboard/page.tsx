@@ -14,44 +14,50 @@ const RPC_URL  = "https://rpc.xlayer.tech";
 const EXPLORER = "https://www.oklink.com/xlayer";
 const NFT_V1   = "0xBB15f43a032c3DE6aB33fDFBfb140FA461854c1E";
 const NFT_V2   = "0xBC2200d99980661fef938eE72001BAaE496F0adf";
-// Narrow getLogs range — both NFT contracts were deployed well after this block on X Layer mainnet.
-// Some RPCs reject unbounded fromBlock=0x0 ranges, so we anchor to a safe pre-deploy block.
-const FROM_BLOCK = "0x1000000"; // 16,777,216 — pre-deploy floor for both NFT contracts
-
-// keccak256("Transfer(address,address,uint256)")
-const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-// from == 0x0…0 means mint
-const ZERO_TOPIC = "0x" + "0".repeat(64);
+// ownerOf(uint256) selector
+const OWNER_OF_SIG = "0x6352211e";
+// Max token IDs to probe per contract (generous cap; increases as more NFTs are minted)
+const MAX_TOKENS = 200;
 
 type Holder = { addr: string; count: number };
 
-async function rpc(method: string, params: unknown[]): Promise<any> {
+type BatchResult = { id: number; result?: string; error?: { code: number; message: string } };
+
+async function rpcBatch(calls: { id: number; method: string; params: unknown[] }[]): Promise<BatchResult[]> {
   const res = await fetch(RPC_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+    body: JSON.stringify(calls.map(c => ({ jsonrpc: "2.0", id: c.id, method: c.method, params: c.params }))),
   });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  return data.result;
+  return res.json();
 }
 
 async function fetchMintHolders(): Promise<Holder[]> {
   const tally = new Map<string, number>();
-  for (const addr of [NFT_V1, NFT_V2]) {
+  for (const nftAddr of [NFT_V1, NFT_V2]) {
+    // Batch all ownerOf(1..MAX_TOKENS) in a single HTTP request.
+    // Tokens that don't exist return an error — we just skip them.
+    const batch = Array.from({ length: MAX_TOKENS }, (_, i) => ({
+      id: i + 1,
+      method: "eth_call",
+      params: [
+        { to: nftAddr, data: OWNER_OF_SIG + (i + 1).toString(16).padStart(64, "0") },
+        "latest",
+      ],
+    }));
     try {
-      const logs: { topics: string[] }[] = await rpc("eth_getLogs", [
-        { address: addr, topics: [TRANSFER_TOPIC, ZERO_TOPIC], fromBlock: FROM_BLOCK, toBlock: "latest" },
-      ]);
-      for (const log of logs) {
-        // topic[2] = to address (32-byte padded)
-        const toTopic = log.topics[2];
-        if (!toTopic) continue;
-        const to = "0x" + toTopic.slice(26).toLowerCase();
-        tally.set(to, (tally.get(to) ?? 0) + 1);
+      const results = await rpcBatch(batch);
+      for (const r of results) {
+        if (r.result && r.result.length === 66) {
+          const owner = "0x" + r.result.slice(26).toLowerCase();
+          const ZERO_ADDR = "0x" + "0".repeat(40);
+          if (owner !== ZERO_ADDR) {
+            tally.set(owner, (tally.get(owner) ?? 0) + 1);
+          }
+        }
       }
     } catch (e) {
-      console.warn(`[leaderboard] ${addr} log fetch failed:`, e);
+      console.warn(`[leaderboard] batch ownerOf failed for ${nftAddr}:`, e);
     }
   }
   return Array.from(tally.entries())

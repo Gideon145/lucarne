@@ -45,8 +45,6 @@ export default function CountdownBanner() {
         color: "var(--text-dim, #9ca3af)",
       }}
     >
-      <span style={{ fontSize: 15 }}>⚽</span>
-
       {kicked ? (
         <span style={{ color: "var(--green, #00ff88)", fontWeight: 700 }}>
           FIFA WORLD CUP 2026 IS LIVE
