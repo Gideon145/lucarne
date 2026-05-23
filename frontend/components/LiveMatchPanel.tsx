@@ -84,6 +84,8 @@ const STATIC_GAMES: Record<string, LiveMatchData> = {
     gameId: "0x24ba1da38dccf3520be37c13283e854e5d1f2605a1f01f983193f41d58372e89",
     proofTxHash: "0xe3553d8e0242baddac7db1256bf5f16aff3ee79c1c128051886ad036a76d3dd2",
     signalTxHash: "0x6983a19169803ad0a03355586d289c1b644d31802ae0ae7f297eff8b50f504d5",
+    signalCorrect: false,
+    actualResult: "DRAW",
   },
   "sea-int-bol-2026-05-23": {
     slug: "sea-int-bol-2026-05-23", eventId: "static-int-bol",
@@ -154,6 +156,7 @@ interface LiveMatchData {
   signalTxHash?:  string;
   resolvedTxHash?: string;   // MatchResultAttestor resolve() tx
   signalCorrect?:  boolean;  // was the pre-match signal call right?
+  actualResult?:   "HOME_WIN" | "DRAW" | "AWAY_WIN";  // actual FT result
 }
 
 function parseTeams(title: string): { home: string; away: string } {
@@ -661,37 +664,70 @@ function ResultView({
           {away}
         </div>
 
-        {/* Winner banner */}
-        <div style={{
-          display: "inline-block",
-          border: "2px solid var(--green)",
-          padding: "20px 48px",
-          background: "rgba(0,255,133,0.05)",
-          boxShadow: "0 0 40px rgba(0,255,133,0.15)",
-        }}>
-          <div style={{ fontSize: 12, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.2em", marginBottom: 10 }}>
-            ✓ RESULT CONFIRMED
+        {/* Winner / Draw banner */}
+        {data.actualResult === "DRAW" ? (
+          <div style={{
+            display: "inline-block",
+            border: "2px solid var(--amber)",
+            padding: "20px 48px",
+            background: "rgba(240,180,41,0.05)",
+            boxShadow: "0 0 40px rgba(240,180,41,0.12)",
+          }}>
+            <div style={{ fontSize: 12, color: "var(--amber)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.2em", marginBottom: 10 }}>
+              RESULT CONFIRMED
+            </div>
+            <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: 32, fontWeight: 900, color: "var(--amber)", letterSpacing: "0.1em" }}>
+              DRAW
+            </div>
           </div>
-          <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: 32, fontWeight: 900, color: "var(--green)", letterSpacing: "0.1em", textShadow: "0 0 24px var(--green-glow)" }}>
-            {winner.toUpperCase()} WIN
+        ) : (
+          <div style={{
+            display: "inline-block",
+            border: "2px solid var(--green)",
+            padding: "20px 48px",
+            background: "rgba(0,255,133,0.05)",
+            boxShadow: "0 0 40px rgba(0,255,133,0.15)",
+          }}>
+            <div style={{ fontSize: 12, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.2em", marginBottom: 10 }}>
+              ✓ RESULT CONFIRMED
+            </div>
+            <div style={{ fontFamily: "var(--font-orbitron), sans-serif", fontSize: 32, fontWeight: 900, color: "var(--green)", letterSpacing: "0.1em", textShadow: "0 0 24px var(--green-glow)" }}>
+              {winner.toUpperCase()} WIN
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* ── Signal called it ───────────────────────────────────────── */}
-      <div style={{ border: "1px solid rgba(0,255,133,0.3)", borderLeft: "4px solid var(--green)", padding: "28px 32px", marginBottom: 40, background: "rgba(0,255,133,0.04)" }}>
-        <div style={{ fontSize: 13, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.2em", marginBottom: 16 }}>
-          ✓ SIGNAL CALLED IT
+      {/* ── Signal called it / wrong ──────────────────────────────── */}
+      {data.signalCorrect === false ? (
+        <div style={{ border: "1px solid rgba(224,82,82,0.4)", borderLeft: "4px solid #e05252", padding: "28px 32px", marginBottom: 40, background: "rgba(224,82,82,0.04)" }}>
+          <div style={{ fontSize: 13, color: "#e05252", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.2em", marginBottom: 16 }}>
+            ✗ SIGNAL WRONG
+          </div>
+          <p style={{ margin: 0, fontSize: 16, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
+            Lucarne called <strong style={{ color: "#e05252" }}>{winner}</strong> to win.
+            The result was{" "}
+            <strong style={{ color: "var(--amber)" }}>{data.actualResult === "DRAW" ? "a draw" : "the other side"}</strong>.
+            The signal was wrong — the stake is gone. Every call is locked on-chain before kickoff,
+            settled trustlessly after FT. We don&apos;t bury bad calls.{" "}
+            <strong>The ledger doesn&apos;t lie.</strong>
+          </p>
         </div>
-        <p style={{ margin: 0, fontSize: 16, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
-          Before kickoff, Lucarne&apos;s signal engine had{" "}
-          <strong style={{ color: "var(--green)" }}>{winner}</strong> as the clear market favourite at{" "}
-          <strong style={{ color: "var(--green)" }}>{preWinnerProb.toFixed(1)}%</strong> implied probability.
-          That signal was computed, attested, and locked on{" "}
-          <strong>X Layer mainnet</strong> — immutable before the whistle blew.{" "}
-          <strong style={{ color: "var(--green)" }}>It cannot be edited. The record stands forever.</strong>
-        </p>
-      </div>
+      ) : (
+        <div style={{ border: "1px solid rgba(0,255,133,0.3)", borderLeft: "4px solid var(--green)", padding: "28px 32px", marginBottom: 40, background: "rgba(0,255,133,0.04)" }}>
+          <div style={{ fontSize: 13, color: "var(--green)", fontFamily: "var(--font-mono), monospace", letterSpacing: "0.2em", marginBottom: 16 }}>
+            ✓ SIGNAL CALLED IT
+          </div>
+          <p style={{ margin: 0, fontSize: 16, color: "var(--text-primary)", fontFamily: "var(--font-mono), monospace", lineHeight: 2 }}>
+            Before kickoff, Lucarne&apos;s signal engine had{" "}
+            <strong style={{ color: "var(--green)" }}>{winner}</strong> as the clear market favourite at{" "}
+            <strong style={{ color: "var(--green)" }}>{preWinnerProb.toFixed(1)}%</strong> implied probability.
+            That signal was computed, attested, and locked on{" "}
+            <strong>X Layer mainnet</strong> — immutable before the whistle blew.{" "}
+            <strong style={{ color: "var(--green)" }}>It cannot be edited. The record stands forever.</strong>
+          </p>
+        </div>
+      )}
 
       {/* ── Pre-match signal snapshot ──────────────────────────────── */}
       <div style={{ marginBottom: 40 }}>
@@ -700,9 +736,9 @@ function ResultView({
         </div>
         <div style={{ display: "flex", gap: 0, border: "1px solid var(--border)" }}>
           {[
-            { label: `${home.toUpperCase()} WIN`, prob: preHome, won: home === winner },
-            { label: "DRAW",                       prob: preDraw, won: false },
-            { label: `${away.toUpperCase()} WIN`,  prob: preAway, won: away === winner },
+            { label: `${home.toUpperCase()} WIN`, prob: preHome, won: data.actualResult === "HOME_WIN" || (!data.actualResult && home === winner) },
+            { label: "DRAW",                       prob: preDraw, won: data.actualResult === "DRAW" },
+            { label: `${away.toUpperCase()} WIN`,  prob: preAway, won: data.actualResult === "AWAY_WIN" || (!data.actualResult && away === winner) },
           ].map(({ label, prob, won }, i) => (
             <div key={label} style={{
               flex: 1,
@@ -733,6 +769,9 @@ function ResultView({
           Source: Polymarket · attested via Lucarne SignalAttestor on X Layer before kickoff
         </div>
       </div>
+
+      {/* ── Signal Pool — settle + NFT mint accessible from result view ─── */}
+      <BetPanel slug={data.slug} home={home} away={away} />
 
       {/* ── Community predictions (resolved — show results, no submit) */}
       <PredictionPanel slug={data.slug} home={home} away={away} isResolved={true} />
