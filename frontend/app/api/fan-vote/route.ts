@@ -9,10 +9,18 @@ const redis = new Redis({
 });
 
 const NATIONS = [
-  "ARG","BRA","FRA","ENG","ESP","GER","POR","NED",
-  "ITA","URU","COL","MEX","USA","JAP","KOR","MAR",
-  "CAN","BEL","CRO","SEN","NGA","ECU","AUS","TUR",
-  "CHE","EGY","IRN","SAU","DEN","SRB","VEN","CMR",
+  // CONMEBOL
+  "ARG","BRA","COL","ECU","PAR","URU",
+  // UEFA
+  "AUT","BEL","BIH","CRO","CZE","ENG","FRA","GER","NED","NOR","POR","SCO","ESP","SWE","SUI","TUR",
+  // AFC
+  "AUS","IRN","IRQ","JPN","JOR","QAT","KSA","KOR","UZB",
+  // CAF
+  "ALG","CPV","COD","EGY","GHA","CIV","MAR","SEN","RSA","TUN",
+  // CONCACAF
+  "CAN","CUW","HAI","MEX","PAN","USA",
+  // OFC
+  "NZL",
 ];
 
 function normaliseHandle(raw: string): string | null {

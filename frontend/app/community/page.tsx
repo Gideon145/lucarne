@@ -6,38 +6,60 @@ import { useEffect, useState, useCallback } from "react";
 const GIVEAWAY_END = new Date("2026-05-26T00:00:00Z").getTime();
 
 const NATIONS: { iso3: string; iso2: string; name: string }[] = [
-  { iso3: "ARG", iso2: "ar",     name: "Argentina"    },
-  { iso3: "BRA", iso2: "br",     name: "Brazil"       },
-  { iso3: "FRA", iso2: "fr",     name: "France"       },
-  { iso3: "ENG", iso2: "gb-eng", name: "England"      },
-  { iso3: "ESP", iso2: "es",     name: "Spain"        },
-  { iso3: "GER", iso2: "de",     name: "Germany"      },
-  { iso3: "POR", iso2: "pt",     name: "Portugal"     },
-  { iso3: "NED", iso2: "nl",     name: "Netherlands"  },
-  { iso3: "ITA", iso2: "it",     name: "Italy"        },
-  { iso3: "URU", iso2: "uy",     name: "Uruguay"      },
-  { iso3: "COL", iso2: "co",     name: "Colombia"     },
-  { iso3: "MEX", iso2: "mx",     name: "Mexico"       },
-  { iso3: "USA", iso2: "us",     name: "USA"          },
-  { iso3: "JAP", iso2: "jp",     name: "Japan"        },
-  { iso3: "KOR", iso2: "kr",     name: "South Korea"  },
-  { iso3: "MAR", iso2: "ma",     name: "Morocco"      },
-  { iso3: "CAN", iso2: "ca",     name: "Canada"       },
-  { iso3: "BEL", iso2: "be",     name: "Belgium"      },
-  { iso3: "CRO", iso2: "hr",     name: "Croatia"      },
-  { iso3: "SEN", iso2: "sn",     name: "Senegal"      },
-  { iso3: "NGA", iso2: "ng",     name: "Nigeria"      },
-  { iso3: "ECU", iso2: "ec",     name: "Ecuador"      },
-  { iso3: "AUS", iso2: "au",     name: "Australia"    },
-  { iso3: "TUR", iso2: "tr",     name: "Turkey"       },
-  { iso3: "CHE", iso2: "ch",     name: "Switzerland"  },
-  { iso3: "EGY", iso2: "eg",     name: "Egypt"        },
-  { iso3: "IRN", iso2: "ir",     name: "Iran"         },
-  { iso3: "SAU", iso2: "sa",     name: "Saudi Arabia" },
-  { iso3: "DEN", iso2: "dk",     name: "Denmark"      },
-  { iso3: "SRB", iso2: "rs",     name: "Serbia"       },
-  { iso3: "VEN", iso2: "ve",     name: "Venezuela"    },
-  { iso3: "CMR", iso2: "cm",     name: "Cameroon"     },
+  // CONMEBOL
+  { iso3: "ARG", iso2: "ar",     name: "Argentina"          },
+  { iso3: "BRA", iso2: "br",     name: "Brazil"             },
+  { iso3: "COL", iso2: "co",     name: "Colombia"           },
+  { iso3: "ECU", iso2: "ec",     name: "Ecuador"            },
+  { iso3: "PAR", iso2: "py",     name: "Paraguay"           },
+  { iso3: "URU", iso2: "uy",     name: "Uruguay"            },
+  // UEFA
+  { iso3: "AUT", iso2: "at",     name: "Austria"            },
+  { iso3: "BEL", iso2: "be",     name: "Belgium"            },
+  { iso3: "BIH", iso2: "ba",     name: "Bosnia & Herz."     },
+  { iso3: "CRO", iso2: "hr",     name: "Croatia"            },
+  { iso3: "CZE", iso2: "cz",     name: "Czech Republic"     },
+  { iso3: "ENG", iso2: "gb-eng", name: "England"            },
+  { iso3: "FRA", iso2: "fr",     name: "France"             },
+  { iso3: "GER", iso2: "de",     name: "Germany"            },
+  { iso3: "NED", iso2: "nl",     name: "Netherlands"        },
+  { iso3: "NOR", iso2: "no",     name: "Norway"             },
+  { iso3: "POR", iso2: "pt",     name: "Portugal"           },
+  { iso3: "SCO", iso2: "gb-sct", name: "Scotland"           },
+  { iso3: "ESP", iso2: "es",     name: "Spain"              },
+  { iso3: "SWE", iso2: "se",     name: "Sweden"             },
+  { iso3: "SUI", iso2: "ch",     name: "Switzerland"        },
+  { iso3: "TUR", iso2: "tr",     name: "Turkey"             },
+  // AFC
+  { iso3: "AUS", iso2: "au",     name: "Australia"          },
+  { iso3: "IRN", iso2: "ir",     name: "Iran"               },
+  { iso3: "IRQ", iso2: "iq",     name: "Iraq"               },
+  { iso3: "JPN", iso2: "jp",     name: "Japan"              },
+  { iso3: "JOR", iso2: "jo",     name: "Jordan"             },
+  { iso3: "QAT", iso2: "qa",     name: "Qatar"              },
+  { iso3: "KSA", iso2: "sa",     name: "Saudi Arabia"       },
+  { iso3: "KOR", iso2: "kr",     name: "South Korea"        },
+  { iso3: "UZB", iso2: "uz",     name: "Uzbekistan"         },
+  // CAF
+  { iso3: "ALG", iso2: "dz",     name: "Algeria"            },
+  { iso3: "CPV", iso2: "cv",     name: "Cape Verde"         },
+  { iso3: "COD", iso2: "cd",     name: "DR Congo"           },
+  { iso3: "EGY", iso2: "eg",     name: "Egypt"              },
+  { iso3: "GHA", iso2: "gh",     name: "Ghana"              },
+  { iso3: "CIV", iso2: "ci",     name: "Ivory Coast"        },
+  { iso3: "MAR", iso2: "ma",     name: "Morocco"            },
+  { iso3: "SEN", iso2: "sn",     name: "Senegal"            },
+  { iso3: "RSA", iso2: "za",     name: "South Africa"       },
+  { iso3: "TUN", iso2: "tn",     name: "Tunisia"            },
+  // CONCACAF
+  { iso3: "CAN", iso2: "ca",     name: "Canada"             },
+  { iso3: "CUW", iso2: "cw",     name: "Curaçao"            },
+  { iso3: "HAI", iso2: "ht",     name: "Haiti"              },
+  { iso3: "MEX", iso2: "mx",     name: "Mexico"             },
+  { iso3: "PAN", iso2: "pa",     name: "Panama"             },
+  { iso3: "USA", iso2: "us",     name: "USA"                },
+  // OFC
+  { iso3: "NZL", iso2: "nz",     name: "New Zealand"        },
 ];
 
 function pad(n: number) { return String(n).padStart(2, "0"); }
@@ -155,7 +177,7 @@ export default function CommunityFavourite() {
             WHO DO YOU BACK?
           </h1>
           <p style={{ margin: 0, fontSize: 13, lineHeight: 1.8, color: "rgba(255,255,255,0.5)", maxWidth: 640 }}>
-            <strong style={{ color: "rgba(255,255,255,0.8)" }}>LUCARNE</strong> is a real-time on-chain AI signal terminal for World Cup 2026 — scoring all 32 nations every 60 seconds on{" "}
+            <strong style={{ color: "rgba(255,255,255,0.8)" }}>LUCARNE</strong> is a real-time on-chain AI signal terminal for World Cup 2026 — scoring all 48 nations every 60 seconds on{" "}
             <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={{ color: "rgba(0,255,133,0.8)", textDecoration: "none" }}>X Layer</a>.
             Pick your favourite nation below to enter the <strong style={{ color: "rgba(0,255,133,0.9)" }}>0.2 OKB giveaway</strong> — one random fan wins when the timer runs out.
             Explore{" "}
