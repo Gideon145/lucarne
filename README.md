@@ -4,18 +4,18 @@
 
 > *"Every signal staked. Every call attested. The ledger doesn't lie."*
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-frontend--sigma--two--60.vercel.app-cyan)](https://frontend-sigma-two-60.vercel.app)
-[![Judge Mode](https://img.shields.io/badge/Judge%20Mode-%2Fjudge-magenta)](https://frontend-sigma-two-60.vercel.app/judge)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-lucarne--xyz.vercel.app-cyan)](https://lucarne-xyz.vercel.app)
+[![Judge Mode](https://img.shields.io/badge/Judge%20Mode-%2Fjudge-magenta)](https://lucarne-xyz.vercel.app/judge)
 [![Judge Guide](https://img.shields.io/badge/Judge%20Guide-JUDGE__GUIDE.md-magenta)](./JUDGE_GUIDE.md)
-[![Leaderboard](https://img.shields.io/badge/Leaderboard-%2Fleaderboard-gold)](https://frontend-sigma-two-60.vercel.app/leaderboard)
-[![GameFi](https://img.shields.io/badge/Track-GameFi-brightgreen)](https://frontend-sigma-two-60.vercel.app/survivor)
+[![Leaderboard](https://img.shields.io/badge/Leaderboard-%2Fleaderboard-gold)](https://lucarne-xyz.vercel.app/leaderboard)
+[![GameFi](https://img.shields.io/badge/Track-GameFi-brightgreen)](https://lucarne-xyz.vercel.app/survivor)
 [![Follow on X](https://img.shields.io/badge/X-%40lucarne__xyz-black)](https://x.com/lucarne_xyz)
 [![Agent Wallet](https://img.shields.io/badge/Agent%20Wallet-0xC8D9...47C3-green)](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3)
 [![X Layer Mainnet](https://img.shields.io/badge/Chain-X%20Layer%20Mainnet%20196-brightgreen)](https://www.oklink.com/xlayer)
 [![Loop Interval](https://img.shields.io/badge/Loop-60s-orange)](#what-the-agent-actually-does-every-60-seconds)
 [![Nations Scored](https://img.shields.io/badge/Nations-48%20World%20Cup%202026-blue)](#)
 
-### Judges — open [`/judge`](https://frontend-sigma-two-60.vercel.app/judge) for a wallet-free, one-page verification surface (live lifetime nonce, contract status, on-chain proofs). Build progress is broadcast in real time at [x.com/lucarne_xyz](https://x.com/lucarne_xyz).
+### Judges — open [`/judge`](https://lucarne-xyz.vercel.app/judge) for a wallet-free, one-page verification surface (live lifetime nonce, contract status, on-chain proofs). Build progress is broadcast in real time at [x.com/lucarne_xyz](https://x.com/lucarne_xyz).
 
 ---
 
@@ -45,7 +45,7 @@ Lucarne fixes this with a single primitive: **on-chain attestation with economic
 
 | Service | URL | Status |
 |---|---|---|
-| **Frontend (Live HUD)** | https://frontend-sigma-two-60.vercel.app | Live |
+| **Frontend (Live HUD)** | https://lucarne-xyz.vercel.app | Live |
 | **Agent Wallet (all tx)** | https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3 | 14,000+ tx |
 | **SignalAttestor (48 nations)** | https://www.oklink.com/xlayer/address/0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81 | Mainnet |
 | **MatchSignalAttestor** | https://www.oklink.com/xlayer/address/0x9693d19C09d9dE08F4acaD288f7608552D018482 | Mainnet |
@@ -271,8 +271,8 @@ During the hackathon we built across six of the eligible tracks. Every track has
 | **Trading** | ✅ Shipped | [`SignalPool v2`](https://www.oklink.com/xlayer/address/0xEe15Dc83cD4AcD16D8698831d468B1FE12ccEa67) parimutuel pool — real OKB stakes, real user bets, real settlement; agent bonds every match call |
 | **NFT** | ✅ Shipped | [`ICalledItNFT v2`](https://www.oklink.com/xlayer/address/0xBC2200d99980661fef938eE72001BAaE496F0adf) soulbound ERC-721 — real mints [`0x01ec8778…`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de), [`0xdc7120d5…`](https://www.oklink.com/xlayer/tx/0xdc7120d57a82670e9773f09404df5f0ef0c95aedeba5083de25f566175158321) |
 | **AI Agent** | ✅ Shipped | Autonomous 60s loop on agent wallet [`0xC8D9…47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) (14,000+ mainnet tx). Claude-powered AI briefs gated by **x402** on **OKX Onchain OS** |
-| **Social** | ✅ Shipped | Live build broadcast on [x.com/lucarne_xyz](https://x.com/lucarne_xyz); share-to-X button fires on every NFT-mint confirmation (pre-filled tweet with match link); [`/leaderboard`](https://frontend-sigma-two-60.vercel.app/leaderboard) ranks wallets by on-chain proven call count |
-| **GameFi** | ✅ Shipped | [`SurvivorPool`](https://www.oklink.com/xlayer/address/0x7250E9480A025bF59EedD271DFB88C5BC2f8c12F) — pick a nation each round, survive on momentum score ≥ 30, last survivor(s) split the pot (0.001 OKB entry). Live at [`/survivor`](https://frontend-sigma-two-60.vercel.app/survivor) |
+| **Social** | ✅ Shipped | Live build broadcast on [x.com/lucarne_xyz](https://x.com/lucarne_xyz); share-to-X button fires on every NFT-mint confirmation (pre-filled tweet with match link); [`/leaderboard`](https://lucarne-xyz.vercel.app/leaderboard) ranks wallets by on-chain proven call count |
+| **GameFi** | ✅ Shipped | [`SurvivorPool`](https://www.oklink.com/xlayer/address/0x7250E9480A025bF59EedD271DFB88C5BC2f8c12F) — pick a nation each round, survive on momentum score ≥ 30, last survivor(s) split the pot (0.001 OKB entry). Live at [`/survivor`](https://lucarne-xyz.vercel.app/survivor) |
 
 ---
 
@@ -305,7 +305,7 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
 - **Full pipeline exercised on 5 real club matches** in 4 days (May 20–23) — signal generation, attestation, community voting, agent-bonded pools, real user bets, soulbound NFT mints — **2 correct calls, 1 real OKB loss, 2 pending**. (See Pipeline Validation table above.)
 - **First user bet landed:** [`0x9176860e...`](https://www.oklink.com/xlayer/tx/0x9176860e7fe9c53142ef399f316fa7a988e8b8219c3c58dcd2658060c2e3da81) · **First soulbound NFT minted:** [`0x01ec8778...`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de).
 - **Continuous on Railway** (production, 24/7) — frontend on Vercel, Polybot sidecar on Railway, agent autonomously writing to mainnet every cycle.
-- **Live dashboard:** [frontend-sigma-two-60.vercel.app](https://frontend-sigma-two-60.vercel.app) — every nation, every match, every tx hash, all clickable into OKLink.
+- **Live dashboard:** [lucarne-xyz.vercel.app](https://lucarne-xyz.vercel.app) — every nation, every match, every tx hash, all clickable into OKLink.
 - **Public build log:** [x.com/lucarne_xyz](https://x.com/lucarne_xyz) — every shipped layer broadcast in real time with the corresponding mainnet tx.
 
 ---
@@ -316,7 +316,7 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
 
 **Step 1 — Open Judge Mode (10s)**
 
-Go to [frontend-sigma-two-60.vercel.app/judge](https://frontend-sigma-two-60.vercel.app/judge). One page. No wallet. Live lifetime nonce read directly from X Layer RPC. All contract addresses, all proof tx hashes, all explorer links.
+Go to [lucarne-xyz.vercel.app/judge](https://lucarne-xyz.vercel.app/judge). One page. No wallet. Live lifetime nonce read directly from X Layer RPC. All contract addresses, all proof tx hashes, all explorer links.
 
 **Step 2 — Confirm 14k+ mainnet TXs (10s)**
 
