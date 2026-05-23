@@ -166,7 +166,7 @@ export default function MatchPage() {
         }}>
           {/* Team A */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 10 }}>
-            {countryA ? (
+            {countryA && (
               <img
                 src={`https://flagcdn.com/w160/${countryA.iso2}.png`}
                 alt={countryA.name}
@@ -175,14 +175,12 @@ export default function MatchPage() {
                 className="flag-img"
                 style={{ objectFit: "cover", borderRadius: 4 }}
               />
-            ) : (
-              <div style={{ width: 88, height: 58, background: "rgba(255,255,255,0.05)", borderRadius: 4 }} />
             )}
             <div>
               <div style={{
                 fontFamily: "var(--font-orbitron), sans-serif",
                 fontWeight: 800,
-                fontSize: 18,
+                fontSize: countryA ? 18 : 28,
                 letterSpacing: "0.06em",
               }}>
                 {countryA?.name.toUpperCase() ?? team1}
@@ -209,7 +207,7 @@ export default function MatchPage() {
 
           {/* Team B */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
-            {countryB ? (
+            {countryB && (
               <img
                 src={`https://flagcdn.com/w160/${countryB.iso2}.png`}
                 alt={countryB.name}
@@ -218,14 +216,12 @@ export default function MatchPage() {
                 className="flag-img"
                 style={{ objectFit: "cover", borderRadius: 4 }}
               />
-            ) : (
-              <div style={{ width: 88, height: 58, background: "rgba(255,255,255,0.05)", borderRadius: 4 }} />
             )}
             <div style={{ textAlign: "right" }}>
               <div style={{
                 fontFamily: "var(--font-orbitron), sans-serif",
                 fontWeight: 800,
-                fontSize: 18,
+                fontSize: countryB ? 18 : 28,
                 letterSpacing: "0.06em",
               }}>
                 {countryB?.name.toUpperCase() ?? team2}
@@ -265,6 +261,49 @@ export default function MatchPage() {
             fontSize: 12,
           }}>
             {error}
+          </div>
+        )}
+
+        {/* Fallback brief for club matches — polybot has no Polymarket nation data for clubs */}
+        {!data && !loading && (
+          <div style={{
+            padding: "24px",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: 8,
+            marginBottom: 20,
+          }}>
+            <div style={{
+              fontSize: 11,
+              color: "var(--green)",
+              letterSpacing: "0.18em",
+              marginBottom: 14,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}>
+              <span style={{
+                display: "inline-block",
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: "var(--green)",
+                boxShadow: "0 0 6px var(--green)",
+              }} />
+              LUCARNE MATCH INTELLIGENCE
+            </div>
+            <div style={{
+              fontSize: 14,
+              lineHeight: 1.75,
+              color: "var(--text-secondary)",
+              whiteSpace: "pre-wrap",
+            }}>
+              {`Lucarne is an on-chain prediction market where an AI agent puts its own capital at risk.
+
+For this match the Lucarne agent has already staked OKB on a predicted outcome. If the agent\'s signal is wrong, its stake is redistributed proportionally to the winning bettors — the agent is a participant, not the house.
+
+Connect your wallet below to bet alongside or against the agent\'s call. All settlement is trustless and automatic on X Layer Mainnet.`}
+            </div>
           </div>
         )}
 
