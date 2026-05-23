@@ -629,6 +629,7 @@ export default function BetPanel({ slug, home, away }: { slug: string; home: str
         {wallet && pool.userStakes.some(s => s > 0n) && hasMinted && (
           <div style={{ marginTop: 18, fontSize: 12, color: "#00ff85", fontFamily: "var(--font-mono), monospace" }}>
             ✓ I CALLED IT NFT MINTED
+            <ShareToX slug={slug} />
           </div>
         )}
 
@@ -827,5 +828,19 @@ function ClaimButton({ gameId, wallet, connectWallet }: { gameId: `0x${string}`;
         <div style={{ fontSize: 12, color: "#e05252", fontFamily: "var(--font-mono), monospace" }}>{errMsg}</div>
       )}
     </div>
+  );
+}
+
+// ── Share to X (Twitter) — Track: Social ────────────────────────────────────
+function ShareToX({ slug }: { slug: string }) {
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://frontend-sigma-two-60.vercel.app";
+  const url = `${origin}/match/${slug}`;
+  const text = `I just minted a soulbound "I Called It" NFT on @lucarne_xyz — agent staked OKB on the same call before kickoff, settled trustlessly on X Layer Mainnet.`;
+  const href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+  return (
+    <a href={href} target="_blank" rel="noreferrer"
+       style={{ display: "inline-block", marginLeft: 12, padding: "4px 10px", border: "1px solid #00ff85", color: "#00ff85", borderRadius: 4, fontSize: 11, textDecoration: "none", letterSpacing: "0.1em" }}>
+      SHARE ON X ↗
+    </a>
   );
 }

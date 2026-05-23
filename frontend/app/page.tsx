@@ -259,9 +259,18 @@ export default function Home() {
               fontSize: 10,
               color: "var(--text-faint)",
               textAlign: "center",
+              lineHeight: 1.7,
             }}
           >
-            LUCARNE · OKX X Layer Build-X · Signal-gated attestations every 60s
+            <div>LUCARNE · OKX X Layer Build-X · Signal-gated attestations every 60s</div>
+            <div style={{ marginTop: 8, maxWidth: 720, margin: "8px auto 0" }}>
+              <a href="/judge" style={{ color: "var(--green)", textDecoration: "none", marginRight: 12 }}>JUDGE MODE</a>
+              <a href="/leaderboard" style={{ color: "var(--gold)", textDecoration: "none", marginRight: 12 }}>LEADERBOARD</a>
+              <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={{ color: "var(--text-dim)", textDecoration: "none" }}>@lucarne_xyz ↗</a>
+            </div>
+            <div style={{ marginTop: 10, maxWidth: 720, margin: "10px auto 0", color: "var(--text-dim)", fontSize: 9, letterSpacing: "0.04em" }}>
+              NOT FINANCIAL ADVICE · 18+ · SELF-CUSTODIAL · AI OUTPUTS MAY BE INACCURATE · DIGITAL ASSETS ARE VOLATILE
+            </div>
           </div>
         </div>
 

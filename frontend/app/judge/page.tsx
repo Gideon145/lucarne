@@ -309,12 +309,19 @@ export default function JudgePage() {
         </section>
 
         {/* Footer */}
-        <footer style={{ textAlign: "center", color: "var(--text-faint)", fontSize: "0.9rem", padding: "2rem 0 1rem" }}>
-          LUCARNE · World Cup 2026 · X Layer Mainnet (Chain 196)
-          {" · "}
-          <a href="https://github.com/Gideon145/lucarne" target="_blank" rel="noreferrer" style={inlineLink}>GitHub</a>
-          {" · "}
-          <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={inlineLink}>@lucarne_xyz</a>
+        <footer style={{ textAlign: "center", color: "var(--text-faint)", fontSize: "0.85rem", padding: "2rem 0 1rem", lineHeight: 1.7 }}>
+          <div style={{ marginBottom: "0.75rem" }}>
+            LUCARNE · World Cup 2026 · X Layer Mainnet (Chain 196)
+            {" · "}
+            <a href="https://github.com/Gideon145/lucarne" target="_blank" rel="noreferrer" style={inlineLink}>GitHub</a>
+            {" · "}
+            <a href="https://github.com/Gideon145/lucarne/blob/main/JUDGE_GUIDE.md" target="_blank" rel="noreferrer" style={inlineLink}>JUDGE_GUIDE.md</a>
+            {" · "}
+            <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={inlineLink}>@lucarne_xyz</a>
+          </div>
+          <div style={{ maxWidth: 720, margin: "0 auto", color: "var(--text-dim)", fontSize: "0.78rem" }}>
+            <b>Disclaimer.</b> Not financial advice. Digital assets are volatile and AI agent outputs may be inaccurate — every Lucarne signal is one input, not the truth. 18+ only. Self-custodial — Lucarne never custodies user funds. No artificial volume; all pool stakes and NFT mints linked above are organic on-chain actions. Independent hackathon submission; not endorsed by OKX, X Layer, FIFA, Polymarket, or Anthropic.
+          </div>
         </footer>
       </div>
     </main>
