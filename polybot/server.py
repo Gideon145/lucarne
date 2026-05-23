@@ -68,10 +68,13 @@ def make_402_payload(resource_url: str, description: str) -> dict:
 
 
 def verify_x402_payment(header: str | None) -> tuple[bool, str]:
-    """Decode and lightly validate an X-Payment header.
-    Returns (is_valid, nonce).  For the demo, any well-formed x402
-    payload on xlayer-mainnet is accepted; production would verify
-    the EIP-3009 signature on-chain via okx-onchain-gateway.
+    """Decode and validate an X-Payment header.
+    Returns (is_valid, nonce_or_reason).  Checks x402 envelope shape,
+    network, payTo (must match our wallet), value (must be >= price),
+    asset (must be USDC on X Layer), and replay-protects the nonce.
+    EIP-3009 signature recovery is intentionally deferred to the
+    settlement layer (okx-onchain-gateway / facilitator) — this gate
+    blocks malformed / wrong-payee / underpaid / replayed claims.
     """
     if not header:
         return False, "missing"
@@ -86,8 +89,21 @@ def verify_x402_payment(header: str | None) -> tuple[bool, str]:
         return False, "unsupported scheme"
     if payload.get("network") != X402_NETWORK:
         return False, f"wrong network: {payload.get('network')}"
-    # Extract nonce from authorization sub-payload
-    auth = payload.get("payload", {}).get("authorization", {})
+    # EIP-3009 authorization sub-payload
+    auth = payload.get("payload", {}).get("authorization", {}) or {}
+    to_addr = (auth.get("to") or "").lower()
+    if to_addr != LUCARNE_WALLET.lower():
+        return False, f"wrong payTo: {to_addr}"
+    # value is a decimal string in token base units (6dp for USDC)
+    try:
+        value_paid = int(auth.get("value") or "0")
+    except (TypeError, ValueError):
+        return False, "bad value"
+    if value_paid < int(X402_PRICE):
+        return False, f"underpaid: {value_paid} < {X402_PRICE}"
+    asset = (payload.get("payload", {}).get("asset") or payload.get("asset") or "").lower()
+    if asset and asset != X402_ASSET.lower():
+        return False, f"wrong asset: {asset}"
     nonce = auth.get("nonce") or hashlib.sha256(raw).hexdigest()
     if nonce in _paid_nonces:
         return False, "payment already used"
