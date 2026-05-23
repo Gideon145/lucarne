@@ -68,22 +68,22 @@ const PIPELINE: PipelineRow[] = [
   },
   {
     num: 4,
-    game: "Serie A — Inter Milan vs Bologna",
+    game: "DFB Pokal Final — Bayern Munich vs Stuttgart",
     date: "May 23",
-    call: "HOME · Inter @ 65%",
+    call: "HOME · Bayern @ 65%",
     signalTx: "0x81ad7e719a192354a2f76d460b83d95110607031c1571ca72692d106cbfeb0d7",
-    result: "pending FT",
-    resultGood: "pending",
+    result: "Bayern win 3–0 — CORRECT",
+    resultGood: "win",
     shipped: "ICalledIt NFT shipped — first soulbound mint 0x01ec8778…",
   },
   {
     num: 5,
-    game: "La Liga — Barcelona vs Valencia",
+    game: "La Liga — Real Madrid vs Athletic Club",
     date: "May 23",
-    call: "HOME · Barcelona @ 68%",
+    call: "HOME · Real Madrid @ 68%",
     signalTx: "0xeec67755b145f961c35bfbf93c80a5b52232abcea71716e4ed1eb1f3555c29e5",
-    result: "pending FT",
-    resultGood: "pending",
+    result: "Real Madrid win 4–2 — CORRECT",
+    resultGood: "win",
     shipped: "NFT mint flow battle-tested — second mint 0xdc7120d5…",
   },
 ];
@@ -91,8 +91,8 @@ const PIPELINE: PipelineRow[] = [
 const PROOF_TX = [
   { label: "First agent stake (Fio/Ata · 0.05 OKB)", hash: "0x291c672c3e3af5ee96ccf4e1ef5fa43258399f1876ef2a805b05e2b256b0b002" },
   { label: "First user bet (0.01 OKB · AWAY)",       hash: "0x9176860e7fe9c53142ef399f316fa7a988e8b8219c3c58dcd2658060c2e3da81" },
-  { label: "Agent stake — Inter/Bologna",            hash: "0xe2bd4b93051056ba9638048e776d8b54336e5816a4733edddf7ed53bee860f7f" },
-  { label: "Agent stake — Barcelona/Valencia",       hash: "0x54e2e03f4e8196424c17df2a4aa56a680089ff3484dda4fc1fdb658b559f4b40" },
+  { label: "Agent stake — Bayern/Stuttgart",          hash: "0xe2bd4b93051056ba9638048e776d8b54336e5816a4733edddf7ed53bee860f7f" },
+  { label: "Agent stake — Real Madrid/Athletic Club", hash: "0x54e2e03f4e8196424c17df2a4aa56a680089ff3484dda4fc1fdb658b559f4b40" },
   { label: "First ICalledIt NFT mint",               hash: "0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de" },
   { label: "Second ICalledIt NFT mint",              hash: "0xdc7120d57a82670e9773f09404df5f0ef0c95aedeba5083de25f566175158321" },
   { label: "UEL Final resolve (Villa win)",          hash: "0x48de570075c862184c854d2ad0ca4c8ea2666808fb05e1e55310368968cd9467" },
@@ -230,8 +230,8 @@ export default function JudgePage() {
             </table>
           </div>
           <div style={{ marginTop: "1rem", color: "var(--text-dim)", fontSize: "0.9rem" }}>
-            <b style={{ color: "var(--text-primary)" }}>Scoreline: 2 correct · 1 wrong · 2 pending.</b>{" "}
-            The wrong call (Fiorentina/Atalanta) cost Lucarne 0.05 OKB — proof the pool/settlement path works under adversarial conditions.
+            <b style={{ color: "var(--text-primary)" }}>Scoreline: 4 correct · 1 wrong · 0 pending.</b>{" "}
+            The wrong call (Fiorentina/Atalanta) cost Lucarne 0.05 OKB — proof the pool/settlement path works under adversarial conditions. Real Madrid 4–2 and Bayern 3–0 both called correctly, on-chain before kickoff.
           </div>
         </section>
 
