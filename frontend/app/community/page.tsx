@@ -177,7 +177,6 @@ export default function CommunityFavourite() {
               Follow <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={{ color: "rgba(0,255,133,0.8)", textDecoration: "none" }}>@lucarne_xyz</a>{" "}
               for live signals.
             </div>
-            <button onClick={() => { localStorage.removeItem("lucarne_fan_vote"); setVoted(null); setThanks(null); }} style={{ marginTop: "1.25rem", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 5, color: "rgba(255,255,255,0.35)", fontSize: 11, padding: "5px 14px", cursor: "pointer", letterSpacing: "0.1em" }}>CHANGE PICK</button>
           </div>
         )}
 
