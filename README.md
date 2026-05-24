@@ -226,7 +226,7 @@ lucarne/
 
 **2. Every claim is on-chain verifiable.** This README has 12+ tx hash links. Every one resolves on OKLink. Open OKX Wallet, switch to X Layer, paste any address — it's all there.
 
-**3. Skin in the game.** The agent stakes OKB on every match call before kickoff. When it gets one wrong (Fiorentina/Atalanta), that OKB is gone. Real money, real consequences, real signal discipline.
+**3. Skin in the game.** The agent stakes OKB on every match call before kickoff — but only when signal confidence clears a meaningful threshold (a Kelly-style edge filter baked into the write gate). When it gets one wrong (Fiorentina/Atalanta), that OKB is gone. Real money, real consequences, real signal discipline.
 
 **4. Full OKX stack.** X Layer Mainnet for every contract, OKB for gas + stakes, Polymarket for data, OKX Onchain OS + **real x402 EIP-3009 USDC settlement** for paid AI briefs, OKLink for proof. This is what an OKX-native dApp looks like.
 
@@ -313,7 +313,7 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
   curl -X POST https://rpc.xlayer.tech -H 'content-type: application/json' \
     -d '{"jsonrpc":"2.0","id":1,"method":"eth_getTransactionCount","params":["0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3","latest"]}'
   ```
-- **Autonomous since launch** — 60-second cadence, persistent nonce across Railway restarts, signal-driven write gate (|ΔScore|>3, regime change, or 4h heartbeat) keeps gas burn minimal while preserving every meaningful regime transition.
+- **Autonomous since launch** — 60-second cadence, persistent nonce across Railway restarts, signal-driven write gate (`|ΔScore|>3`, regime change, or 4h heartbeat) keeps gas burn minimal while preserving every meaningful regime transition. The agent only opens a pool when signal confidence clears a meaningful threshold — a Kelly-style edge filter that keeps every stake intentional and every on-chain write justified.
 - **7 contracts deployed on X Layer Mainnet** — SignalAttestor, MatchSignalAttestor, MatchResultAttestor, SignalPool v2 (with `reclaimNoWinner`), ICalledItNFT v2 (soulbound ERC-721), LucarnePredictions (community vote), plus legacy v1 of pool + NFT preserved for reference.
 - **Full pipeline exercised on 5 real club matches** in 4 days (May 20—23) — signal generation, attestation, community voting, agent-bonded pools, real user bets, soulbound NFT mints — **4 correct calls, 1 real OKB loss, 0 pending. 80% hit rate.** (See Pipeline Validation table above.)
 - **First user bet landed:** [`0x9176860e...`](https://www.oklink.com/xlayer/tx/0x9176860e7fe9c53142ef399f316fa7a988e8b8219c3c58dcd2658060c2e3da81) · **First soulbound NFT minted:** [`0x01ec8778...`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de).
