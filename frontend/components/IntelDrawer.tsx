@@ -324,6 +324,20 @@ export function IntelDrawer({ nation, onClose }: Props) {
               }}>
                 Powered by OKX okx-agent-payments-protocol
               </div>
+              <div style={{
+                marginTop: 14,
+                fontSize: 10,
+                color: "#ffffff",
+                fontFamily: "var(--font-mono), monospace",
+                letterSpacing: "0.16em",
+                opacity: 0.7,
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 3,
+                display: "inline-block",
+                padding: "3px 8px",
+              }}>
+                ⚡ x402 DEMO — NO REAL FUNDS MOVED
+              </div>
             </div>
           )}
 
