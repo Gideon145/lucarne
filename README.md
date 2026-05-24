@@ -182,7 +182,7 @@ Parimutuel pool: three buckets (HOME / DRAW / AWAY).
 | `agentStake(gameId, outcome, kickoffTimestamp)` | Agent opens pool with its OKB stake |
 | `bet(gameId, outcome)` | Users stake OKB on any outcome until kickoff |
 | `settle(gameId)` | Anyone can call after `MatchResultAttestor` resolves |
-| `claim(gameId)` | Winners claim proportional share: `payout = (stake Ã— pot) / winningBucket` |
+| `claim(gameId)` | Winners claim proportional share: `payout = (stake × pot) / winningBucket` |
 | `reclaimNoWinner(gameId, outcome)` | If the winning bucket is empty (no counterparty), stakers reclaim their own stake — prevents permanent fund lock when niche outcomes hit |
 
 ### ICalledItNFT.sol (v2) — `0xBC2200d9...96F0adf`
@@ -209,38 +209,38 @@ OKB as native gas is what makes the 60-second loop economically viable. Attestin
 
 ```
 lucarne/
-â”œâ”€â”€ agent/                   Autonomous scoring agent (Node.js / TypeScript)
-â”‚   â””â”€â”€ src/
-â”‚       â”œâ”€â”€ index.ts         60s loop: score 48 nations, write to chain
-â”‚       â””â”€â”€ lib/
-â”‚           â”œâ”€â”€ signal.ts    Polymarket + form -> 0..100 score + regime
-â”‚           â”œâ”€â”€ outcome.ts   Resolves matches, writes outcomes on-chain
-â”‚           â””â”€â”€ logger.ts
-â”‚
-â”œâ”€â”€ contracts/               Solidity 0.8.24 · Hardhat v3 · TypeScript ESM
-â”‚   â”œâ”€â”€ contracts/
-â”‚   â”‚   â”œâ”€â”€ SignalAttestor.sol           # 48-nation scoreboard
-â”‚   â”‚   â”œâ”€â”€ MatchSignalAttestor.sol      # pre-kickoff signal lock
-â”‚   â”‚   â”œâ”€â”€ MatchResultAttestor.sol      # FT result + verdict
-â”‚   â”‚   â”œâ”€â”€ SignalPool.sol               # parimutuel pool with reclaimNoWinner
-â”‚   â”‚   â””â”€â”€ ICalledItNFT.sol             # soulbound proof NFT
-â”‚   â”œâ”€â”€ scripts/
-â”‚   â”‚   â”œâ”€â”€ attest-match-signal.js       # agent: lock signal before kickoff
-â”‚   â”‚   â”œâ”€â”€ stake-pool.js                # agent: stake OKB, open pool
-â”‚   â”‚   â”œâ”€â”€ resolve-match.js             # agent: write FT result on-chain
-â”‚   â”‚   â””â”€â”€ deploy*.ts                   # deployment scripts
-â”‚   â””â”€â”€ deployments.json
-â”‚
-â”œâ”€â”€ frontend/                Next.js 14 App Router · Viem · TypeScript
-â”‚   â”œâ”€â”€ app/
-â”‚   â”œâ”€â”€ components/
-â”‚   â”‚   â”œâ”€â”€ LiveMatchPanel.tsx           # 5-game tabs + signal intel + result cards
-â”‚   â”‚   â””â”€â”€ BetPanel.tsx                 # stake, bet, claim, settle, mint NFT
-â”‚   â””â”€â”€ lib/
-â”‚       â””â”€â”€ constants.ts                 # all live contract addresses
-â”‚
-â””â”€â”€ polybot/                 FastAPI sidecar — Polymarket data + AI brief router
-    â””â”€â”€ server.py
+├── agent/                   Autonomous scoring agent (Node.js / TypeScript)
+│   └── src/
+│       ├── index.ts         60s loop: score 48 nations, write to chain
+│       └── lib/
+│           ├── signal.ts    Polymarket + form -> 0..100 score + regime
+│           ├── outcome.ts   Resolves matches, writes outcomes on-chain
+│           └── logger.ts
+│
+├── contracts/               Solidity 0.8.24 · Hardhat v3 · TypeScript ESM
+│   ├── contracts/
+│   │   ├── SignalAttestor.sol           # 48-nation scoreboard
+│   │   ├── MatchSignalAttestor.sol      # pre-kickoff signal lock
+│   │   ├── MatchResultAttestor.sol      # FT result + verdict
+│   │   ├── SignalPool.sol               # parimutuel pool with reclaimNoWinner
+│   │   └── ICalledItNFT.sol             # soulbound proof NFT
+│   ├── scripts/
+│   │   ├── attest-match-signal.js       # agent: lock signal before kickoff
+│   │   ├── stake-pool.js                # agent: stake OKB, open pool
+│   │   ├── resolve-match.js             # agent: write FT result on-chain
+│   │   └── deploy*.ts                   # deployment scripts
+│   └── deployments.json
+│
+├── frontend/                Next.js 14 App Router · Viem · TypeScript
+│   ├── app/
+│   ├── components/
+│   │   ├── LiveMatchPanel.tsx           # 5-game tabs + signal intel + result cards
+│   │   └── BetPanel.tsx                 # stake, bet, claim, settle, mint NFT
+│   └── lib/
+│       └── constants.ts                 # all live contract addresses
+│
+└── polybot/                 FastAPI sidecar — Polymarket data + AI brief router
+    └── server.py
 ```
 
 ---
@@ -267,12 +267,12 @@ During the hackathon we built across six of the eligible tracks. Every track has
 
 | Track | Status | On-Chain Proof |
 |---|---|---|
-| **Prediction Markets** | âœ… Shipped | [`LucarnePredictions`](https://www.oklink.com/xlayer/address/0x178565919FFebC4b57ca04112d0FFFaD946Df6E7) community-vote contract + Polymarket as the live signal data source for all 48 nations |
-| **Trading** | âœ… Shipped | [`SignalPool v2`](https://www.oklink.com/xlayer/address/0xEe15Dc83cD4AcD16D8698831d468B1FE12ccEa67) parimutuel pool — real OKB stakes, real user bets, real settlement; agent bonds every match call |
-| **NFT** | âœ… Shipped | [`ICalledItNFT v2`](https://www.oklink.com/xlayer/address/0xBC2200d99980661fef938eE72001BAaE496F0adf) soulbound ERC-721 — real mints [`0x01ec8778â€¦`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de), [`0xdc7120d5â€¦`](https://www.oklink.com/xlayer/tx/0xdc7120d57a82670e9773f09404df5f0ef0c95aedeba5083de25f566175158321) |
-| **AI Agent** | âœ… Shipped | Autonomous 60s loop on agent wallet [`0xC8D9â€¦47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) (14,000+ mainnet tx). Claude-powered AI briefs gated by **x402** on **OKX Onchain OS** |
-| **Social** | âœ… Shipped | Live build broadcast on [x.com/lucarne_xyz](https://x.com/lucarne_xyz); share-to-X button fires on every NFT-mint confirmation (pre-filled tweet with match link); [`/leaderboard`](https://lucarne-xyz.vercel.app/leaderboard) ranks wallets by on-chain proven call count |
-| **GameFi** | âœ… Shipped | [`SurvivorPool`](https://www.oklink.com/xlayer/address/0x7250E9480A025bF59EedD271DFB88C5BC2f8c12F) — pick a nation each round, survive on momentum score â‰¥ 30, last survivor(s) split the pot (0.001 OKB entry). Live at [`/survivor`](https://lucarne-xyz.vercel.app/survivor) |
+| **Prediction Markets** | ✅ Shipped | [`LucarnePredictions`](https://www.oklink.com/xlayer/address/0x178565919FFebC4b57ca04112d0FFFaD946Df6E7) community-vote contract + Polymarket as the live signal data source for all 48 nations |
+| **Trading** | ✅ Shipped | [`SignalPool v2`](https://www.oklink.com/xlayer/address/0xEe15Dc83cD4AcD16D8698831d468B1FE12ccEa67) parimutuel pool — real OKB stakes, real user bets, real settlement; agent bonds every match call |
+| **NFT** | ✅ Shipped | [`ICalledItNFT v2`](https://www.oklink.com/xlayer/address/0xBC2200d99980661fef938eE72001BAaE496F0adf) soulbound ERC-721 — real mints [`0x01ec8778…`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de), [`0xdc7120d5…`](https://www.oklink.com/xlayer/tx/0xdc7120d57a82670e9773f09404df5f0ef0c95aedeba5083de25f566175158321) |
+| **AI Agent** | ✅ Shipped | Autonomous 60s loop on agent wallet [`0xC8D9…47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) (14,000+ mainnet tx). Claude-powered AI briefs gated by **x402** on **OKX Onchain OS** |
+| **Social** | ✅ Shipped | Live build broadcast on [x.com/lucarne_xyz](https://x.com/lucarne_xyz); share-to-X button fires on every NFT-mint confirmation (pre-filled tweet with match link); [`/leaderboard`](https://lucarne-xyz.vercel.app/leaderboard) ranks wallets by on-chain proven call count |
+| **GameFi** | ✅ Shipped | [`SurvivorPool`](https://www.oklink.com/xlayer/address/0x7250E9480A025bF59EedD271DFB88C5BC2f8c12F) — pick a nation each round, survive on momentum score ≥ 30, last survivor(s) split the pot (0.001 OKB entry). Live at [`/survivor`](https://lucarne-xyz.vercel.app/survivor) |
 
 ---
 
@@ -282,10 +282,10 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
 
 | Skill | Where It Lives in Lucarne |
 |---|---|
-| **`okx-agent-payments-protocol`** (x402) | `polybot/server.py` — paid Claude AI briefs are gated by an x402 micropayment (`xlayer-mainnet`, USDC `0x74b7f1â€¦6d22`, `pay-to` = agent wallet). Replay-protection via per-nonce set. Hit `GET /brief/{iso3}` → 402 → pay → 200 |
+| **`okx-agent-payments-protocol`** (x402) | `polybot/server.py` — paid Claude AI briefs are gated by an x402 micropayment (`xlayer-mainnet`, USDC `0x74b7f1…6d22`, `pay-to` = agent wallet). Replay-protection via per-nonce set. Hit `GET /brief/{iso3}` → 402 → pay → 200 |
 | **`okx-dapp-discovery`** (Polymarket plugin) | Polymarket gamma-api drives the per-nation probability signal for all 48 World Cup nations and every live match (`polybot/server.py` → `POLYMARKET_IDS`, `WC_FIXTURES`) |
 | **`okx-onchain-gateway`** | X Layer Mainnet RPC (`https://rpc.xlayer.tech`) is the gateway for every `attest()`, `agentStake()`, `bet()`, `settle()`, `mintForGame()`, and `resolve()` transaction. The agent persists nonce across restarts and refetches pending-nonce explicitly to survive X Layer RPC quirks |
-| **`okx-agentic-wallet`** (pattern) | Agent wallet [`0xC8D9â€¦47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) operates as a self-driven agentic wallet on X Layer — 14,000+ mainnet tx, signal-driven write gate, no human intervention in the scoring loop |
+| **`okx-agentic-wallet`** (pattern) | Agent wallet [`0xC8D9…47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) operates as a self-driven agentic wallet on X Layer — 14,000+ mainnet tx, signal-driven write gate, no human intervention in the scoring loop |
 
 **Why this matters for judging:** every claim in this section is grep-able. Open `polybot/server.py` and search for `x402`, `X402_NETWORK`, `xlayer-mainnet`, `LUCARNE_WALLET` — the wiring is real, not aspirational.
 
@@ -300,7 +300,7 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
   curl -X POST https://rpc.xlayer.tech -H 'content-type: application/json' \
     -d '{"jsonrpc":"2.0","id":1,"method":"eth_getTransactionCount","params":["0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3","latest"]}'
   ```
-- **Autonomous since launch** — 60-second cadence, persistent nonce across Railway restarts, signal-driven write gate (|Î”Score|>3, regime change, or 4h heartbeat) keeps gas burn minimal while preserving every meaningful regime transition.
+- **Autonomous since launch** — 60-second cadence, persistent nonce across Railway restarts, signal-driven write gate (|ΔScore|>3, regime change, or 4h heartbeat) keeps gas burn minimal while preserving every meaningful regime transition.
 - **7 contracts deployed on X Layer Mainnet** — SignalAttestor, MatchSignalAttestor, MatchResultAttestor, SignalPool v2 (with `reclaimNoWinner`), ICalledItNFT v2 (soulbound ERC-721), LucarnePredictions (community vote), plus legacy v1 of pool + NFT preserved for reference.
 - **Full pipeline exercised on 5 real club matches** in 4 days (May 20—23) — signal generation, attestation, community voting, agent-bonded pools, real user bets, soulbound NFT mints — **2 correct calls, 1 real OKB loss, 2 pending**. (See Pipeline Validation table above.)
 - **First user bet landed:** [`0x9176860e...`](https://www.oklink.com/xlayer/tx/0x9176860e7fe9c53142ef399f316fa7a988e8b8219c3c58dcd2658060c2e3da81) · **First soulbound NFT minted:** [`0x01ec8778...`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de).
@@ -340,7 +340,7 @@ We don't hide losses. Click the Fiorentina/Atalanta signal tx [`0x6983a191...`](
 
 Lucarne does not fake liveness. Every degraded path is surfaced rather than papered over — and the 14k+ TX trail is the proof these recovery paths work in production, not in theory.
 
-- **v1 vs v2 pools.** The four pool/NFT activity hashes above (Fio/Ata stake + user bet, Inter stake, Barca stake, both NFT mints) hit the **v1** SignalPool/NFT contracts (`0xd6E29fFcâ€¦` and the v1 NFT) because they predate the v2 redeploy that added `reclaimNoWinner`. All *new* pools from this point forward open on [`SignalPool v2`](https://www.oklink.com/xlayer/address/0xEe15Dc83cD4AcD16D8698831d468B1FE12ccEa67). We kept v1 deployed and visible for full transparency — every loss, every locked stake, every recovery path is on record.
+- **v1 vs v2 pools.** The four pool/NFT activity hashes above (Fio/Ata stake + user bet, Inter stake, Barca stake, both NFT mints) hit the **v1** SignalPool/NFT contracts (`0xd6E29fFc…` and the v1 NFT) because they predate the v2 redeploy that added `reclaimNoWinner`. All *new* pools from this point forward open on [`SignalPool v2`](https://www.oklink.com/xlayer/address/0xEe15Dc83cD4AcD16D8698831d468B1FE12ccEa67). We kept v1 deployed and visible for full transparency — every loss, every locked stake, every recovery path is on record.
 - **If a SignalPool outcome has no winners** (e.g. niche AWAY win nobody bet on) → `reclaimNoWinner(gameId, outcome)` lets stakers withdraw their own stake — v2-only behaviour, by design.
 - **If RPC drops mid-cycle** → ethers v6 fetches pending nonce explicitly to avoid `nonce-too-low` errors specific to X Layer's RPC behavior. The lifetime nonce never gets out of sequence.
 - **If Polymarket data is stale** → write-gate suppresses the attestation; nothing fake is ever signed.
