@@ -1039,6 +1039,7 @@ async def get_intel(request: Request, country: str, score: int = 0, regime: int 
         "brief": brief,
         "players": key_players,
         "fixtures": fixtures,
+        "x402_demo": True,
     }
     _intel_cache[cache_key] = result
     _intel_cache_ts[cache_key] = time.time()
@@ -1132,6 +1133,7 @@ async def get_match_odds(request: Request, team1: str, team2: str):
         "draw":  round(draw_prob * 100, 1),
         "winB":  round(win_b * 100, 1),
         "brief": brief,
+        "x402_demo": True,
     }
     _intel_cache[cache_key] = result
     _intel_cache_ts[cache_key] = time.time()
