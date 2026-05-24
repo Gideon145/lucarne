@@ -15,6 +15,12 @@ const AGENT_WALLET = "0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3";
 const RPC_URL      = "https://rpc.xlayer.tech";
 const EXPLORER     = "https://www.oklink.com/xlayer";
 
+// Shared secret with polybot (LUCARNE_JUDGE_TOKEN env). Bypasses x402 payment
+// gate for hackathon judges only. Anyone with this URL can read paid briefs
+// for free — that is the entire point of /judge.
+const JUDGE_TOKEN  = "dcbf9eb07dc37025763e262aafbafb398de4a23cead53cd37fa66d3a61c4e80a";
+const JUDGE_QS     = `?judge=${JUDGE_TOKEN}`;
+
 const CONTRACTS = [
   { name: "SignalAttestor (32 nations)",   addr: "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81" },
   { name: "MatchSignalAttestor",            addr: "0x9693d19C09d9dE08F4acaD288f7608552D018482" },
@@ -154,8 +160,8 @@ export default function JudgePage() {
               </div>
             </div>
             <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <a href="/" style={linkBtn}>← Live Dashboard</a>
-              <a href="/track-record" style={linkBtn}>AGENT TRACK RECORD ↗</a>
+              <a href={`/${JUDGE_QS}`} style={linkBtn}>← Live Dashboard (judge unlock)</a>
+              <a href={`/track-record${JUDGE_QS}`} style={linkBtn}>AGENT TRACK RECORD ↗</a>
               <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={linkBtn}>@lucarne_xyz ↗</a>
             </div>
           </div>
@@ -180,12 +186,36 @@ export default function JudgePage() {
             <a href={`${EXPLORER}/address/${AGENT_WALLET}`} target="_blank" rel="noreferrer" style={btnPrimary}>
               Open Agent Wallet on OKLink ↗
             </a>
-            <a href="https://frontend-sigma-two-60.vercel.app" target="_blank" rel="noreferrer" style={linkBtn}>
-              Live Dashboard ↗
+            <a href={`https://frontend-sigma-two-60.vercel.app/${JUDGE_QS}`} target="_blank" rel="noreferrer" style={linkBtn}>
+              Live Dashboard (judge unlock) ↗
             </a>
             <a href="https://github.com/Gideon145/lucarne" target="_blank" rel="noreferrer" style={linkBtn}>
               GitHub ↗
             </a>
+          </div>
+        </section>
+
+        {/* x402 judge unlock */}
+        <section style={card}>
+          <h2 style={h2}>x402 Paid AI Briefs — Free for Judges</h2>
+          <div style={{ color: "var(--text-dim)", fontSize: "0.95rem", marginBottom: "1rem", lineHeight: 1.6 }}>
+            Lucarne&apos;s nation drawers and match pages are gated by a real <b style={{ color: "var(--text-primary)" }}>x402 / EIP-3009 USDC paywall</b> on X Layer mainnet
+            ({" "}
+            <a href={`${EXPLORER}/address/0x74b7f16337b8972027f6196a17a631ac6de26d22`} target="_blank" rel="noreferrer" style={inlineLink}>
+              USDC 0x74b7…6d22 ↗
+            </a>
+            ): 0.01 USDC per unlock, signed via <code style={inlineCode}>eth_signTypedData_v4</code> and settled on-chain via a relayer.
+            The links below carry a one-time <code style={inlineCode}>?judge=…</code> token recognised by the polybot — judges browse every paid surface without a wallet, while a yellow <b style={{ color: "var(--amber)" }}>JUDGE MODE</b> badge stays visible on every unlocked brief so nothing is hidden.
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <a href={`/${JUDGE_QS}`} style={btnPrimary}>Open Homepage Drawers ↗</a>
+            <a href={`/match/argentina-brazil-2026-7-12${JUDGE_QS}`} style={linkBtn}>Sample Match Brief ↗</a>
+            <a href={`/community${JUDGE_QS}`} style={linkBtn}>Community Vote ↗</a>
+            <a href={`/survivor${JUDGE_QS}`} style={linkBtn}>Survivor Pool ↗</a>
+            <a href={`/leaderboard${JUDGE_QS}`} style={linkBtn}>Leaderboard ↗</a>
+          </div>
+          <div style={{ marginTop: "1rem", color: "var(--text-faint)", fontSize: "0.8rem" }}>
+            Paid path (any real user): wallet signs EIP-3009 <code style={inlineCode}>TransferWithAuthorization</code> → polybot relayer submits to USDC → tx hash appears on the unlocked brief, linked to OKLink. No mocks.
           </div>
         </section>
 
