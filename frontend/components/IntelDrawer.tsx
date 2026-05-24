@@ -31,6 +31,7 @@ interface IntelData {
   brief: string;
   players: Player[];
   fixtures: Fixture[];
+  x402_demo?: boolean;
 }
 
 interface Props {
@@ -413,6 +414,19 @@ export function IntelDrawer({ nation, onClose }: Props) {
                     boxShadow: "0 0 6px var(--green)",
                   }} />
                   LUCARNE INTEL BRIEF
+                  {intel.x402_demo && (
+                    <span style={{
+                      marginLeft: 8,
+                      fontSize: 9,
+                      fontFamily: "var(--font-mono), monospace",
+                      letterSpacing: "0.14em",
+                      color: "#ffffff",
+                      opacity: 0.55,
+                      border: "1px solid rgba(255,255,255,0.25)",
+                      borderRadius: 3,
+                      padding: "1px 5px",
+                    }}>x402 DEMO</span>
+                  )}
                 </div>
                 <div style={{
                   fontSize: 15,
