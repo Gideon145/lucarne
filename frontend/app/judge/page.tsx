@@ -155,6 +155,7 @@ export default function JudgePage() {
             </div>
             <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               <a href="/" style={linkBtn}>← Live Dashboard</a>
+              <a href="/track-record" style={linkBtn}>AGENT TRACK RECORD ↗</a>
               <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={linkBtn}>@lucarne_xyz ↗</a>
             </div>
           </div>

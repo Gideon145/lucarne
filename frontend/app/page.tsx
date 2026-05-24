@@ -218,6 +218,7 @@ export default function Home() {
           <a href="/survivor" className="filter-tab" style={{ textDecoration: "none" }}>HOT SEAT POOL</a>
           <a href="/community" className="filter-tab" style={{ textDecoration: "none" }}>COMMUNITY FAVOURITE</a>
           <a href="/leaderboard" className="filter-tab" style={{ textDecoration: "none" }}>LEADERBOARD</a>
+          <a href="/track-record" className="filter-tab" style={{ textDecoration: "none" }}>TRACK RECORD</a>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
           {(["score", "regime", "recent"] as const).map((s) => (
@@ -270,6 +271,7 @@ export default function Home() {
             <div>LUCARNE · OKX X Layer Build-X · Signal-gated attestations every 60s</div>
             <div style={{ marginTop: 8, maxWidth: 720, margin: "8px auto 0" }}>
               <a href="/judge" style={{ color: "var(--green)", textDecoration: "none", marginRight: 12 }}>JUDGE MODE</a>
+              <a href="/track-record" style={{ color: "var(--gold)", textDecoration: "none", marginRight: 12 }}>TRACK RECORD</a>
               <a href="/community" style={{ color: "var(--green)", textDecoration: "none", marginRight: 12 }}>COMMUNITY FAVOURITE</a>
               <a href="/leaderboard" style={{ color: "var(--gold)", textDecoration: "none", marginRight: 12 }}>LEADERBOARD</a>
               <a href="https://x.com/lucarne_xyz" target="_blank" rel="noreferrer" style={{ color: "var(--text-dim)", textDecoration: "none" }}>@lucarne_xyz ↗</a>
