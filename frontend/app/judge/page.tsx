@@ -195,6 +195,44 @@ export default function JudgePage() {
           </div>
         </section>
 
+        {/* MCP server */}
+        <section style={card}>
+          <h2 style={h2}>MCP Server — Lucarne Plugged Into Any LLM</h2>
+          <div style={{ color: "var(--text-dim)", fontSize: "0.95rem", marginBottom: "1rem", lineHeight: 1.6 }}>
+            A live{" "}
+            <a href="https://modelcontextprotocol.io" target="_blank" rel="noreferrer" style={inlineLink}>Model Context Protocol</a>{" "}
+            server exposes Lucarne to Claude Desktop, Cursor, Continue, and any HTTP client.
+            4 tools: <code style={inlineCode}>getSignal</code>, <code style={inlineCode}>getOdds</code>, <code style={inlineCode}>getBrief</code>, <code style={inlineCode}>getMatch</code>.
+            Plus a plain SSE feed for trading bots that don&apos;t speak MCP yet.
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1rem" }}>
+            <a href="https://lucarne-mcp-production.up.railway.app" target="_blank" rel="noreferrer" style={btnPrimary}>
+              Open MCP Landing ↗
+            </a>
+            <a href="https://lucarne-mcp-production.up.railway.app/tools" target="_blank" rel="noreferrer" style={linkBtn}>
+              /tools (JSON) ↗
+            </a>
+            <a href="https://github.com/Gideon145/lucarne/tree/main/mcp-server" target="_blank" rel="noreferrer" style={linkBtn}>
+              Source ↗
+            </a>
+          </div>
+          <div style={{ color: "var(--text-dim)", fontSize: "0.85rem", marginBottom: "0.5rem", letterSpacing: "0.08em" }}>
+            CLAUDE DESKTOP — claude_desktop_config.json
+          </div>
+          <pre style={pre}>{`{
+  "mcpServers": {
+    "lucarne": {
+      "command": "npx",
+      "args": ["-y", "lucarne-mcp"]
+    }
+  }
+}`}</pre>
+          <div style={{ color: "var(--text-dim)", fontSize: "0.85rem", margin: "0.75rem 0 0.5rem", letterSpacing: "0.08em" }}>
+            SUBSCRIBE — STREAM A NATION&apos;S LIVE SIGNAL + ODDS (NO MCP CLIENT NEEDED)
+          </div>
+          <pre style={pre}>{`curl -N https://lucarne-mcp-production.up.railway.app/subscribe/ARG?interval=15`}</pre>
+        </section>
+
         {/* x402 judge unlock */}
         <section style={card}>
           <h2 style={h2}>x402 Paid AI Briefs — Free for Judges</h2>
