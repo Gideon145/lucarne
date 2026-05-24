@@ -80,16 +80,12 @@ Before betting Lucarne's reputation on the 2026 World Cup, we ran the **entire p
 
 ---
 
-## On-Chain Pool & Settlement Activity (Verifiable)
+## On-Chain Pool & Settlement Activity
 
-| Action | Tx Hash | Detail |
-|---|---|---|
-| **Agent stake** — Fiorentina/Atalanta pool opened (AWAY · 0.05 OKB) | [`0x291c672c...`](https://www.oklink.com/xlayer/tx/0x291c672c3e3af5ee96ccf4e1ef5fa43258399f1876ef2a805b05e2b256b0b002) | First SignalPool stake |
-| **First user bet** — 0.01 OKB on AWAY (Fiorentina/Atalanta) | [`0x9176860e...`](https://www.oklink.com/xlayer/tx/0x9176860e7fe9c53142ef399f316fa7a988e8b8219c3c58dcd2658060c2e3da81) | Pool received its first counterparty bet |
-| **Agent stake** — Bayern/Stuttgart pool (HOME · 0.05 OKB) | [`0xe2bd4b93...`](https://www.oklink.com/xlayer/tx/0xe2bd4b93051056ba9638048e776d8b54336e5816a4733edddf7ed53bee860f7f) | Pool live for users |
-| **Agent stake** — Real Madrid/Athletic Club pool (HOME · 0.05 OKB) | [`0x54e2e03f...`](https://www.oklink.com/xlayer/tx/0x54e2e03f4e8196424c17df2a4aa56a680089ff3484dda4fc1fdb658b559f4b40) | Pool live for users |
-| **NFT mint** — ICalledIt soulbound proof | [`0x01ec8778...`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de) | First "I Called It" NFT minted |
-| **NFT mint** — ICalledIt soulbound proof | [`0xdc7120d5...`](https://www.oklink.com/xlayer/tx/0xdc7120d57a82670e9773f09404df5f0ef0c95aedeba5083de25f566175158321) | Second mint, different game |
+The Pipeline Validation table above already links every per-match tx (signal lock, agent stake, settlement, NFT mint). Two extras worth flagging:
+
+- **First user counter-bet** on the agent's pool (Fio/Ata, AWAY · 0.01 OKB): [`0x9176860e…`](https://www.oklink.com/xlayer/tx/0x9176860e7fe9c53142ef399f316fa7a988e8b8219c3c58dcd2658060c2e3da81)
+- **First soulbound NFT** minted from a winning call: [`0x01ec8778…`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de)
 
 ---
 
@@ -215,61 +211,28 @@ OKB as native gas is what makes the 60-second loop economically viable. Attestin
 
 ```
 lucarne/
-├── agent/                   Autonomous scoring agent (Node.js / TypeScript)
-│   └── src/
-│       ├── index.ts         60s loop: score 48 nations, write to chain
-│       └── lib/
-│           ├── signal.ts    Polymarket + form -> 0..100 score + regime
-│           ├── outcome.ts   Resolves matches, writes outcomes on-chain
-│           └── logger.ts
-│
-├── contracts/               Solidity 0.8.24 · Hardhat v3 · TypeScript ESM
-│   ├── contracts/
-│   │   ├── SignalAttestor.sol           # 48-nation scoreboard
-│   │   ├── MatchSignalAttestor.sol      # pre-kickoff signal lock
-│   │   ├── MatchResultAttestor.sol      # FT result + verdict
-│   │   ├── SignalPool.sol               # parimutuel pool with reclaimNoWinner
-│   │   └── ICalledItNFT.sol             # soulbound proof NFT
-│   ├── scripts/
-│   │   ├── attest-match-signal.js       # agent: lock signal before kickoff
-│   │   ├── stake-pool.js                # agent: stake OKB, open pool
-│   │   ├── resolve-match.js             # agent: write FT result on-chain
-│   │   └── deploy*.ts                   # deployment scripts
-│   └── deployments.json
-│
-├── frontend/                Next.js 14 App Router · Viem · TypeScript
-│   ├── app/
-│   ├── components/
-│   │   ├── LiveMatchPanel.tsx           # 5-game tabs + signal intel + result cards
-│   │   └── BetPanel.tsx                 # stake, bet, claim, settle, mint NFT
-│   └── lib/
-│       └── constants.ts                 # all live contract addresses
-│
-├── polybot/                 FastAPI sidecar — Polymarket data + AI brief router + x402 EIP-3009 paywall
-│   └── server.py
-│
-└── mcp-server/              Model Context Protocol server (stdio + SSE) — plugs Lucarne into Claude/Cursor
-    └── src/
-        ├── server.ts                    # low-level MCP Server + 4 tools
-        ├── stdio.ts                     # stdio transport (Claude Desktop)
-        └── http.ts                      # SSE + /subscribe feed (Railway)
+├── agent/          # Autonomous 60s scoring loop (Node + TypeScript)
+├── contracts/     # 7 Solidity contracts on X Layer Mainnet (Hardhat v3)
+├── frontend/      # Next.js 14 dashboard + /judge + /track-record (Vercel)
+├── polybot/       # FastAPI sidecar — Polymarket data + Claude AI briefs + x402 EIP-3009 paywall
+└── mcp-server/    # Model Context Protocol server (stdio + SSE) — plugs Lucarne into Claude/Cursor + trading bots
 ```
 
 ---
 
 ## What Makes Lucarne Different
 
-**1. The agent is running right now.** Not in a demo container. Not behind a "click here to start." On X Layer Mainnet, every 60 seconds, 48 countries, 22,000+ confirmed transactions in the agent wallet. Click the link, see the tx count.
+**1. The agent is running right now** — On X Layer Mainnet, every 60 seconds, 48 countries, 22,000+ confirmed transactions in the agent wallet. Click the link, see the tx count.
 
-**2. Every claim is on-chain verifiable.** This README has 12+ tx hash links above. Every single one resolves on OKLink. Open OKX Wallet, switch to X Layer, paste any address — it's all there.
+**2. Every claim is on-chain verifiable.** This README has 12+ tx hash links. Every one resolves on OKLink. Open OKX Wallet, switch to X Layer, paste any address — it's all there.
 
-**3. Skin in the game.** The agent doesn't just predict — it stakes OKB on every match call before kickoff. When it gets one wrong (Fiorentina/Atalanta), that OKB is gone. Real money, real consequences, real signal quality discipline.
+**3. Skin in the game.** The agent stakes OKB on every match call before kickoff. When it gets one wrong (Fiorentina/Atalanta), that OKB is gone. Real money, real consequences, real signal discipline.
 
-**4. World Cup timing.** Built specifically for the 2026 FIFA World Cup. 48 nations already wired into the agent loop. As group-stage matches begin, the infrastructure is already in production — no migration, no scramble.
+**4. Full OKX stack.** X Layer Mainnet for every contract, OKB for gas + stakes, Polymarket for data, OKX Onchain OS + **real x402 EIP-3009 USDC settlement** for paid AI briefs, OKLink for proof. This is what an OKX-native dApp looks like.
 
-**5. Full OKX stack usage.** X Layer Mainnet for every contract. OKB for gas + stakes. Polymarket for data. OKX Onchain OS + x402 for paid AI briefs. OKLink for proof. This is what an OKX-native dApp looks like.
+**5. Composable + plug-and-play.** `MatchSignalAttestor`, `SignalPool`, `ICalledItNFT` are independent primitives reusable by any dApp. And the [MCP server](https://lucarne-mcp-production.up.railway.app) makes the entire signal stream consumable by Claude, Cursor, or any HTTP bot — zero integration code.
 
-**6. Composable primitives.** `MatchSignalAttestor` is independent of `SignalPool` is independent of `ICalledItNFT`. Any of them can be reused by other dApps. We aren't building a closed silo — we're shipping public goods.
+**6. World Cup timing.** 48 nations already wired into the agent loop for the 2026 FIFA World Cup. The infrastructure is in production now — no migration, no scramble.
 
 ---
 
@@ -362,29 +325,21 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
 
 ---
 
-## For Judges — 60-Second Verification Path
+## For Judges — 60-Second Verification
 
-> Every claim in this README is independently verifiable on OKLink or via a single `curl`. No setup required.
+> Everything you need is one click away. No setup, no wallet.
 
-**Step 1 — Open Judge Mode (10s)**
+1. **Open [lucarne-xyz.vercel.app/judge](https://lucarne-xyz.vercel.app/judge)** — single page, live nonce read from X Layer RPC, every contract + every proof tx hash linked to OKLink. Paid x402 briefs unlock free for judges (token embedded).
+2. **Confirm tx count** with one curl:
+   ```bash
+   curl -X POST https://rpc.xlayer.tech -H 'content-type: application/json' \
+     -d '{"jsonrpc":"2.0","id":1,"method":"eth_getTransactionCount","params":["0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3","latest"]}'
+   ```
+   Hex-decode the result — 22,000+ lifetime confirmed writes.
+3. **Watch a fresh TX land** — refresh [the agent wallet on OKLink](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3); a new `attest()` appears within ~60 seconds.
+4. **Verify a wrong call** — Fiorentina/Atalanta signal [`0x6983a191…`](https://www.oklink.com/xlayer/tx/0x6983a19169803ad0a03355586d289c1b644d31802ae0ae7f297eff8b50f504d5) staked 0.05 OKB on Atalanta. Match drew 0–0. OKB is gone. We don't hide losses.
 
-Go to [lucarne-xyz.vercel.app/judge](https://lucarne-xyz.vercel.app/judge). One page. No wallet. Live lifetime nonce read directly from X Layer RPC. All contract addresses, all proof tx hashes, all explorer links.
-
-**Step 2 — Confirm 22k+ mainnet TXs (10s)**
-
-```bash
-curl -X POST https://rpc.xlayer.tech -H 'content-type: application/json' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getTransactionCount","params":["0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3","latest"]}'
-```
-The returned hex is the **lifetime confirmed transaction count** on the agent wallet. It cannot be fabricated.
-
-**Step 3 — Watch a fresh TX land (60s)**
-
-Open [the agent wallet on OKLink](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) and refresh. A new `attest()` transaction will appear within ~60 seconds. Click it — decoded input shows `country`, `score`, `regime`, and `signalHash`.
-
-**Step 4 — Verify the wrong call (15s)**
-
-We don't hide losses. Click the Fiorentina/Atalanta signal tx [`0x6983a191...`](https://www.oklink.com/xlayer/tx/0x6983a19169803ad0a03355586d289c1b644d31802ae0ae7f297eff8b50f504d5) — the agent staked 0.05 OKB on Atalanta. The match drew 0-0. The OKB is gone. That's signal discipline.
+Full walkthrough: [`JUDGE_GUIDE.md`](./JUDGE_GUIDE.md).
 
 ---
 
@@ -420,53 +375,28 @@ By interacting with the live frontend or any deployed Lucarne contract you ackno
 
 ## Local Development
 
-### Prerequisites
-- Node.js 18+
-- X Layer Mainnet wallet with OKB
-
-### 1. Deploy Contracts
+> Full prod stack is already live (Vercel + Railway + X Layer Mainnet). The steps below are only needed if you want to fork & redeploy.
 
 ```bash
-cd contracts
-npm install
-cp .env.example .env  # add PRIVATE_KEY
-npx hardhat run scripts/deployMatchResult.ts --network xlayer
-npx hardhat run scripts/deploySignalPool.ts  --network xlayer
-```
+# 1. Contracts (Hardhat v3, X Layer Mainnet, chain 196)
+cd contracts && npm install && cp .env.example .env   # PRIVATE_KEY
+npx hardhat run scripts/deploySignalPool.ts --network xlayer
 
-### 2. Run the Agent
+# 2. Agent (60s scoring loop)
+cd ../agent && npm install && cp .env.example .env
+npm run start
 
-```bash
-cd agent
-npm install
-cp .env.example .env  # PRIVATE_KEY, SIGNAL_ATTESTOR, etc.
-npm run start         # 60s loop begins
-```
+# 3. Frontend
+cd ../frontend && npm install && npm run dev   # http://localhost:3000
 
-### 3. Pre-Kickoff Signal Workflow
+# 4. Polybot (x402 paywall + AI briefs) — FastAPI, requires X402_FACILITATOR_KEY
+cd ../polybot && pip install -r requirements.txt && uvicorn server:app --reload
 
-```bash
-cd contracts
-
-# Compute + attest signal on-chain before kickoff
-node scripts/attest-match-signal.js sea-int-bol-2026-05-23
-
-# Open the SignalPool with 0.05 OKB stake
-node scripts/stake-pool.js sea-int-bol-2026-05-23
-
-# After FT, write result
-node scripts/resolve-match.js sea-int-bol-2026-05-23
+# 5. MCP server (stdio for Claude Desktop, or SSE for HTTP clients)
+cd ../mcp-server && npm install && npm run build && npm run start:stdio
 ```
 
 `gameId` is always `keccak256(slug)` — consistent across all contracts.
-
-### 4. Run the Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev    # http://localhost:3000
-```
 
 ---
 
