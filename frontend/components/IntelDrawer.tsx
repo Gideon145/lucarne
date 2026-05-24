@@ -4,9 +4,15 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { NationData } from "@/lib/useAttestations";
 import { COUNTRY_MAP } from "@/lib/countries";
-import { AGENT_WALLET, POLYBOT_URL } from "@/lib/constants";
+import { POLYBOT_URL } from "@/lib/constants";
 import { RegimeBadge, REGIME_COLORS, REGIME_LABELS } from "./RegimeBadge";
 import type { Regime } from "@/lib/useAttestations";
+
+// X Layer USDC + EIP-3009 constants for x402 (OKX Onchain OS)
+const USDC_ADDR     = "0x74b7f16337b8972027f6196a17a631ac6de26d22";
+const LUCARNE_WALLET = "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81";
+const X_LAYER_CHAIN  = 196;
+const X_LAYER_CHAIN_HEX = "0xc4";
 
 interface Player {
   name: string;
@@ -31,7 +37,8 @@ interface IntelData {
   brief: string;
   players: Player[];
   fixtures: Fixture[];
-  x402_demo?: boolean;
+  payment_tx?: string | null;
+  judge_mode?: boolean;
 }
 
 interface Props {
@@ -49,11 +56,20 @@ function posLabel(pos: string): string {
 
 export function IntelDrawer({ nation, onClose }: Props) {
   const router = useRouter();
+  const [judgeToken, setJudgeToken] = useState<string>("");
   const [intel, setIntel] = useState<IntelData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentRequired, setPaymentRequired] = useState<{ description: string } | null>(null);
   const [paying, setPaying] = useState(false);
+  const [payStatus, setPayStatus] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      setJudgeToken(p.get("judge") ?? "");
+    }
+  }, []);
 
   const country = nation ? COUNTRY_MAP.get(nation.iso3) : null;
 
@@ -62,9 +78,12 @@ export function IntelDrawer({ nation, onClose }: Props) {
     setError(null);
     if (!paymentHeader) { setIntel(null); setPaymentRequired(null); }
     try {
+      const headers: Record<string, string> = {};
+      if (paymentHeader) headers["X-Payment"] = paymentHeader;
+      if (judgeToken)    headers["X-Lucarne-Judge"] = judgeToken;
       const res = await fetch(
         `${POLYBOT_URL}/intel/${n.iso3}?score=${n.score}&regime=${n.regime}`,
-        paymentHeader ? { headers: { "X-Payment": paymentHeader } } : undefined,
+        Object.keys(headers).length ? { headers } : undefined,
       );
       if (res.status === 402) {
         const data = await res.json();
@@ -81,35 +100,112 @@ export function IntelDrawer({ nation, onClose }: Props) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [judgeToken]);
 
   const payAndUnlock = useCallback(async () => {
     if (!nation) return;
     setPaying(true);
+    setError(null);
     try {
+      // 1. Get user wallet
+      const eth = (window as unknown as { ethereum?: { request: (a: { method: string; params?: unknown }) => Promise<unknown> } }).ethereum;
+      if (!eth) throw new Error("No wallet detected — install OKX Wallet or MetaMask");
+      setPayStatus("CONNECTING WALLET…");
+      const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
+      const from = accounts?.[0];
+      if (!from) throw new Error("Wallet not connected");
+
+      // 2. Ensure X Layer (chain 196)
+      try {
+        await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: X_LAYER_CHAIN_HEX }] });
+      } catch (e: unknown) {
+        const err = e as { code?: number };
+        if (err?.code === 4902) {
+          await eth.request({ method: "wallet_addEthereumChain", params: [{
+            chainId: X_LAYER_CHAIN_HEX,
+            chainName: "X Layer",
+            nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
+            rpcUrls: ["https://rpc.xlayer.tech"],
+            blockExplorerUrls: ["https://www.oklink.com/xlayer"],
+          }] });
+        } else {
+          throw e;
+        }
+      }
+
+      // 3. Build EIP-3009 TransferWithAuthorization typed-data
       const nonce = "0x" + Array.from(crypto.getRandomValues(new Uint8Array(32)))
         .map(b => b.toString(16).padStart(2, "0")).join("");
+      const validAfter = "0";
       const validBefore = String(Math.floor(Date.now() / 1000) + 300);
+      const value = "10000"; // 0.01 USDC
+      const typedData = {
+        types: {
+          EIP712Domain: [
+            { name: "name",              type: "string"  },
+            { name: "version",           type: "string"  },
+            { name: "chainId",           type: "uint256" },
+            { name: "verifyingContract", type: "address" },
+          ],
+          TransferWithAuthorization: [
+            { name: "from",        type: "address" },
+            { name: "to",          type: "address" },
+            { name: "value",       type: "uint256" },
+            { name: "validAfter",  type: "uint256" },
+            { name: "validBefore", type: "uint256" },
+            { name: "nonce",       type: "bytes32" },
+          ],
+        },
+        domain: {
+          name: "USD Coin",
+          version: "2",
+          chainId: X_LAYER_CHAIN,
+          verifyingContract: USDC_ADDR,
+        },
+        primaryType: "TransferWithAuthorization",
+        message: {
+          from,
+          to: LUCARNE_WALLET,
+          value,
+          validAfter,
+          validBefore,
+          nonce,
+        },
+      };
+
+      setPayStatus("AWAITING SIGNATURE…");
+      const signature = (await eth.request({
+        method: "eth_signTypedData_v4",
+        params: [from, JSON.stringify(typedData)],
+      })) as string;
+
+      // 4. Build x402 envelope
       const token = {
         x402Version: 1,
         scheme: "exact",
         network: "xlayer-mainnet",
         payload: {
-          signature: "0x" + "0".repeat(130),
+          signature,
           authorization: {
-            from: AGENT_WALLET,
-            to: "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81",
-            value: "10000",
-            validAfter: "0",
+            from,
+            to: LUCARNE_WALLET,
+            value,
+            validAfter,
             validBefore,
             nonce,
           },
+          asset: USDC_ADDR,
         },
       };
-      const encoded = btoa(JSON.stringify(token));
-      await fetchIntel(nation, encoded);
+      setPayStatus("SETTLING ON X LAYER…");
+      await fetchIntel(nation, btoa(JSON.stringify(token)));
+    } catch (e: unknown) {
+      const err = e as { message?: string; code?: number };
+      if (err?.code === 4001) setError("Payment rejected");
+      else setError(err?.message || "Payment failed");
     } finally {
       setPaying(false);
+      setPayStatus("");
     }
   }, [nation, fetchIntel]);
 
@@ -238,7 +334,7 @@ export function IntelDrawer({ nation, onClose }: Props) {
                 {paying ? "PROCESSING PAYMENT…" : "LOADING INTEL…"}
               </div>
               <div style={{ marginTop: 8, fontSize: 10, color: "var(--text-faint)" }}>
-                {paying ? "x402 · X Layer · OKX Onchain OS" : "Querying Polymarket · generating AI brief"}
+                {paying ? (payStatus || "x402 · X Layer · OKX Onchain OS") : "Querying Polymarket · generating AI brief"}
               </div>
             </div>
           )}
@@ -313,7 +409,7 @@ export function IntelDrawer({ nation, onClose }: Props) {
                   transition: "opacity 0.15s",
                 }}
               >
-                {paying ? "PROCESSING…" : "PAY & UNLOCK BRIEF →"}
+                {paying ? (payStatus || "PROCESSING…") : "PAY & UNLOCK BRIEF →"}
               </button>
               <div style={{
                 marginTop: 10,
@@ -322,21 +418,7 @@ export function IntelDrawer({ nation, onClose }: Props) {
                 fontFamily: "var(--font-mono), monospace",
                 letterSpacing: "0.1em",
               }}>
-                Powered by OKX okx-agent-payments-protocol
-              </div>
-              <div style={{
-                marginTop: 14,
-                fontSize: 10,
-                color: "#ffffff",
-                fontFamily: "var(--font-mono), monospace",
-                letterSpacing: "0.16em",
-                opacity: 0.7,
-                border: "1px solid rgba(255,255,255,0.2)",
-                borderRadius: 3,
-                display: "inline-block",
-                padding: "3px 8px",
-              }}>
-                ⚡ x402 DEMO — NO REAL FUNDS MOVED
+                Powered by OKX okx-agent-payments-protocol · EIP-3009
               </div>
             </div>
           )}
@@ -428,18 +510,37 @@ export function IntelDrawer({ nation, onClose }: Props) {
                     boxShadow: "0 0 6px var(--green)",
                   }} />
                   LUCARNE INTEL BRIEF
-                  {intel.x402_demo && (
+                  {intel.judge_mode && (
                     <span style={{
                       marginLeft: 8,
                       fontSize: 9,
                       fontFamily: "var(--font-mono), monospace",
                       letterSpacing: "0.14em",
-                      color: "#ffffff",
-                      opacity: 0.55,
-                      border: "1px solid rgba(255,255,255,0.25)",
+                      color: "var(--amber)",
+                      opacity: 0.85,
+                      border: "1px solid rgba(255,180,0,0.35)",
                       borderRadius: 3,
                       padding: "1px 5px",
-                    }}>x402 DEMO</span>
+                    }}>JUDGE MODE</span>
+                  )}
+                  {intel.payment_tx && (
+                    <a
+                      href={`https://www.oklink.com/xlayer/tx/${intel.payment_tx}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        marginLeft: 8,
+                        fontSize: 9,
+                        fontFamily: "var(--font-mono), monospace",
+                        letterSpacing: "0.14em",
+                        color: "var(--green)",
+                        opacity: 0.85,
+                        border: "1px solid rgba(0,255,133,0.35)",
+                        borderRadius: 3,
+                        padding: "1px 5px",
+                        textDecoration: "none",
+                      }}
+                    >x402 · {intel.payment_tx.slice(0,8)}… ↗</a>
                   )}
                 </div>
                 <div style={{

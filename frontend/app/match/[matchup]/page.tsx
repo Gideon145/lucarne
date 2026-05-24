@@ -3,15 +3,23 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { COUNTRY_MAP } from "@/lib/countries";
-import { AGENT_WALLET, POLYBOT_URL } from "@/lib/constants";
+import { POLYBOT_URL } from "@/lib/constants";
 import BetPanel from "@/components/BetPanel";
 import PredictionPanel from "@/components/PredictionPanel";
+
+// X Layer USDC + EIP-3009 constants for x402 (OKX Onchain OS)
+const USDC_ADDR        = "0x74b7f16337b8972027f6196a17a631ac6de26d22";
+const LUCARNE_WALLET   = "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81";
+const X_LAYER_CHAIN    = 196;
+const X_LAYER_CHAIN_HEX = "0xc4";
 
 interface MatchData {
   teamA: string; nameA: string; oddsA: number | null;
   teamB: string; nameB: string; oddsB: number | null;
   winA: number; draw: number; winB: number;
   brief: string;
+  payment_tx?: string | null;
+  judge_mode?: boolean;
 }
 
 function ProbBar({
@@ -80,6 +88,15 @@ export default function MatchPage() {
   const [error, setError] = useState<string | null>(null);
   const [paymentRequired, setPaymentRequired] = useState<{ description: string } | null>(null);
   const [paying, setPaying] = useState(false);
+  const [payStatus, setPayStatus] = useState<string>("");
+  const [judgeToken, setJudgeToken] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      setJudgeToken(p.get("judge") ?? "");
+    }
+  }, []);
 
   const countryA = COUNTRY_MAP.get(team1);
   const countryB = COUNTRY_MAP.get(team2);
@@ -90,9 +107,12 @@ export default function MatchPage() {
     setError(null);
     if (!paymentHeader) { setData(null); setPaymentRequired(null); }
     try {
+      const headers: Record<string, string> = {};
+      if (paymentHeader) headers["X-Payment"] = paymentHeader;
+      if (judgeToken)    headers["X-Lucarne-Judge"] = judgeToken;
       const res = await fetch(
         `${POLYBOT_URL}/match/${team1}/${team2}`,
-        paymentHeader ? { headers: { "X-Payment": paymentHeader } } : undefined,
+        Object.keys(headers).length ? { headers } : undefined,
       );
       if (res.status === 402) {
         const body = await res.json();
@@ -109,33 +129,83 @@ export default function MatchPage() {
     } finally {
       setLoading(false);
     }
-  }, [team1, team2]);
+  }, [team1, team2, judgeToken]);
 
   const payAndUnlock = useCallback(async () => {
     setPaying(true);
+    setError(null);
     try {
+      const eth = (window as unknown as { ethereum?: { request: (a: { method: string; params?: unknown }) => Promise<unknown> } }).ethereum;
+      if (!eth) throw new Error("No wallet detected — install OKX Wallet or MetaMask");
+      setPayStatus("CONNECTING WALLET…");
+      const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
+      const from = accounts?.[0];
+      if (!from) throw new Error("Wallet not connected");
+      try {
+        await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: X_LAYER_CHAIN_HEX }] });
+      } catch (e: unknown) {
+        const err = e as { code?: number };
+        if (err?.code === 4902) {
+          await eth.request({ method: "wallet_addEthereumChain", params: [{
+            chainId: X_LAYER_CHAIN_HEX,
+            chainName: "X Layer",
+            nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
+            rpcUrls: ["https://rpc.xlayer.tech"],
+            blockExplorerUrls: ["https://www.oklink.com/xlayer"],
+          }] });
+        } else { throw e; }
+      }
       const nonce = "0x" + Array.from(crypto.getRandomValues(new Uint8Array(32)))
         .map(b => b.toString(16).padStart(2, "0")).join("");
+      const validAfter = "0";
       const validBefore = String(Math.floor(Date.now() / 1000) + 300);
+      const value = "10000";
+      const typedData = {
+        types: {
+          EIP712Domain: [
+            { name: "name",              type: "string"  },
+            { name: "version",           type: "string"  },
+            { name: "chainId",           type: "uint256" },
+            { name: "verifyingContract", type: "address" },
+          ],
+          TransferWithAuthorization: [
+            { name: "from",        type: "address" },
+            { name: "to",          type: "address" },
+            { name: "value",       type: "uint256" },
+            { name: "validAfter",  type: "uint256" },
+            { name: "validBefore", type: "uint256" },
+            { name: "nonce",       type: "bytes32" },
+          ],
+        },
+        domain: {
+          name: "USD Coin", version: "2",
+          chainId: X_LAYER_CHAIN, verifyingContract: USDC_ADDR,
+        },
+        primaryType: "TransferWithAuthorization",
+        message: { from, to: LUCARNE_WALLET, value, validAfter, validBefore, nonce },
+      };
+      setPayStatus("AWAITING SIGNATURE…");
+      const signature = (await eth.request({
+        method: "eth_signTypedData_v4",
+        params: [from, JSON.stringify(typedData)],
+      })) as string;
       const token = {
-        x402Version: 1,
-        scheme: "exact",
-        network: "xlayer-mainnet",
+        x402Version: 1, scheme: "exact", network: "xlayer-mainnet",
         payload: {
-          signature: "0x" + "0".repeat(130),
-          authorization: {
-            from: AGENT_WALLET,
-            to: "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81",
-            value: "10000",
-            validAfter: "0",
-            validBefore,
-            nonce,
-          },
+          signature,
+          authorization: { from, to: LUCARNE_WALLET, value, validAfter, validBefore, nonce },
+          asset: USDC_ADDR,
         },
       };
+      setPayStatus("SETTLING ON X LAYER…");
       await fetchMatch(btoa(JSON.stringify(token)));
+    } catch (e: unknown) {
+      const err = e as { message?: string; code?: number };
+      if (err?.code === 4001) setError("Payment rejected");
+      else setError(err?.message || "Payment failed");
     } finally {
       setPaying(false);
+      setPayStatus("");
     }
   }, [fetchMatch]);
 
@@ -368,7 +438,7 @@ export default function MatchPage() {
                 transition: "background 0.15s",
               }}
             >
-              {paying ? "PROCESSING x402…" : "UNLOCK MATCH BRIEF · 0.01 USDC"}
+              {paying ? (payStatus || "PROCESSING…") : "UNLOCK MATCH BRIEF · 0.01 USDC"}
             </button>
           </div>
         )}
@@ -488,6 +558,25 @@ Connect your wallet below to bet alongside or against the agent\'s call. All set
                   boxShadow: "0 0 6px var(--green)",
                 }} />
                 LUCARNE MATCH INTELLIGENCE
+                {data.judge_mode && (
+                  <span style={{
+                    marginLeft: 8, fontSize: 9, letterSpacing: "0.14em",
+                    color: "var(--amber)", opacity: 0.85,
+                    border: "1px solid rgba(255,180,0,0.35)", borderRadius: 3, padding: "1px 5px",
+                  }}>JUDGE MODE</span>
+                )}
+                {data.payment_tx && (
+                  <a
+                    href={`https://www.oklink.com/xlayer/tx/${data.payment_tx}`}
+                    target="_blank" rel="noopener noreferrer"
+                    style={{
+                      marginLeft: 8, fontSize: 9, letterSpacing: "0.14em",
+                      color: "var(--green)", opacity: 0.85,
+                      border: "1px solid rgba(0,255,133,0.35)", borderRadius: 3,
+                      padding: "1px 5px", textDecoration: "none",
+                    }}
+                  >x402 · {data.payment_tx.slice(0,8)}… ↗</a>
+                )}
               </div>
               <div style={{
                 fontSize: 14,

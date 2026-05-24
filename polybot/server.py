@@ -37,15 +37,85 @@ GAMMA_API = "https://gamma-api.polymarket.com"
 ODDS_HISTORY_LEN = 60   # keep last 60 data points per country
 
 # ─────────────────────────────────────────────────────────────────────────────
-# x402 Payment Gate — OKX Onchain OS / X Layer
+# x402 Payment Gate — OKX Onchain OS / X Layer · EIP-3009 settlement
 # ─────────────────────────────────────────────────────────────────────────────
 
 X402_PRICE      = "10000"   # 0.01 USDC (6 decimals)
 X402_ASSET      = "0x74b7f16337b8972027f6196a17a631ac6de26d22"  # USDC on X Layer mainnet
 X402_NETWORK    = "xlayer-mainnet"
 X402_SCHEME     = "exact"
+X402_CHAIN_ID   = 196       # X Layer mainnet
+X402_RPC_URL    = os.getenv("X402_RPC_URL", "https://rpc.xlayer.tech")
 LUCARNE_WALLET  = os.getenv("LUCARNE_WALLET_ADDRESS", "0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81")
-_paid_nonces: set[str] = set()  # replay prevention
+
+# Facilitator / relayer: server-side wallet that submits the user-signed
+# transferWithAuthorization to USDC and pays OKB gas. Optional — if unset
+# the gate degrades gracefully to "signature verified, not settled".
+X402_FACILITATOR_KEY = os.getenv("X402_FACILITATOR_KEY", "").strip()
+
+# Shared bypass token honoured on the /judge link so hackathon judges can
+# explore paid endpoints without holding USDC. Empty disables the bypass.
+LUCARNE_JUDGE_TOKEN = os.getenv("LUCARNE_JUDGE_TOKEN", "").strip()
+
+_paid_nonces: set[str] = set()  # replay prevention (USDC contract enforces too)
+_settle_cache: dict[str, str] = {}  # nonce -> tx_hash (so retries return same hash)
+
+
+# Minimal USDC ABI (EIP-3009 + view helpers)
+USDC_ABI = [
+    {
+        "name": "transferWithAuthorization",
+        "type": "function",
+        "stateMutability": "nonpayable",
+        "inputs": [
+            {"name": "from", "type": "address"},
+            {"name": "to", "type": "address"},
+            {"name": "value", "type": "uint256"},
+            {"name": "validAfter", "type": "uint256"},
+            {"name": "validBefore", "type": "uint256"},
+            {"name": "nonce", "type": "bytes32"},
+            {"name": "v", "type": "uint8"},
+            {"name": "r", "type": "bytes32"},
+            {"name": "s", "type": "bytes32"},
+        ],
+        "outputs": [],
+    },
+    {
+        "name": "authorizationState",
+        "type": "function",
+        "stateMutability": "view",
+        "inputs": [
+            {"name": "authorizer", "type": "address"},
+            {"name": "nonce", "type": "bytes32"},
+        ],
+        "outputs": [{"name": "", "type": "bool"}],
+    },
+]
+
+# EIP-712 domain for X Layer USDC
+EIP712_DOMAIN = {
+    "name": "USD Coin",
+    "version": "2",
+    "chainId": X402_CHAIN_ID,
+    "verifyingContract": X402_ASSET,
+}
+
+EIP712_TYPES_TRANSFER_WITH_AUTH = {
+    "EIP712Domain": [
+        {"name": "name",              "type": "string"},
+        {"name": "version",           "type": "string"},
+        {"name": "chainId",           "type": "uint256"},
+        {"name": "verifyingContract", "type": "address"},
+    ],
+    "TransferWithAuthorization": [
+        {"name": "from",        "type": "address"},
+        {"name": "to",          "type": "address"},
+        {"name": "value",       "type": "uint256"},
+        {"name": "validAfter",  "type": "uint256"},
+        {"name": "validBefore", "type": "uint256"},
+        {"name": "nonce",       "type": "bytes32"},
+    ],
+}
 
 
 def make_402_payload(resource_url: str, description: str) -> dict:
@@ -62,53 +132,166 @@ def make_402_payload(resource_url: str, description: str) -> dict:
             "payTo": LUCARNE_WALLET,
             "maxTimeoutSeconds": 300,
             "asset": X402_ASSET,
-            "extra": {"name": "USD Coin", "version": "2"},
+            "extra": {"name": "USD Coin", "version": "2", "chainId": X402_CHAIN_ID},
         }],
     }
 
 
-def verify_x402_payment(header: str | None) -> tuple[bool, str]:
-    """Decode and validate an X-Payment header.
-    Returns (is_valid, nonce_or_reason).  Checks x402 envelope shape,
-    network, payTo (must match our wallet), value (must be >= price),
-    asset (must be USDC on X Layer), and replay-protects the nonce.
-    EIP-3009 signature recovery is intentionally deferred to the
-    settlement layer (okx-onchain-gateway / facilitator) — this gate
-    blocks malformed / wrong-payee / underpaid / replayed claims.
-    """
+def _parse_x402_header(header: str | None) -> tuple[dict | None, str]:
+    """Decode an X-Payment header.  Returns (envelope, reason).  envelope is
+    None when the header is missing or malformed."""
     if not header:
-        return False, "missing"
+        return None, "missing"
     try:
         raw = base64.b64decode(header + "==")
-        payload = json.loads(raw)
+        envelope = json.loads(raw)
     except Exception:
-        return False, "malformed"
-    if payload.get("x402Version") != 1:
-        return False, "wrong version"
-    if payload.get("scheme") != X402_SCHEME:
-        return False, "unsupported scheme"
-    if payload.get("network") != X402_NETWORK:
-        return False, f"wrong network: {payload.get('network')}"
-    # EIP-3009 authorization sub-payload
-    auth = payload.get("payload", {}).get("authorization", {}) or {}
+        return None, "malformed"
+    return envelope, "ok"
+
+
+def _validate_envelope(envelope: dict) -> tuple[bool, str, dict, str]:
+    """Validate envelope shape + recover authorization + signature.
+    Returns (ok, reason, authorization, signature_hex)."""
+    if envelope.get("x402Version") != 1:
+        return False, "wrong version", {}, ""
+    if envelope.get("scheme") != X402_SCHEME:
+        return False, "unsupported scheme", {}, ""
+    if envelope.get("network") != X402_NETWORK:
+        return False, f"wrong network: {envelope.get('network')}", {}, ""
+    payload = envelope.get("payload") or {}
+    auth = payload.get("authorization") or {}
+    signature = payload.get("signature") or ""
     to_addr = (auth.get("to") or "").lower()
     if to_addr != LUCARNE_WALLET.lower():
-        return False, f"wrong payTo: {to_addr}"
-    # value is a decimal string in token base units (6dp for USDC)
+        return False, f"wrong payTo: {to_addr}", {}, ""
     try:
         value_paid = int(auth.get("value") or "0")
     except (TypeError, ValueError):
-        return False, "bad value"
+        return False, "bad value", {}, ""
     if value_paid < int(X402_PRICE):
-        return False, f"underpaid: {value_paid} < {X402_PRICE}"
-    asset = (payload.get("payload", {}).get("asset") or payload.get("asset") or "").lower()
+        return False, f"underpaid: {value_paid} < {X402_PRICE}", {}, ""
+    asset = (payload.get("asset") or envelope.get("asset") or "").lower()
     if asset and asset != X402_ASSET.lower():
-        return False, f"wrong asset: {asset}"
-    nonce = auth.get("nonce") or hashlib.sha256(raw).hexdigest()
-    if nonce in _paid_nonces:
-        return False, "payment already used"
-    _paid_nonces.add(nonce)
-    return True, nonce
+        return False, f"wrong asset: {asset}", {}, ""
+    return True, "ok", auth, signature
+
+
+def settle_x402_payment(header: str | None) -> tuple[bool, str, str | None]:
+    """Verify the EIP-3009 signature and submit the on-chain
+    transferWithAuthorization. Returns (is_valid, reason_or_nonce, tx_hash).
+
+    When `X402_FACILITATOR_KEY` is unset, signature is recovered & validated
+    but the on-chain settlement step is skipped (tx_hash is None). This keeps
+    local/dev flows working without a funded relayer.
+    """
+    envelope, reason = _parse_x402_header(header)
+    if envelope is None:
+        return False, reason, None
+    ok, reason, auth, signature = _validate_envelope(envelope)
+    if not ok:
+        return False, reason, None
+
+    nonce = auth.get("nonce") or ""
+    if not isinstance(nonce, str) or not nonce.startswith("0x") or len(nonce) != 66:
+        return False, "bad nonce", None
+
+    # Replay shortcut — same nonce + same authorizer = same tx
+    cache_key = f"{(auth.get('from') or '').lower()}:{nonce.lower()}"
+    if cache_key in _settle_cache:
+        return True, nonce, _settle_cache[cache_key]
+    if nonce.lower() in _paid_nonces:
+        return False, "payment already used", None
+
+    # Verify EIP-712 signature recovers to the `from` address
+    try:
+        from eth_account import Account
+        from eth_account.messages import encode_typed_data
+
+        message = {
+            "from":        auth.get("from"),
+            "to":          auth.get("to"),
+            "value":       int(auth.get("value")),
+            "validAfter":  int(auth.get("validAfter") or "0"),
+            "validBefore": int(auth.get("validBefore") or "0"),
+            "nonce":       nonce,
+        }
+        typed = {
+            "types":       EIP712_TYPES_TRANSFER_WITH_AUTH,
+            "domain":      EIP712_DOMAIN,
+            "primaryType": "TransferWithAuthorization",
+            "message":     message,
+        }
+        signable = encode_typed_data(full_message=typed)
+        recovered = Account.recover_message(signable, signature=signature)
+        if recovered.lower() != (auth.get("from") or "").lower():
+            return False, f"bad signature (recovered {recovered})", None
+    except Exception as e:
+        return False, f"sig verify failed: {str(e)[:120]}", None
+
+    # Optional on-chain settlement
+    if not X402_FACILITATOR_KEY:
+        _paid_nonces.add(nonce.lower())
+        return True, nonce, None
+
+    try:
+        from web3 import Web3
+
+        w3 = Web3(Web3.HTTPProvider(X402_RPC_URL, request_kwargs={"timeout": 20}))
+        if not w3.is_connected():
+            return False, "rpc unavailable", None
+        relayer = Account.from_key(X402_FACILITATOR_KEY)
+        usdc = w3.eth.contract(address=Web3.to_checksum_address(X402_ASSET), abi=USDC_ABI)
+
+        # Skip if already settled on-chain
+        already = usdc.functions.authorizationState(
+            Web3.to_checksum_address(auth["from"]),
+            bytes.fromhex(nonce[2:]),
+        ).call()
+        if already:
+            _paid_nonces.add(nonce.lower())
+            return True, nonce, None
+
+        sig_bytes = bytes.fromhex(signature[2:] if signature.startswith("0x") else signature)
+        if len(sig_bytes) != 65:
+            return False, "bad signature length", None
+        r = sig_bytes[0:32]
+        s = sig_bytes[32:64]
+        v = sig_bytes[64]
+        if v < 27:
+            v += 27
+
+        tx = usdc.functions.transferWithAuthorization(
+            Web3.to_checksum_address(auth["from"]),
+            Web3.to_checksum_address(auth["to"]),
+            int(auth["value"]),
+            int(auth.get("validAfter") or "0"),
+            int(auth.get("validBefore") or "0"),
+            bytes.fromhex(nonce[2:]),
+            v, r, s,
+        ).build_transaction({
+            "from": relayer.address,
+            "nonce": w3.eth.get_transaction_count(relayer.address, "pending"),
+            "chainId": X402_CHAIN_ID,
+            "gas": 150_000,
+            "gasPrice": w3.eth.gas_price,
+        })
+        signed = relayer.sign_transaction(tx)
+        tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+        if not tx_hash.startswith("0x"):
+            tx_hash = "0x" + tx_hash
+        _paid_nonces.add(nonce.lower())
+        _settle_cache[cache_key] = tx_hash
+        return True, nonce, tx_hash
+    except Exception as e:
+        return False, f"settle failed: {str(e)[:160]}", None
+
+
+def is_judge_request(request: Request) -> bool:
+    """True when the caller passed the shared judge token."""
+    if not LUCARNE_JUDGE_TOKEN:
+        return False
+    return request.headers.get("X-Lucarne-Judge", "").strip() == LUCARNE_JUDGE_TOKEN
 
 # ─────────────────────────────────────────────────────────────────────────────
 # World Cup 2026 country → Polymarket search slug
@@ -998,25 +1181,31 @@ async def get_intel(request: Request, country: str, score: int = 0, regime: int 
         raise HTTPException(status_code=404, detail=f"Unknown country: {country}")
 
     # ── x402 payment gate ────────────────────────────────────────────────────
-    payment_header = request.headers.get("X-Payment")
-    valid, _ = verify_x402_payment(payment_header)
-    if not valid:
-        name_for_pmt = COUNTRY_NAMES[country]
-        pmt = make_402_payload(
-            resource_url=str(request.url),
-            description=f"LUCARNE Signal Intel Brief — {name_for_pmt} (WC 2026)",
-        )
-        encoded = base64.b64encode(json.dumps(pmt).encode()).decode()
-        return JSONResponse(
-            status_code=402,
-            content={"error": "Payment required", "x402": pmt},
-            headers={"X-Payment-Required": encoded},
-        )
+    judge_mode = is_judge_request(request)
+    payment_tx_hash: str | None = None
+    if not judge_mode:
+        payment_header = request.headers.get("X-Payment")
+        valid, reason, payment_tx_hash = settle_x402_payment(payment_header)
+        if not valid:
+            name_for_pmt = COUNTRY_NAMES[country]
+            pmt = make_402_payload(
+                resource_url=str(request.url),
+                description=f"LUCARNE Signal Intel Brief — {name_for_pmt} (WC 2026)",
+            )
+            encoded = base64.b64encode(json.dumps(pmt).encode()).decode()
+            return JSONResponse(
+                status_code=402,
+                content={"error": "Payment required", "reason": reason, "x402": pmt},
+                headers={"X-Payment-Required": encoded},
+            )
     # ─────────────────────────────────────────────────────────────────────────
 
     cache_key = f"{country}_{score}_{regime}"
     if cache_key in _intel_cache and (time.time() - _intel_cache_ts.get(cache_key, 0)) < INTEL_TTL:
-        return _intel_cache[cache_key]
+        cached = dict(_intel_cache[cache_key])
+        cached["payment_tx"] = payment_tx_hash
+        cached["judge_mode"] = judge_mode
+        return cached
 
     name = COUNTRY_NAMES[country]
     team_id = SOFASCORE_TEAM_IDS.get(country)
@@ -1039,7 +1228,8 @@ async def get_intel(request: Request, country: str, score: int = 0, regime: int 
         "brief": brief,
         "players": key_players,
         "fixtures": fixtures,
-        "x402_demo": True,
+        "payment_tx": payment_tx_hash,
+        "judge_mode": judge_mode,
     }
     _intel_cache[cache_key] = result
     _intel_cache_ts[cache_key] = time.time()
@@ -1075,29 +1265,38 @@ async def get_match_odds(request: Request, team1: str, team2: str):
         raise HTTPException(status_code=404, detail=f"Unknown country: {team2}")
 
     # ── x402 payment gate ────────────────────────────────────────────────────
-    payment_header = request.headers.get("X-Payment")
-    valid, _ = verify_x402_payment(payment_header)
-    if not valid:
-        name1 = COUNTRY_NAMES.get(team1, team1)
-        name2 = COUNTRY_NAMES.get(team2, team2)
-        pmt = make_402_payload(
-            resource_url=str(request.url),
-            description=f"LUCARNE Match Intel Brief — {name1} vs {name2} (WC 2026)",
-        )
-        encoded = base64.b64encode(json.dumps(pmt).encode()).decode()
-        return JSONResponse(
-            status_code=402,
-            content={"error": "Payment required", "x402": pmt},
-            headers={"X-Payment-Required": encoded},
-        )
+    judge_mode = is_judge_request(request)
+    payment_tx_hash: str | None = None
+    if not judge_mode:
+        payment_header = request.headers.get("X-Payment")
+        valid, reason, payment_tx_hash = settle_x402_payment(payment_header)
+        if not valid:
+            name1 = COUNTRY_NAMES.get(team1, team1)
+            name2 = COUNTRY_NAMES.get(team2, team2)
+            pmt = make_402_payload(
+                resource_url=str(request.url),
+                description=f"LUCARNE Match Intel Brief — {name1} vs {name2} (WC 2026)",
+            )
+            encoded = base64.b64encode(json.dumps(pmt).encode()).decode()
+            return JSONResponse(
+                status_code=402,
+                content={"error": "Payment required", "reason": reason, "x402": pmt},
+                headers={"X-Payment-Required": encoded},
+            )
     # ─────────────────────────────────────────────────────────────────────────
 
     cache_key = f"match_{team1}_{team2}"
     alt_key   = f"match_{team2}_{team1}"
     if cache_key in _intel_cache and (time.time() - _intel_cache_ts.get(cache_key, 0)) < 1800:
-        return _intel_cache[cache_key]
+        cached = dict(_intel_cache[cache_key])
+        cached["payment_tx"] = payment_tx_hash
+        cached["judge_mode"] = judge_mode
+        return cached
     if alt_key in _intel_cache and (time.time() - _intel_cache_ts.get(alt_key, 0)) < 1800:
-        return _intel_cache[alt_key]
+        cached = dict(_intel_cache[alt_key])
+        cached["payment_tx"] = payment_tx_hash
+        cached["judge_mode"] = judge_mode
+        return cached
 
     # Fetch both teams' Polymarket odds in parallel
     odds_a, odds_b = await asyncio.gather(
@@ -1133,7 +1332,8 @@ async def get_match_odds(request: Request, team1: str, team2: str):
         "draw":  round(draw_prob * 100, 1),
         "winB":  round(win_b * 100, 1),
         "brief": brief,
-        "x402_demo": True,
+        "payment_tx": payment_tx_hash,
+        "judge_mode": judge_mode,
     }
     _intel_cache[cache_key] = result
     _intel_cache_ts[cache_key] = time.time()
