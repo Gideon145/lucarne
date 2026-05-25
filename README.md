@@ -15,8 +15,6 @@
 [![Follow on X](https://img.shields.io/badge/X-%40lucarne__xyz-black)](https://x.com/lucarne_xyz)
 [![Agent Wallet](https://img.shields.io/badge/Agent%20Wallet-0xC8D9...47C3-green)](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3)
 [![X Layer Mainnet](https://img.shields.io/badge/Chain-X%20Layer%20Mainnet%20196-brightgreen)](https://www.oklink.com/xlayer)
-[![Loop Interval](https://img.shields.io/badge/Loop-60s-orange)](#what-the-agent-actually-does-every-60-seconds)
-[![Nations Scored](https://img.shields.io/badge/Nations-48%20World%20Cup%202026-blue)](#)
 
 ### Judges — open [`/judge`](https://lucarne-xyz.vercel.app/judge) for a wallet-free, one-page verification surface (live lifetime nonce, contract status, on-chain proofs). Build progress is broadcast in real time at [x.com/lucarne_xyz](https://x.com/lucarne_xyz).
 
@@ -78,15 +76,6 @@ Before betting Lucarne's reputation on the 2026 World Cup, we ran the **entire p
 | 5 | **La Liga** — Real Madrid vs Athletic Club | May 23 | HOME (Real Madrid) @ 68% | [`0xeec67755...`](https://www.oklink.com/xlayer/tx/0xeec67755b145f961c35bfbf93c80a5b52232abcea71716e4ed1eb1f3555c29e5) | **Real Madrid win 4–2 — CORRECT** | NFT mint flow battle-tested · second mint [`0xdc7120d5...`](https://www.oklink.com/xlayer/tx/0xdc7120d57a82670e9773f09404df5f0ef0c95aedeba5083de25f566175158321) |
 
 **Stress-test scoreline: 4 correct · 1 wrong · 0 pending.** Every layer of the stack has been exercised in production with real OKB on the line — including a **real loss** (Fiorentina/Atalanta) that proves the pool/settlement path works in adversarial conditions. Real Madrid won 4–2 and Bayern won 3–0, both called correctly before kickoff. The entire build process is broadcast live on **[x.com/lucarne_xyz](https://x.com/lucarne_xyz)** — see the per-game commits and demo clips as they shipped.
-
----
-
-## On-Chain Pool & Settlement Activity
-
-The Pipeline Validation table above already links every per-match tx (signal lock, agent stake, settlement, NFT mint). Two extras worth flagging:
-
-- **First user counter-bet** on the agent's pool (Fio/Ata, AWAY · 0.01 OKB): [`0x9176860e…`](https://www.oklink.com/xlayer/tx/0x9176860e7fe9c53142ef399f316fa7a988e8b8219c3c58dcd2658060c2e3da81)
-- **First soulbound NFT** minted from a winning call: [`0x01ec8778…`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de)
 
 ---
 
@@ -325,10 +314,6 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
 - **Full pipeline exercised on 5 real club matches** in 4 days (May 20—23) — signal generation, attestation, community voting, agent-bonded pools, real user bets, soulbound NFT mints — **4 correct calls, 1 real OKB loss, 0 pending. 80% hit rate on a 5-game sample** (treat the 27,500+ TX chain history as the real trust anchor — sample size is intentionally small and early; accuracy claims will grow with World Cup group-stage volume). (See Pipeline Validation table above.)
 - **First user bet landed:** [`0x9176860e...`](https://www.oklink.com/xlayer/tx/0x9176860e7fe9c53142ef399f316fa7a988e8b8219c3c58dcd2658060c2e3da81) · **First soulbound NFT minted:** [`0x01ec8778...`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de).
 - **Real x402 settlement on X Layer.** Paid AI briefs (`/intel/{iso3}`, `/match/{t1}/{t2}`) are gated by an EIP-3009 USDC paywall on X Layer mainnet — user signs `TransferWithAuthorization` via `eth_signTypedData_v4`, the polybot relayer submits on-chain to USDC [`0x74b7f1…6d22`](https://www.oklink.com/xlayer/address/0x74b7f16337b8972027f6196a17a631ac6de26d22). Real tx hashes appear on every unlocked brief. No mocks.
-- **MCP server live for any LLM** — [lucarne-mcp-production.up.railway.app](https://lucarne-mcp-production.up.railway.app) exposes 4 tools (`getSignal`, `getOdds`, `getBrief`, `getMatch`) over stdio (Claude Desktop / Cursor) and SSE, plus a plain `/subscribe/:iso3` feed for trading bots.
-- **Continuous on Railway** (production, 24/7) — frontend on Vercel, Polybot + MCP sidecars on Railway, agent autonomously writing to mainnet every cycle.
-- **Live dashboard:** [lucarne-xyz.vercel.app](https://lucarne-xyz.vercel.app) · **Track record:** [lucarne-xyz.vercel.app/track-record](https://lucarne-xyz.vercel.app/track-record) — every nation, every match, every tx hash, all clickable into OKLink.
-- **Public build log:** [x.com/lucarne_xyz](https://x.com/lucarne_xyz) — every shipped layer broadcast in real time with the corresponding mainnet tx.
 
 ---
 
@@ -352,31 +337,8 @@ Full walkthrough: [`JUDGE_GUIDE.md`](./JUDGE_GUIDE.md).
 
 ## Known Limitations (Honest Framing)
 
-Lucarne does not fake liveness. Every degraded path is surfaced rather than papered over — and the 27k+ TX trail is the proof these recovery paths work in production, not in theory.
-
 - **v1 vs v2 pools.** The four pool/NFT activity hashes above (Fio/Ata stake + user bet, Inter stake, Barca stake, both NFT mints) hit the **v1** SignalPool/NFT contracts (`0xd6E29fFc…` and the v1 NFT) because they predate the v2 redeploy that added `reclaimNoWinner`. All *new* pools from this point forward open on [`SignalPool v2`](https://www.oklink.com/xlayer/address/0xEe15Dc83cD4AcD16D8698831d468B1FE12ccEa67). We kept v1 deployed and visible for full transparency — every loss, every locked stake, every recovery path is on record.
-- **If a SignalPool outcome has no winners** (e.g. niche AWAY win nobody bet on) → `reclaimNoWinner(gameId, outcome)` lets stakers withdraw their own stake — v2-only behaviour, by design.
-- **If RPC drops mid-cycle** → ethers v6 fetches pending nonce explicitly to avoid `nonce-too-low` errors specific to X Layer's RPC behavior. The lifetime nonce never gets out of sequence.
-- **If Polymarket data is stale** → write-gate suppresses the attestation; nothing fake is ever signed.
-- **If the agent process crashes** → Railway restarts it. The agent re-reads nonce from chain and resumes — proven repeatedly across 27k+ TXs.
 - **x402 paid AI briefs run for real on X Layer Mainnet.** The polybot accepts an EIP-3009 `TransferWithAuthorization` envelope, recovers the signer via EIP-712, and submits the USDC transfer on-chain through a relayer wallet — the real tx hash is returned on every unlocked brief. If the upstream USDC RPC stalls, the request fails closed (HTTP 402); no "premium brief" is ever served without a valid on-chain signature.
-
----
-
-## Disclaimer & Risk
-
-> **Lucarne is experimental software. Read this before betting OKB.**
-
-- **Not financial advice.** Country scores, match signals, and AI briefs are momentum-tracking outputs derived from public Polymarket data and football form. **Nothing in this product is a recommendation to buy, sell, hold, or stake any digital asset.** Signals are wrong all the time — we deliberately surfaced [the Fiorentina/Atalanta loss](https://www.oklink.com/xlayer/tx/0x6983a19169803ad0a03355586d289c1b644d31802ae0ae7f297eff8b50f504d5) as on-chain proof of that.
-- **Digital assets are volatile.** OKB staked into a `SignalPool` can be lost in full. Pools settle from on-chain match results — once `settle()` is called, the outcome is irreversible. Stake only what you can afford to lose.
-- **AI agent outputs may be inaccurate.** The 60s scoring loop, the regime classifier, and the Claude-generated AI briefs can all be wrong, stale, or biased by the underlying Polymarket liquidity. Treat them as one input, not the truth.
-- **18+ only.** Lucarne is a permissionless on-chain protocol but the betting/NFT-minting flows are intended for users 18 years or older. Do not interact if your jurisdiction prohibits parimutuel pools or prediction markets.
-- **Self-custodial.** Lucarne never custodies user funds. All transactions are signed by the user's own wallet (OKX Wallet, MetaMask, or any EIP-1193 provider) and broadcast directly to X Layer Mainnet.
-- **No artificial volume.** Every pool stake, user bet, and NFT mint linked in this README is an organic, independent on-chain action. The agent does not wash-trade against itself, and there is no protocol-controlled bot inflating pool sizes or NFT counts.
-- **No endorsement.** This project is an independent submission to the X Layer X Cup hackathon. It is not endorsed by, affiliated with, or guaranteed by OKX, X Layer, FIFA, Polymarket, or Anthropic.
-- **Restricted jurisdictions.** Users are solely responsible for ensuring their use of Lucarne complies with all applicable laws in their jurisdiction.
-
-By interacting with the live frontend or any deployed Lucarne contract you acknowledge the above and accept full responsibility for your own funds and decisions.
 
 ---
 
@@ -410,3 +372,7 @@ cd ../mcp-server && npm install && npm run build && npm run start:stdio
 ## License
 
 MIT
+
+---
+
+> **Disclaimer:** Experimental software. Not financial advice. OKB staked in SignalPools can be lost. Self-custodial — Lucarne never holds your keys. 18+ only. Not affiliated with OKX, FIFA, Polymarket, or Anthropic.
