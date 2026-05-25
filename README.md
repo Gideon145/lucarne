@@ -151,7 +151,7 @@ That's it. 60 seconds. Forever. Every meaningful score change becomes a permanen
 
 ## Smart Contracts (X Layer Mainnet, Chain ID 196)
 
-### SignalAttestor.sol — `0x2Dcbd501...0FAe81`
+### SignalAttestor.sol — `0xCEe5E03f...8826Ab`
 The 48-nation scoreboard. The agent writes here every 60 seconds when a country's score moves >3 points or 4 hours pass without a write.
 
 ```solidity

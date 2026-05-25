@@ -110,5 +110,9 @@
       "KOR",
       "MAR"
     ]
+  },
+  "xlayer": {
+    "signalAttestorV2": "0xCEe5E03f2B37581D15b4e39F785892c66f8826Ab",
+    "signalAttestorV2DeployedAt": "2026-05-25T18:46:30.151Z"
   }
 }

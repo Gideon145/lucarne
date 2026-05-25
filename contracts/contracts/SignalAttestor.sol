@@ -38,8 +38,9 @@ contract SignalAttestor {
     // country ISO3 → latest attestation
     mapping(bytes3 => Attestation) public latest;
 
-    // country ISO3 → history (last 500 attestations)
+    // country ISO3 → history (last 500 attestations, O(1) ring buffer)
     mapping(bytes3 => Attestation[]) private _history;
+    mapping(bytes3 => uint256)       private _histHead; // ring-buffer write pointer
     uint256 public constant MAX_HISTORY = 500;
 
     // Total on-chain attestations (TX firehose counter — shown in frontend TX badge)
@@ -90,11 +91,10 @@ contract SignalAttestor {
 
         Attestation[] storage hist = _history[country];
         if (hist.length == MAX_HISTORY) {
-            // Ring-buffer: shift out oldest
-            for (uint256 i = 0; i < MAX_HISTORY - 1; i++) {
-                hist[i] = hist[i + 1];
-            }
-            hist[MAX_HISTORY - 1] = a;
+            // O(1) ring-buffer: overwrite slot at head, advance pointer
+            uint256 head = _histHead[country];
+            hist[head] = a;
+            _histHead[country] = (head + 1) % MAX_HISTORY;
         } else {
             hist.push(a);
         }
@@ -111,6 +111,15 @@ contract SignalAttestor {
     }
 
     function getHistory(bytes3 country) external view returns (Attestation[] memory) {
-        return _history[country];
+        Attestation[] storage hist = _history[country];
+        uint256 len = hist.length;
+        if (len < MAX_HISTORY) return hist;
+        // Return entries in chronological order from ring buffer
+        Attestation[] memory result = new Attestation[](MAX_HISTORY);
+        uint256 head = _histHead[country];
+        for (uint256 i = 0; i < MAX_HISTORY; i++) {
+            result[i] = hist[(head + i) % MAX_HISTORY];
+        }
+        return result;
     }
 }
