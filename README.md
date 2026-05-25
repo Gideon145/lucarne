@@ -30,6 +30,11 @@ Click any nation in the terminal to unlock a **paid AI brief** — generated liv
 
 **This is not a paper agent.** It runs in production, computes signals on a 60-second loop, and writes to mainnet every cycle that produces a meaningful score change. Every prediction is economically bonded by real OKB the agent stands to lose.
 
+**How a fan uses it — in three steps:**
+1. Open the HUD → see all 48 World Cup nations scored live, updating every 60 seconds on-chain
+2. Click any nation → pay $0.10 via x402 micropayment → Claude AI brief unlocks instantly with form analysis + signal rationale
+3. Bet OKB on a match outcome before kickoff → win → mint a soulbound "I Called It" NFT as permanent on-chain proof
+
 ---
 
 ## The Problem Lucarne Solves
@@ -52,12 +57,6 @@ Lucarne fixes this with a single primitive: **on-chain attestation with economic
 | **MCP Server** (Claude/Cursor + SSE feed) | https://lucarne-mcp-production.up.railway.app | Live |
 | **Polybot** (FastAPI + x402 paywall) | https://lucarne-polybot-production.up.railway.app | Live |
 | **Agent Wallet (all tx)** | https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3 | 27,500+ tx |
-| **SignalAttestor (48 nations)** | https://www.oklink.com/xlayer/address/0x2Dcbd50173bB570BB5257223bfDb6b92520FAe81 | Mainnet |
-| **MatchSignalAttestor** | https://www.oklink.com/xlayer/address/0x9693d19C09d9dE08F4acaD288f7608552D018482 | Mainnet |
-| **MatchResultAttestor** | https://www.oklink.com/xlayer/address/0x81AF1dfF7D92ac333a785a1486822159855377bF | Mainnet |
-| **SignalPool v2** | https://www.oklink.com/xlayer/address/0xEe15Dc83cD4AcD16D8698831d468B1FE12ccEa67 | Mainnet |
-| **ICalledItNFT v2** | https://www.oklink.com/xlayer/address/0xBC2200d99980661fef938eE72001BAaE496F0adf | Mainnet |
-| **LucarnePredictions** | https://www.oklink.com/xlayer/address/0x178565919FFebC4b57ca04112d0FFFaD946Df6E7 | Mainnet |
 
 The agent wallet has **over 27,500 confirmed transactions** on X Layer Mainnet — every one of them either a country score attestation, a match signal, a pool stake, or a settlement call. That is the proof. It cannot be faked.
 
@@ -193,7 +192,7 @@ Soulbound ERC-721. One mint per wallet per game. Bettors who staked on the winni
 | **Wallet** | OKX Wallet + MetaMask (injected provider, EIP-1193) |
 | **Explorer** | OKLink (`oklink.com/xlayer`) — every tx hash in this README resolves there |
 
-OKB as native gas is what makes the 60-second loop economically viable. Attesting 48 country scores every minute on Ethereum L1 would cost thousands of dollars per day. On X Layer it costs cents. That's why Lucarne can exist.
+OKB as native gas is what makes the 60-second loop economically viable. Attesting 48 country scores every minute on Ethereum L1 would cost thousands of dollars per day. On X Layer it costs cents. But it goes beyond cost — X Layer is the only chain where Lucarne can attest 48 nations, settle x402 USDC micropayments, stake OKB on match calls, and mint soulbound NFTs all natively, in a single gas token, with the block times to sustain a 60-second agent loop. The product architecture only works here.
 
 ---
 
