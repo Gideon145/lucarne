@@ -1,4 +1,6 @@
 export const SIGNAL_ATTESTOR          = "0xCEe5E03f2B37581D15b4e39F785892c66f8826Ab" as const;
+// v1 contract attestations (preserved as offset so total counter is cumulative)
+export const SIGNAL_ATTESTOR_V1_COUNT = 29209n;
 export const MATCH_SIGNAL_ATTESTOR    = "0x9693d19C09d9dE08F4acaD288f7608552D018482" as const;
 export const MATCH_RESULT_ATTESTOR    = "0x81AF1dfF7D92ac333a785a1486822159855377bF" as const;
 export const PREDICTIONS_CONTRACT     = "0x178565919FFebC4b57ca04112d0FFFaD946Df6E7" as const;

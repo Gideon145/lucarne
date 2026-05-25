@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { createPublicClient, http, defineChain, parseAbiItem } from "viem";
-import { SIGNAL_ATTESTOR, RPC_URL, POLYBOT_URL } from "./constants";
+import { SIGNAL_ATTESTOR, SIGNAL_ATTESTOR_V1_COUNT, RPC_URL, POLYBOT_URL } from "./constants";
 import { COUNTRIES } from "./countries";
 
 // ── Chain definition ──────────────────────────────────────────────────────────
@@ -127,7 +127,7 @@ export function useAttestations(): AttestationState {
       ]);
 
       if (totalResult.status === "fulfilled") {
-        const total = totalResult.value as bigint;
+        const total = (totalResult.value as bigint) + SIGNAL_ATTESTOR_V1_COUNT;
         setTotalAttestations(total);
         // If we got a non-zero total, agent is live
         setAgentLive(total > 0n);
