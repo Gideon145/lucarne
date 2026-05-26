@@ -5,7 +5,7 @@
 > *"Every signal staked. Every call attested. The ledger doesn't lie."*
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-lucarne--xyz.vercel.app-cyan)](https://lucarne-xyz.vercel.app)
-[![Demo Video](https://img.shields.io/badge/Demo%20Video-YouTube-red)](https://youtu.be/ADD_VIDEO_ID_HERE)
+[![Demo Video](https://img.shields.io/badge/Demo%20Video-YouTube-red)](https://youtu.be/WPRe53iQzHM)
 [![Judge Mode](https://img.shields.io/badge/Judge%20Mode-%2Fjudge-magenta)](https://lucarne-xyz.vercel.app/judge)
 [![Judge Guide](https://img.shields.io/badge/Judge%20Guide-JUDGE__GUIDE.md-magenta)](./JUDGE_GUIDE.md)
 [![Leaderboard](https://img.shields.io/badge/Leaderboard-%2Fleaderboard-gold)](https://lucarne-xyz.vercel.app/leaderboard)
