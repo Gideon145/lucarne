@@ -1006,6 +1006,59 @@ async def get_form(country: str):
     return result
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Signal reason — free one-sentence AI explanation of a country's score
+# ─────────────────────────────────────────────────────────────────────────────
+
+_reason_cache: dict[str, str] = {}
+_reason_cache_ts: dict[str, float] = {}
+REASON_TTL = 21600  # 6 hours
+
+
+async def generate_signal_reason(
+    country: str, name: str, score: int, regime: int, odds: float | None
+) -> str:
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        return ""
+    client = anthropic.AsyncAnthropic(api_key=api_key)
+    odds_str = f"{round(odds * 100, 1)}% Polymarket win odds" if odds is not None else "no market data"
+    regime_label = ["calm", "trending", "volatile", "breakout"][min(regime, 3)]
+    prompt = (
+        f"One sentence (max 12 words) for why {name} scores {score}/100 "
+        f"in Lucarne's WC 2026 signal model. Regime: {regime_label}. {odds_str}. "
+        f"Be specific and data-driven. No quotes. No markdown. Just the sentence."
+    )
+    try:
+        resp = await client.messages.create(
+            model="claude-haiku-4-5",
+            max_tokens=60,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.content[0].text.strip()
+    except Exception:
+        return ""
+
+
+@app.get("/reason/{country}")
+async def get_reason(country: str, score: int = 0, regime: int = 0):
+    """Free endpoint — short one-sentence AI signal reason for a country's score.
+    Cached 6h per (country, score, regime) combination."""
+    country = country.upper()
+    if country not in COUNTRY_NAMES:
+        raise HTTPException(status_code=404, detail=f"Unknown country: {country}")
+    cache_key = f"{country}_{score}_{regime}"
+    now = time.time()
+    if cache_key in _reason_cache and (now - _reason_cache_ts.get(cache_key, 0)) < REASON_TTL:
+        return {"country": country, "reason": _reason_cache[cache_key]}
+    name = COUNTRY_NAMES[country]
+    odds = await fetch_country_odds(country)
+    reason = await generate_signal_reason(country, name, score, regime, odds)
+    _reason_cache[cache_key] = reason
+    _reason_cache_ts[cache_key] = now
+    return {"country": country, "reason": reason}
+
+
 async def generate_key_players(country: str, name: str, debug: bool = False):
     """Use Claude to identify 5 key star players for a WC 2026 nation.
 

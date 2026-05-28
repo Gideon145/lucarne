@@ -1,7 +1,10 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { NationData } from "@/lib/useAttestations";
 import { COUNTRY_MAP } from "@/lib/countries";
 import { RegimeBadge, REGIME_COLORS, REGIME_GLOWS } from "./RegimeBadge";
-import { OKLINK_BASE, SIGNAL_ATTESTOR } from "@/lib/constants";
+import { OKLINK_BASE, POLYBOT_URL, SIGNAL_ATTESTOR } from "@/lib/constants";
 
 function scoreColor(score: number): string {
   if (score >= 75) return "var(--gold)";
@@ -25,6 +28,18 @@ interface Props {
 
 export function NationCard({ nation, onClick }: Props) {
   const country = COUNTRY_MAP.get(nation.iso3);
+  const [reason, setReason] = useState<string>("");
+
+  useEffect(() => {
+    if (!nation || nation.score < 55) return; // only VOLATILE + BREAKOUT
+    let cancelled = false;
+    fetch(`${POLYBOT_URL}/reason/${nation.iso3}?score=${nation.score}&regime=${nation.regime}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (!cancelled && d?.reason) setReason(d.reason); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [nation.iso3, nation.score, nation.regime]);
+
   if (!country) return null;
 
   const { iso3, score, regime, ts, polybotOdds, signalHash } = nation;
@@ -101,6 +116,21 @@ export function NationCard({ nation, onClick }: Props) {
           />
         </div>
       </div>
+
+      {/* AI signal reason */}
+      {reason && (
+        <div style={{
+          fontSize: 11,
+          color: "var(--text-dim)",
+          fontStyle: "italic",
+          marginTop: 6,
+          marginBottom: 2,
+          lineHeight: 1.4,
+          opacity: 0.85,
+        }}>
+          ⬡ {reason}
+        </div>
+      )}
 
       {/* Stats row */}
       <div
