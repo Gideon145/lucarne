@@ -1022,17 +1022,17 @@ async def generate_signal_reason(
     if not api_key:
         return ""
     client = anthropic.AsyncAnthropic(api_key=api_key)
-    odds_str = f"{round(odds * 100, 1)}% Polymarket win odds" if odds is not None else "no market data"
+    odds_str = f"{round(odds * 100, 1)}% Polymarket tournament win probability" if odds is not None else "no Polymarket data"
     regime_label = ["calm", "trending", "volatile", "breakout"][min(regime, 3)]
     prompt = (
-        f"One sentence (max 12 words) for why {name} scores {score}/100 "
-        f"in Lucarne's WC 2026 signal model. Regime: {regime_label}. {odds_str}. "
-        f"Be specific and data-driven. No quotes. No markdown. Just the sentence."
+        f"Signal data for {name} at WC 2026: score {score}/100, momentum regime: {regime_label}, {odds_str}. "
+        f"Write one sentence (max 12 words) summarising their WC 2026 outlook based on this data. "
+        f"Be direct and football-specific. No hedging. No quotes. No markdown."
     )
     try:
         resp = await client.messages.create(
             model="claude-haiku-4-5",
-            max_tokens=60,
+            max_tokens=80,
             messages=[{"role": "user", "content": prompt}],
         )
         return resp.content[0].text.strip()
