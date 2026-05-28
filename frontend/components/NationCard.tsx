@@ -31,7 +31,7 @@ export function NationCard({ nation, onClick }: Props) {
   const [reason, setReason] = useState<string>("");
 
   useEffect(() => {
-    if (!nation || nation.score < 55) return; // only VOLATILE + BREAKOUT
+    if (!nation || nation.regime === 0) return; // skip CALM only
     let cancelled = false;
     fetch(`${POLYBOT_URL}/reason/${nation.iso3}?score=${nation.score}&regime=${nation.regime}`)
       .then((r) => r.ok ? r.json() : null)
