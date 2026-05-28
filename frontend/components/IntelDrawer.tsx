@@ -56,20 +56,17 @@ function posLabel(pos: string): string {
 
 export function IntelDrawer({ nation, onClose }: Props) {
   const router = useRouter();
-  const [judgeToken, setJudgeToken] = useState<string>("");
+  const [judgeToken] = useState<string>(() =>
+    typeof window !== "undefined"
+      ? (new URLSearchParams(window.location.search).get("judge") ?? "")
+      : ""
+  );
   const [intel, setIntel] = useState<IntelData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentRequired, setPaymentRequired] = useState<{ description: string } | null>(null);
   const [paying, setPaying] = useState(false);
   const [payStatus, setPayStatus] = useState<string>("");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const p = new URLSearchParams(window.location.search);
-      setJudgeToken(p.get("judge") ?? "");
-    }
-  }, []);
 
   const country = nation ? COUNTRY_MAP.get(nation.iso3) : null;
 

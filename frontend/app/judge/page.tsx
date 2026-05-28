@@ -186,7 +186,7 @@ export default function JudgePage() {
             <a href={`${EXPLORER}/address/${AGENT_WALLET}`} target="_blank" rel="noreferrer" style={btnPrimary}>
               Open Agent Wallet on OKLink ↗
             </a>
-            <a href={`https://frontend-sigma-two-60.vercel.app/${JUDGE_QS}`} target="_blank" rel="noreferrer" style={linkBtn}>
+            <a href={`/${JUDGE_QS}`} target="_blank" rel="noreferrer" style={linkBtn}>
               Live Dashboard (judge unlock) ↗
             </a>
             <a href="https://github.com/Gideon145/lucarne" target="_blank" rel="noreferrer" style={linkBtn}>
