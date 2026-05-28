@@ -89,14 +89,9 @@ export default function MatchPage() {
   const [paymentRequired, setPaymentRequired] = useState<{ description: string } | null>(null);
   const [paying, setPaying] = useState(false);
   const [payStatus, setPayStatus] = useState<string>("");
-  const [judgeToken, setJudgeToken] = useState<string>("");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const p = new URLSearchParams(window.location.search);
-      setJudgeToken(p.get("judge") ?? "");
-    }
-  }, []);
+  const [judgeToken] = useState<string>(() =>
+    typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("judge") ?? "") : ""
+  );
 
   const countryA = COUNTRY_MAP.get(team1);
   const countryB = COUNTRY_MAP.get(team2);
