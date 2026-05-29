@@ -1,4 +1,4 @@
-# Lucarne
+﻿# Lucarne
 
 **Real-time on-chain intelligence terminal for the 2026 FIFA World Cup.**
 
@@ -56,9 +56,9 @@ Lucarne fixes this with a single primitive: **on-chain attestation with economic
 | **Track Record** | https://lucarne-xyz.vercel.app/track-record | Live |
 | **MCP Server** (Claude/Cursor + SSE feed) | https://lucarne-mcp-production.up.railway.app | Live |
 | **Polybot** (FastAPI + x402 paywall) | https://lucarne-polybot-production.up.railway.app | Live |
-| **Agent Wallet (all tx)** | https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3 | 45,000+ tx |
+| **Agent Wallet (all tx)** | https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3 | 50,000+ tx |
 
-The agent wallet has **over 45,000 confirmed transactions** on X Layer Mainnet — every one of them either a country score attestation, a match signal, a pool stake, or a settlement call. That is the proof. It cannot be faked.
+The agent wallet has **over 50,000 confirmed transactions** on X Layer Mainnet — every one of them either a country score attestation, a match signal, a pool stake, or a settlement call. That is the proof. It cannot be faked.
 
 ---
 
@@ -93,7 +93,7 @@ Before betting Lucarne's reputation on the 2026 World Cup, we ran the **entire p
 |  | Live scores    |<-+--| Polymarket +   |  |  +--------------------------+     |
 |  | Live match HUD |  |  | form + market  |  |  | SignalAttestor.sol       |     |
 |  | BetPanel       |  |  | -> 0..100 score|  |  | attest(country, score..) |     |
-|  | NFT mint UI    |  |  +----------------+  |  | 45,000+ on-chain writes  |     |
+|  | NFT mint UI    |  |  +----------------+  |  | 50,000+ on-chain writes  |     |
 |  | x402 AI brief  |  |  | Write Gate     |  |  +--------------------------+     |
 |  +----------------+  |  | |dScore|>3     |  |  | MatchSignalAttestor.sol  |     |
 |                      |  | regime change  |  |  | pre-kickoff signal lock  |     |
@@ -211,7 +211,7 @@ lucarne/
 
 ## What Makes Lucarne Different
 
-**1. The agent is running right now** — On X Layer Mainnet, every 60 seconds, 48 countries, 45,000+ confirmed transactions in the agent wallet. Click the link, see the tx count.
+**1. The agent is running right now** — On X Layer Mainnet, every 60 seconds, 48 countries, 50,000+ confirmed transactions in the agent wallet. Click the link, see the tx count.
 
 **2. Every claim is on-chain verifiable.** This README has 12+ tx hash links. Every one resolves on OKLink. Open OKX Wallet, switch to X Layer, paste any address — it's all there.
 
@@ -242,7 +242,7 @@ Every track has shipped code and verifiable on-chain proof:
 | **Prediction Markets** | ✅ Shipped | [`LucarnePredictions`](https://www.oklink.com/xlayer/address/0x178565919FFebC4b57ca04112d0FFFaD946Df6E7) community-vote contract + Polymarket as the live signal data source for all 48 nations |
 | **Trading** | ✅ Shipped | [`SignalPool v2`](https://www.oklink.com/xlayer/address/0xEe15Dc83cD4AcD16D8698831d468B1FE12ccEa67) parimutuel pool — real OKB stakes, real user bets, real settlement; agent bonds every match call |
 | **NFT** | ✅ Shipped | [`ICalledItNFT v2`](https://www.oklink.com/xlayer/address/0xBC2200d99980661fef938eE72001BAaE496F0adf) soulbound ERC-721 — real mints [`0x01ec8778…`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de), [`0xdc7120d5…`](https://www.oklink.com/xlayer/tx/0xdc7120d57a82670e9773f09404df5f0ef0c95aedeba5083de25f566175158321) |
-| **AI Agent** | ✅ Shipped | Autonomous 60s loop on agent wallet [`0xC8D9…47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) (45,000+ mainnet tx). Claude-powered AI briefs gated by **real x402 EIP-3009 USDC settlement** on X Layer. Free inline AI commentary (Claude Haiku) on every active nation card via `/reason` endpoint. **MCP server** ([lucarne-mcp-production.up.railway.app](https://lucarne-mcp-production.up.railway.app)) exposes the agent to Claude Desktop / Cursor + a plain SSE feed for trading bots |
+| **AI Agent** | ✅ Shipped | Autonomous 60s loop on agent wallet [`0xC8D9…47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) (50,000+ mainnet tx). Claude-powered AI briefs gated by **real x402 EIP-3009 USDC settlement** on X Layer. Free inline AI commentary (Claude Haiku) on every active nation card via `/reason` endpoint. **MCP server** ([lucarne-mcp-production.up.railway.app](https://lucarne-mcp-production.up.railway.app)) exposes the agent to Claude Desktop / Cursor + a plain SSE feed for trading bots |
 | **Social** | ✅ Shipped | Live build broadcast on [x.com/lucarne_xyz](https://x.com/lucarne_xyz); share-to-X button fires on every NFT-mint confirmation (pre-filled tweet with match link); [`/leaderboard`](https://lucarne-xyz.vercel.app/leaderboard) ranks wallets by on-chain proven call count |
 | **GameFi** | ✅ Shipped | [`SurvivorPool`](https://www.oklink.com/xlayer/address/0x7250E9480A025bF59EedD271DFB88C5BC2f8c12F) — pick a nation each round, survive on momentum score ≥ 30, last survivor(s) split the pot (0.001 OKB entry). Live at [`/survivor`](https://lucarne-xyz.vercel.app/survivor) |
 
@@ -295,7 +295,7 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
 | **`okx-agent-payments-protocol`** (x402) | `polybot/server.py` — paid Claude AI briefs are gated by an x402 micropayment (`xlayer-mainnet`, USDC `0x74b7f1…6d22`, `pay-to` = agent wallet). Replay-protection via per-nonce set. Hit `GET /brief/{iso3}` → 402 → pay → 200 |
 | **`okx-dapp-discovery`** (Polymarket plugin) | Polymarket gamma-api drives the per-nation probability signal for all 48 World Cup nations and every live match (`polybot/server.py` → `POLYMARKET_IDS`, `WC_FIXTURES`) |
 | **`okx-onchain-gateway`** | X Layer Mainnet RPC (`https://rpc.xlayer.tech`) is the gateway for every `attest()`, `agentStake()`, `bet()`, `settle()`, `mintForGame()`, and `resolve()` transaction. The agent persists nonce across restarts and refetches pending-nonce explicitly to survive X Layer RPC quirks |
-| **`okx-agentic-wallet`** (pattern) | Agent wallet [`0xC8D9…47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) operates as a self-driven agentic wallet on X Layer — 45,000+ mainnet tx, signal-driven write gate, no human intervention in the scoring loop |
+| **`okx-agentic-wallet`** (pattern) | Agent wallet [`0xC8D9…47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) operates as a self-driven agentic wallet on X Layer — 50,000+ mainnet tx, signal-driven write gate, no human intervention in the scoring loop |
 
 **Why this matters for judging:** every claim in this section is grep-able. Open `polybot/server.py` and search for `x402`, `X402_NETWORK`, `xlayer-mainnet`, `LUCARNE_WALLET` — the wiring is real, not aspirational.
 
@@ -305,14 +305,14 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
 
 > Every number below is independently verifiable on X Layer Mainnet or in the live dashboard — no marketing, just on-chain facts.
 
-- **45,000+ confirmed mainnet transactions** on agent wallet [`0xC8D9...47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) — lifetime nonce, growing in real time. Live count:
+- **50,000+ confirmed mainnet transactions** on agent wallet [`0xC8D9...47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) — lifetime nonce, growing in real time. Live count:
   ```bash
   curl -X POST https://rpc.xlayer.tech -H 'content-type: application/json' \
     -d '{"jsonrpc":"2.0","id":1,"method":"eth_getTransactionCount","params":["0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3","latest"]}'
   ```
 - **Autonomous since launch** — 60-second cadence, persistent nonce across Railway restarts, signal-driven write gate (`|ΔScore|>3`, regime change, or 4h heartbeat) keeps gas burn minimal while preserving every meaningful regime transition. The agent only opens a pool when signal confidence clears a meaningful threshold — a Kelly-style edge filter that keeps every stake intentional and every on-chain write justified.
 - **7 contracts deployed on X Layer Mainnet** — SignalAttestor, MatchSignalAttestor, MatchResultAttestor, SignalPool v2 (with `reclaimNoWinner`), ICalledItNFT v2 (soulbound ERC-721), LucarnePredictions (community vote), plus legacy v1 of pool + NFT preserved for reference.
-- **Full pipeline exercised on 5 real club matches** in 4 days (May 20—23) — signal generation, attestation, community voting, agent-bonded pools, real user bets, soulbound NFT mints — **4 correct calls, 1 real OKB loss, 0 pending. 80% hit rate on a 5-game sample** (treat the 45,000+ TX chain history as the real trust anchor — sample size is intentionally small and early; accuracy claims will grow with World Cup group-stage volume). (See Pipeline Validation table above.)
+- **Full pipeline exercised on 5 real club matches** in 4 days (May 20—23) — signal generation, attestation, community voting, agent-bonded pools, real user bets, soulbound NFT mints — **4 correct calls, 1 real OKB loss, 0 pending. 80% hit rate on a 5-game sample** (treat the 50,000+ TX chain history as the real trust anchor — sample size is intentionally small and early; accuracy claims will grow with World Cup group-stage volume). (See Pipeline Validation table above.)
 - **First user bet landed:** [`0x9176860e...`](https://www.oklink.com/xlayer/tx/0x9176860e7fe9c53142ef399f316fa7a988e8b8219c3c58dcd2658060c2e3da81) · **First soulbound NFT minted:** [`0x01ec8778...`](https://www.oklink.com/xlayer/tx/0x01ec8778625381ff40025a73ed1534c3a2c2c27fb76eee3be35b7587fd97e2de).
 - **Real x402 settlement on X Layer.** Paid AI briefs (`/intel/{iso3}`, `/match/{t1}/{t2}`) are gated by an EIP-3009 USDC paywall on X Layer mainnet — user signs `TransferWithAuthorization` via `eth_signTypedData_v4`, the polybot relayer submits on-chain to USDC [`0x74b7f1…6d22`](https://www.oklink.com/xlayer/address/0x74b7f16337b8972027f6196a17a631ac6de26d22). Real tx hashes appear on every unlocked brief. No mocks.
 
@@ -328,7 +328,7 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
    curl -X POST https://rpc.xlayer.tech -H 'content-type: application/json' \
      -d '{"jsonrpc":"2.0","id":1,"method":"eth_getTransactionCount","params":["0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3","latest"]}'
    ```
-   Hex-decode the result — 45,000+ lifetime confirmed writes.
+   Hex-decode the result — 50,000+ lifetime confirmed writes.
 3. **Watch a fresh TX land** — refresh [the agent wallet on OKLink](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3); a new `attest()` appears within ~60 seconds.
 4. **Verify a wrong call** — Fiorentina/Atalanta signal [`0x6983a191…`](https://www.oklink.com/xlayer/tx/0x6983a19169803ad0a03355586d289c1b644d31802ae0ae7f297eff8b50f504d5) staked 0.05 OKB on Atalanta. Match drew 0–0. OKB is gone. We don't hide losses.
 
