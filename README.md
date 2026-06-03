@@ -58,7 +58,7 @@ Lucarne fixes this with a single primitive: **on-chain attestation with economic
 | **Polybot** (FastAPI + x402 paywall) | https://lucarne-polybot-production.up.railway.app | Live |
 | **Agent Wallet (all tx)** | https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3 | 50,000+ tx |
 
-The agent wallet has **over 50,000 confirmed transactions** on X Layer Mainnet — every one of them either a country score attestation, a match signal, a pool stake, or a settlement call. That is the proof. It cannot be faked.
+The agent wallet has **over 83,000 confirmed transactions** on X Layer Mainnet — every one of them either a country score attestation, a match signal, a pool stake, or a settlement call. That is the proof. It cannot be faked.
 
 ---
 
@@ -93,7 +93,7 @@ Before betting Lucarne's reputation on the 2026 World Cup, we ran the **entire p
 |  | Live scores    |<-+--| Polymarket +   |  |  +--------------------------+     |
 |  | Live match HUD |  |  | form + market  |  |  | SignalAttestor.sol       |     |
 |  | BetPanel       |  |  | -> 0..100 score|  |  | attest(country, score..) |     |
-|  | NFT mint UI    |  |  +----------------+  |  | 50,000+ on-chain writes  |     |
+|  | NFT mint UI    |  |  +----------------+  |  | 83,000+ on-chain writes  |     |
 |  | x402 AI brief  |  |  | Write Gate     |  |  +--------------------------+     |
 |  +----------------+  |  | |dScore|>3     |  |  | MatchSignalAttestor.sol  |     |
 |                      |  | regime change  |  |  | pre-kickoff signal lock  |     |
@@ -301,11 +301,11 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
 
 ---
 
-## Traction (as of May 28, 2026)
+## Traction (as of June 3, 2026)
 
 > Every number below is independently verifiable on X Layer Mainnet or in the live dashboard — no marketing, just on-chain facts.
 
-- **50,000+ confirmed mainnet transactions** on agent wallet [`0xC8D9...47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) — lifetime nonce, growing in real time. Live count:
+- **83,000+ confirmed mainnet transactions** on agent wallet [`0xC8D9...47C3`](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3) — lifetime nonce, growing in real time. Live count:
   ```bash
   curl -X POST https://rpc.xlayer.tech -H 'content-type: application/json' \
     -d '{"jsonrpc":"2.0","id":1,"method":"eth_getTransactionCount","params":["0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3","latest"]}'
@@ -328,7 +328,7 @@ Lucarne is built around the [`okx/onchainos-skills`](https://github.com/okx/onch
    curl -X POST https://rpc.xlayer.tech -H 'content-type: application/json' \
      -d '{"jsonrpc":"2.0","id":1,"method":"eth_getTransactionCount","params":["0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3","latest"]}'
    ```
-   Hex-decode the result — 50,000+ lifetime confirmed writes.
+   Hex-decode the result — 83,000+ lifetime confirmed writes.
 3. **Watch a fresh TX land** — refresh [the agent wallet on OKLink](https://www.oklink.com/xlayer/address/0xC8D92Bfd397A7ccaaf6B44466F2951070A3947C3); a new `attest()` appears within ~60 seconds.
 4. **Verify a wrong call** — Fiorentina/Atalanta signal [`0x6983a191…`](https://www.oklink.com/xlayer/tx/0x6983a19169803ad0a03355586d289c1b644d31802ae0ae7f297eff8b50f504d5) staked 0.05 OKB on Atalanta. Match drew 0–0. OKB is gone. We don't hide losses.
 
